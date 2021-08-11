@@ -1,25 +1,27 @@
 CREATE VIEW [dbo].[FIS_CollegeStructure]
 AS
     SELECT DISTINCT
-        AcademicYear = CRS.AcademicYearID,
-		CollegeCode = NULL,
-		CollegeName = NULL,
+		AcademicYear = CRS.AcademicYearID,
+		CollegeCode = COL.Code,
+		CollegeName = COL.Name,
 		SiteCode = STE.Code,
 		SiteName = STE.Description,
-        FacCode = FAC.Code,
-        FacName = FAC.Name,
-        TeamCode = TEAM.Code,
-        TeamName = TEAM.Name,
-        CostCentreCode = CRS.LedgerCode,
+		FacCode = FAC.Code,
+		FacName = FAC.Name,
+		TeamCode = TEAM.Code,
+		TeamName = TEAM.Name,
+		CostCentreCode = CRS.LedgerCode,
 		CourseCode = CRS.Code,
 		CourseTitle = CRS.Name,
-        ProvSpecField = CRS.Code
-    FROM ProSolution.dbo.Offering CRS
+		ProvSpecField = CRS.Code
+	FROM ProSolution.dbo.Offering CRS
 	INNER JOIN ProSolution.dbo.Site STE
 		ON STE.SiteID = CRS.SiteID
-    INNER JOIN ProSolution.dbo.CollegeLevel TEAM
-        ON TEAM.SID = CRS.SID
-    INNER JOIN ProSolution.dbo.CollegeLevel FAC
-        ON FAC.SID = TEAM.ParentSID
-    LEFT JOIN ProSolution.dbo.OfferingGroup GRP
-        ON GRP.OfferingID = CRS.OfferingID
+	INNER JOIN ProSolution.dbo.CollegeLevel TEAM
+		ON TEAM.SID = CRS.SID
+	INNER JOIN ProSolution.dbo.CollegeLevel FAC
+		ON FAC.SID = TEAM.ParentSID
+	INNER JOIN ProSolution.dbo.CollegeLevel COL
+		ON COL.SID = FAC.ParentSID
+	LEFT JOIN ProSolution.dbo.OfferingGroup GRP
+		ON GRP.OfferingID = CRS.OfferingID

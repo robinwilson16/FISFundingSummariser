@@ -24,7 +24,8 @@ CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@OverrideMatCostCentre NVARCHAR(50),
 	@OverridePartnerFac NVARCHAR(50),
 	@OverridePartnerTeam NVARCHAR(50),
-	@OverridePartnerCostCentre NVARCHAR(50)
+	@OverridePartnerCostCentre NVARCHAR(50),
+	@AnonymiseData BIT
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -61,6 +62,7 @@ BEGIN
 	--DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
+	--DECLARE @AnonymiseData BIT = 0
 
 	--Get date of new ILR Return to be imported
 	IF @AcademicYear >= '19/20'
@@ -116,6 +118,7 @@ BEGIN
 					IsFinalReturn INT NULL,
 					ILRReturnDate DATETIME NULL,
 					SQLDatabase NVARCHAR(50) NULL,
+					ImportDate DATETIME NULL,
 					Is1619FundingSplit INT NULL,
 					ALS1619FundingPercent DECIMAL(5, 2) NULL,
 					Is1619FundingReapportionedByAim INT NULL,
@@ -201,6 +204,7 @@ BEGIN
 					IsAdvLearnLoan INT NULL,
 					IsAdvLearnLoanBursary INT NULL,
 					RateBand NVARCHAR(50) NULL,
+					RateBandOrder INT NULL,
 					GCSEMathsGrade NVARCHAR(4) NULL,
 					GCSEEnglishGrade NVARCHAR(4) NULL,
 					CofMaths NVARCHAR(100) NULL,
@@ -632,4 +636,56 @@ BEGIN
     	@OverridePartnerFac = @OverridePartnerFac,
     	@OverridePartnerTeam = @OverridePartnerTeam,
     	@OverridePartnerCostCentre = @OverridePartnerCostCentre;
+
+
+	--Anonymise the ILR data if required
+	IF @AnonymiseData = 1
+	BEGIN
+		DECLARE @AnonName VARCHAR(250) = 'Anonymous'
+		DECLARE @AnonAddress VARCHAR(250) = 'Anonymous'
+		DECLARE @AnonPostCode VARCHAR(250) = 'ZZ99 9ZZ'
+		DECLARE @AnonTel VARCHAR(250) = '000000000000000'
+		DECLARE @AnonEmail VARCHAR(250) = 'anon@anon.com'
+
+		SET @SQLString = N'
+			UPDATE FD
+			SET
+				Surname = CASE WHEN FD.Surname IS NOT NULL THEN @AnonName ELSE NULL END,
+				Forename = CASE WHEN FD.Forename IS NOT NULL THEN @AnonName ELSE NULL END,
+				Address1 = CASE WHEN FD.Address1 IS NOT NULL THEN @AnonAddress ELSE NULL END,
+				Address2 = CASE WHEN FD.Address2 IS NOT NULL THEN @AnonAddress ELSE NULL END,
+				Address3 = CASE WHEN FD.Address3 IS NOT NULL THEN @AnonAddress ELSE NULL END,
+				Address4 = CASE WHEN FD.Address4 IS NOT NULL THEN @AnonAddress ELSE NULL END,
+				PostCodeCurrent = CASE WHEN FD.PostCodeCurrent IS NOT NULL THEN @AnonPostCode ELSE NULL END,
+				PostCodePriorToEnrol = CASE WHEN FD.PostCodePriorToEnrol IS NOT NULL THEN @AnonPostCode ELSE NULL END,
+				PostCodeLearningStartDate = CASE WHEN FD.PostCodeLearningStartDate IS NOT NULL THEN @AnonPostCode ELSE NULL END,
+				Tel = CASE WHEN FD.Tel IS NOT NULL THEN @AnonTel ELSE NULL END,
+				Email = CASE WHEN FD.Email IS NOT NULL THEN @AnonEmail ELSE NULL END,
+				PostCodeDelivery = CASE WHEN FD.PostCodeDelivery IS NOT NULL THEN @AnonPostCode ELSE NULL END
+			FROM ' + @FISOutputTableLocation + 'FIS_FundingData FD
+			WHERE
+				FD.AcademicYear = @AcademicYear
+				AND FD.ILRReturnDate = @FileDate';
+
+		SET @SQLParams = 
+			N'@AcademicYear NVARCHAR(5),
+			@FileDate DATETIME,
+			@AnonName VARCHAR(250),
+			@AnonAddress VARCHAR(250),
+			@AnonPostCode VARCHAR(250),
+			@AnonTel VARCHAR(250),
+			@AnonEmail VARCHAR(250)';
+
+		EXECUTE sp_executesql 
+			@SQLString, 
+			@SQLParams,
+			@AcademicYear = @AcademicYear,
+			@FileDate = @FileDate,
+			@AnonName = @AnonName,
+			@AnonAddress = @AnonAddress,
+			@AnonPostCode = @AnonPostCode,
+			@AnonTel = @AnonTel,
+			@AnonEmail = @AnonEmail;
+	END
+	
 END

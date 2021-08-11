@@ -1,6 +1,6 @@
 DECLARE @FISDatabase NVARCHAR(100) = 'ILR1920'
 DECLARE @AcademicYear NVARCHAR(5) = '19/20'
-DECLARE @ILRReturn int = 10
+DECLARE @ILRReturn int = 14
 DECLARE @IsFinalReturn BIT = 1
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
@@ -24,6 +24,7 @@ DECLARE @OverrideMatCostCentre NVARCHAR(50) = NULL
 DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
+DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
 
 DECLARE @SQLString NVARCHAR(MAX);
 DECLARE @SQLParams NVARCHAR(MAX);
@@ -55,7 +56,8 @@ SET @SQLString = N'
 		@OverrideMatCostCentre,
 		@OverridePartnerFac,
 		@OverridePartnerTeam,
-		@OverridePartnerCostCentre';
+		@OverridePartnerCostCentre,
+		@AnonymiseData';
 
 SET @SQLParams = 
         N'@FISDatabase NVARCHAR(100),
@@ -83,7 +85,8 @@ SET @SQLParams =
         @OverrideMatCostCentre NVARCHAR(50),
         @OverridePartnerFac NVARCHAR(50),
         @OverridePartnerTeam NVARCHAR(50),
-        @OverridePartnerCostCentre NVARCHAR(50)';
+        @OverridePartnerCostCentre NVARCHAR(50),
+		@AnonymiseData BIT';
     
 EXECUTE sp_executesql 
     @SQLString, 
@@ -113,4 +116,5 @@ EXECUTE sp_executesql
     @OverrideMatCostCentre = @OverrideMatCostCentre,
     @OverridePartnerFac = @OverridePartnerFac,
     @OverridePartnerTeam = @OverridePartnerTeam,
-    @OverridePartnerCostCentre = @OverridePartnerCostCentre;
+    @OverridePartnerCostCentre = @OverridePartnerCostCentre,
+	@AnonymiseData = @AnonymiseData;

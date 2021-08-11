@@ -1,4 +1,4 @@
-DECLARE @FISDatabase NVARCHAR(100) = 'ILR1819_NLAND_R14_F'
+DECLARE @FISDatabase NVARCHAR(100) = 'ILR1819_NLAND_R14_NEW'
 DECLARE @AcademicYear NVARCHAR(5) = '18/19'
 DECLARE @ILRReturn int = 14
 DECLARE @IsFinalReturn BIT = 1
@@ -21,9 +21,10 @@ DECLARE @OverrideEngTeam NVARCHAR(50) = NULL
 DECLARE @OverrideMatTeam NVARCHAR(50) = NULL
 DECLARE @OverrideEngCostCentre NVARCHAR(50) = NULL
 DECLARE @OverrideMatCostCentre NVARCHAR(50) = NULL
-DECLARE @OverridePartnerFac NVARCHAR(50) = 'F00'
+DECLARE @OverridePartnerFac NVARCHAR(50) = 'D10'
 DECLARE @OverridePartnerTeam NVARCHAR(50) = 'T00'
 DECLARE @OverridePartnerCostCentre NVARCHAR(50) = '9800'
+DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
 
 DECLARE @SQLString NVARCHAR(MAX);
 DECLARE @SQLParams NVARCHAR(MAX);
@@ -55,7 +56,8 @@ SET @SQLString = N'
 		@OverrideMatCostCentre,
 		@OverridePartnerFac,
 		@OverridePartnerTeam,
-		@OverridePartnerCostCentre';
+		@OverridePartnerCostCentre,
+		@AnonymiseData';
 
 SET @SQLParams = 
         N'@FISDatabase NVARCHAR(100),
@@ -83,7 +85,8 @@ SET @SQLParams =
         @OverrideMatCostCentre NVARCHAR(50),
         @OverridePartnerFac NVARCHAR(50),
         @OverridePartnerTeam NVARCHAR(50),
-        @OverridePartnerCostCentre NVARCHAR(50)';
+        @OverridePartnerCostCentre NVARCHAR(50),
+		@AnonymiseData BIT';
     
 EXECUTE sp_executesql 
     @SQLString, 
@@ -113,4 +116,5 @@ EXECUTE sp_executesql
     @OverrideMatCostCentre = @OverrideMatCostCentre,
     @OverridePartnerFac = @OverridePartnerFac,
     @OverridePartnerTeam = @OverridePartnerTeam,
-    @OverridePartnerCostCentre = @OverridePartnerCostCentre;
+    @OverridePartnerCostCentre = @OverridePartnerCostCentre,
+	@AnonymiseData = @AnonymiseData;

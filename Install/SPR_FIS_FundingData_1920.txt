@@ -374,8 +374,9 @@ BEGIN
 			ProviderName = PROV.ProviderName,
 			ILRReturn = ''R'' + FORMAT ( @ILRReturn, ''#00'' ),
 			IsFinalReturn = @IsFinalReturn,
-			ILRReturnDate = FORMAT ( SRC.DateTime, ''yyyy-MM-dd HH:mm:ss'' ),
+			ILRReturnDate = SRC.DateTime,
 			SQLDatabase = ''' + @FISDatabase + ''',
+			ImportDate = GETDATE(),
 			Is1619FundingSplit = CASE WHEN LD.FundModel = ''25'' AND @Split1619Funding = 1 AND COALESCE ( HRS.PLH, 0 ) > 0 THEN 1 ELSE 0 END,
 			ALS1619FundingPercent = @1619ALSFundingPercent,
 			Is1619FundingReapportionedByAim = @Reapportion1619FundingByAimWeighting,
@@ -1138,6 +1139,7 @@ BEGIN
 			IsAdvLearnLoan = ALB.AdvLoan,
 			IsAdvLearnLoanBursary = CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine <> ''None'' THEN 1 ELSE 0 END,
 			RateBand = HRS.RateBand,
+			RateBandOrder = HRS.RateBandOrder,
 			GCSEMathsGrade = L.MathGrade,
 			GCSEEnglishGrade = L.EngGrade,
 			CofMaths = FM25.ConditionOfFundingMaths,
@@ -1708,14 +1710,14 @@ BEGIN
 				END, 
 				CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotFundYrEnd END, FM35P.TotFundYrEnd, FM36P.TotFundYrEnd, CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END, 0 ),
 
-			FutureAchCompPayment = 
+			FutureAchievePayment = 
 				CASE
 					WHEN LD.CompStatus <> 1 AND NOT ( LD.CompStatus = 2 AND LD.Outcome = 8 ) THEN 0
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
 					ELSE COALESCE ( FM35.AchieveElement - FM35P.AchCompPaymentYrEnd, FM36PE.PriceEpisodeCompletionElement - FM36P.AchCompPaymentYrEnd )
 				END,
 			FutureAchieveWeighting = @FutureAchieveWeighting,
-			FutureAchCompPaymentWeighted = 
+			FutureAchievePaymentWeighted = 
 				CASE
 					WHEN LD.CompStatus <> 1 AND NOT ( LD.CompStatus = 2 AND LD.Outcome = 8 ) THEN 0
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
@@ -4530,6 +4532,7 @@ BEGIN
 				LD.LearnRefNumber,
 				FM25.FundLine,
 				FM25.RateBand,
+				ORD.RateBandOrder,
 				TFerOnly = CASE WHEN ACT.LearnRefNumber IS NULL THEN 1 ELSE 0 END,
 				PLH = COALESCE ( SUM ( CH.PLH ), 0 ),
 				EEP = COALESCE ( SUM ( CH.EEP ), 0 ),
@@ -4594,6 +4597,29 @@ BEGIN
 					LD.LearnRefNumber
 			) ACT
 				ON ACT.LearnRefNumber = LD.LearnRefNumber
+			LEFT JOIN (
+				SELECT
+					FM25.RateBand,
+					RateBandOrder = 
+						ROW_NUMBER () OVER (
+							ORDER BY
+								CASE
+									WHEN FM25.RateBand LIKE ''Up to%'' THEN 1
+									ELSE 2
+								END,
+								CASE
+									WHEN FM25.RateBand NOT LIKE ''%4a%'' THEN 1
+									ELSE 2
+								END,
+								FM25.RateBand
+						)
+				FROM (
+					SELECT DISTINCT
+						FM25.RateBand
+					FROM ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+				) FM25
+			) ORD
+				ON ORD.RateBand = FM25.RateBand
 			WHERE
 				LD.FundModel = ''25''
 				--AND LD.LearnRefNumber = ''18000292''
@@ -4611,6 +4637,7 @@ BEGIN
 				LD.LearnRefNumber,
 				FM25.FundLine,
 				FM25.RateBand,
+				ORD.RateBandOrder,
 				ACT.LearnRefNumber
 		) HRS
 			ON HRS.LearnRefNumber = L.LearnRefNumber
