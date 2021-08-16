@@ -1,6 +1,0 @@
-CREATE TABLE FIS_Faculties_TBL (
-    AcademicYear NVARCHAR(5),
-	FacCode NVARCHAR(20),
-	FacName NVARCHAR(255),
-	CONSTRAINT PK_FIS_Faculties PRIMARY KEY (AcademicYear, FacCode)
-)

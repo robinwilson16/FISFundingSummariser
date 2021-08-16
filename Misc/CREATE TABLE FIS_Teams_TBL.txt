@@ -1,6 +1,0 @@
-CREATE TABLE FIS_Teams_TBL (
-    AcademicYear NVARCHAR(5),
-	TeamCode NVARCHAR(20),
-	TeamName NVARCHAR(255),
-	CONSTRAINT PK_FIS_Teams PRIMARY KEY (AcademicYear, TeamCode)
-)

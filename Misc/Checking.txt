@@ -1,8 +1,0 @@
-SELECT *
-FROM FIS_FundingData FD
-WHERE
-	FD.AcademicYear = '19/20'
-	AND FD.FundLineSummary = 'Apprenticeships (Legacy)'
-	AND FD.FundLineDetail = '16-18 Apprenticeship'
-	AND FD.IsFunded = 1
-	AND FD.LearnerRef = 'N20111290'
