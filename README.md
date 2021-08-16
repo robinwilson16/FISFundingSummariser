@@ -58,7 +58,7 @@ To confirm data is correct you may wish to validate totals against the funding r
 
 An example query to check data could be as follows
 
---- sql
+~~~~sql
 SELECT
 	FD.FundLineSummary,
 	FD.FundLineDetail,
@@ -75,4 +75,4 @@ GROUP BY
 ORDER BY
 	FD.FundLineSummary,
 	FD.FundLineDetail
----
+~~~~
