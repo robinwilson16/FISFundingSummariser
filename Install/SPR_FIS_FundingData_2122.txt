@@ -1,5 +1,7 @@
 /*
 Changes since 20/21
+PriorLevel added
+ILRReturnDate now contains milliseconds
 */
 
 CREATE PROCEDURE SPR_FIS_FundingData_2122
@@ -65,18 +67,6 @@ BEGIN
 	SET @SQLString = 
         N'
 		DROP TABLE IF EXISTS #LearningAims;
-		DROP TABLE IF EXISTS #CollegeStructure;
-		DROP TABLE IF EXISTS #CourseHours;
-		DROP TABLE IF EXISTS #Employers;
-		DROP TABLE IF EXISTS #Partners;
-		DROP TABLE IF EXISTS #Standards;
-		DROP TABLE IF EXISTS #Frameworks;
-		DROP TABLE IF EXISTS #Pathways;
-		DROP TABLE IF EXISTS #PostCodes;
-		DROP TABLE IF EXISTS #Ethnicities;
-		DROP TABLE IF EXISTS #Disabilities;
-		DROP TABLE IF EXISTS #DestinationProgressionOutcomes;
-
 		SELECT
 			AIM.SSA1Code,
 			AIM.SSA1Name,
@@ -90,6 +80,7 @@ BEGIN
 		INTO #LearningAims
 		FROM FIS_LearningAims AIM
 
+		DROP TABLE IF EXISTS #CollegeStructure;
 		SELECT
 			CS.AcademicYear,
 			CS.CollegeCode,
@@ -109,6 +100,7 @@ BEGIN
 		WHERE
 			CS.AcademicYear = @AcademicYear
 
+		DROP TABLE IF EXISTS #CourseHours;
 		SELECT
 			HRS.AcademicYear,
 			HRS.ProvSpecField,
@@ -120,30 +112,35 @@ BEGIN
 		WHERE
 			HRS.AcademicYear = @AcademicYear
 
+		DROP TABLE IF EXISTS #Employers;
 		SELECT
 			EMP.EmployerEDRS,
 			EMP.EmployerName
 		INTO #Employers
 		FROM FIS_Employers EMP
 
+		DROP TABLE IF EXISTS #Partners;
 		SELECT
 			PAR.PartnerUKPRN,
 			PAR.PartnerName
 		INTO #Partners
 		FROM FIS_Partners PAR
 
+		DROP TABLE IF EXISTS #Standards;
 		SELECT
 			STD.StandardCode,
 			STD.StandardName
 		INTO #Standards
 		FROM FIS_Standards STD
 
+		DROP TABLE IF EXISTS #Frameworks;
 		SELECT
 			FW.FrameworkCode,
 			FW.FrameworkName
 		INTO #Frameworks
 		FROM FIS_Frameworks FW
 
+		DROP TABLE IF EXISTS #Pathways;
 		SELECT
 			PWAY.FrameworkCode,
 			PWAY.ProgType,
@@ -152,6 +149,7 @@ BEGIN
 		INTO #Pathways
 		FROM FIS_Pathways PWAY
 
+		DROP TABLE IF EXISTS #PostCodes;
 		SELECT
 			PC.PostCode,
 			PC.WardCode,
@@ -166,18 +164,28 @@ BEGIN
 		INTO #PostCodes
 		FROM FIS_PostCodes PC
 
+		DROP TABLE IF EXISTS #PriorLevels;
+		SELECT
+			PLEV.Code,
+			PLEV.Description
+		INTO #PriorLevels
+		FROM FIS_PriorLevels PLEV
+
+		DROP TABLE IF EXISTS #Ethnicities;
 		SELECT
 			ETH.Code,
 			ETH.Description
 		INTO #Ethnicities
 		FROM FIS_Ethnicities ETH
 
+		DROP TABLE IF EXISTS #Disabilities;
 		SELECT
 			DIS.Code,
 			DIS.Description
 		INTO #Disabilities
 		FROM FIS_Disabilities DIS
 
+		DROP TABLE IF EXISTS #DestinationProgressionOutcomes;
 		SELECT
 			OC.OutcomeCode,
 			OC.OutcomeType,
@@ -370,7 +378,7 @@ BEGIN
 			ProviderName = PROV.ProviderName,
 			ILRReturn = ''R'' + FORMAT ( @ILRReturn, ''#00'' ),
 			IsFinalReturn = @IsFinalReturn,
-			ILRReturnDate = SRC.DateTime,
+			ILRReturnDate = DATEADD ( MS, - DATEPART ( MS, SRC.DateTime ), SRC.DateTime ), --Remove milliseconds as SSRS truncates these in parameters
 			SQLDatabase = ''' + @FISDatabase + ''',
 			ImportDate = GETDATE(),
 			Is1619FundingSplit = CASE WHEN LD.FundModel = ''25'' AND @Split1619Funding = 1 AND COALESCE ( HRS.PLH, 0 ) > 0 THEN 1 ELSE 0 END,
@@ -428,6 +436,9 @@ BEGIN
 			EmployIntensityInd = ESM.EII,
 			IsFirstFullLevel2 = NULL,
 			IsFirstFullLevel3 = NULL,
+			PriorLevelCode = ATN.PriorLevel,
+			PriorLevelName = PLEV.Description,
+			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
 			PrimaryLLDDHealthProblemCode = LLDD.LLDDCat,
@@ -1719,13 +1730,52 @@ BEGIN
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
 					ELSE COALESCE ( FM35.AchieveElement - FM35P.AchCompPaymentYrEnd, FM36PE.PriceEpisodeCompletionElement - FM36P.AchCompPaymentYrEnd ) * @FutureAchieveWeighting
 				END,
-			
+	'
+
+    SET @SQLString += 
+        N'
+			AppStandardPriceEpisodeIdentifier = FM36PE.PriceEpisodeIdentifier,
+			AppStandardTNP1 = FM36PE.TNP1,
+			AppStandardTNP2 = FM36PE.TNP2,
+			AppStandardTNP3 = FM36PE.TNP3,
+			AppStandardTNP4 = FM36PE.TNP4,
+			AppStandardEpisodeStartDate = FM36PE.EpisodeStartDate,
+			AppStandardPriceEpisode1618FrameworkUpliftRemainingAmount = FM36PE.PriceEpisode1618FrameworkUpliftRemainingAmount,
+			AppStandardPriceEpisode1618FrameworkUpliftTotPrevEarnings = FM36PE.PriceEpisode1618FrameworkUpliftTotPrevEarnings,
+			AppStandardPriceEpisode1618FUBalValue = FM36PE.PriceEpisode1618FUBalValue,
+			AppStandardPriceEpisode1618FUMonthInstValue = FM36PE.PriceEpisode1618FUMonthInstValue,
+			AppStandardPriceEpisode1618FUTotEarnings = FM36PE.PriceEpisode1618FUTotEarnings,
+			AppStandardPriceEpisodeUpperBandLimit = FM36PE.PriceEpisodeUpperBandLimit,
+			AppStandardPriceEpisodePlannedEndDate = FM36PE.PriceEpisodePlannedEndDate,
+			AppStandardPriceEpisodeActualEndDate = FM36PE.PriceEpisodeActualEndDate,
+			AppStandardPriceEpisodeActualEndDateIncEPA = FM36PE.PriceEpisodeActualEndDateIncEPA,
+			AppStandardPriceEpisodeTotalTNPPrice = FM36PE.PriceEpisodeTotalTNPPrice,
+			AppStandardPriceEpisodeUpperLimitAdjustment = FM36PE.PriceEpisodeUpperLimitAdjustment,
+			AppStandardPriceEpisodePlannedInstalments = FM36PE.PriceEpisodePlannedInstalments,
+			AppStandardPriceEpisodeActualInstalments = FM36PE.PriceEpisodeActualInstalments,
+			AppStandardPriceEpisodeCompletionElement = FM36PE.PriceEpisodeCompletionElement,
+			AppStandardPriceEpisodePreviousEarnings = FM36PE.PriceEpisodePreviousEarnings,
+			AppStandardPriceEpisodeInstalmentValue = FM36PE.PriceEpisodeInstalmentValue,
+			AppStandardPriceEpisodeTotalEarnings = FM36PE.PriceEpisodeTotalEarnings,
+			AppStandardPriceEpisodeCompleted = FM36PE.PriceEpisodeCompleted,
+			AppStandardPriceEpisodeRemainingTNPAmount = FM36PE.PriceEpisodeRemainingTNPAmount,
+			AppStandardPriceEpisodeRemainingAmountWithinUpperLimit = FM36PE.PriceEpisodeRemainingAmountWithinUpperLimit,
+			AppStandardPriceEpisodeCappedRemainingTNPAmount = FM36PE.PriceEpisodeCappedRemainingTNPAmount,
+			AppStandardPriceEpisodeExpectedTotalMonthlyValue = FM36PE.PriceEpisodeExpectedTotalMonthlyValue,
+			AppStandardPriceEpisodeAimSeqNumber = FM36PE.PriceEpisodeAimSeqNumber,
+			AppStandardPriceEpisodeApplic1618FrameworkUpliftCompElement = FM36PE.PriceEpisodeApplic1618FrameworkUpliftCompElement,
+			AppStandardPriceEpisodeFundLineType = FM36PE.PriceEpisodeFundLineType,
+			AppStandardEpisodeEffectiveTNPStartDate = FM36PE.EpisodeEffectiveTNPStartDate,
+			AppStandardPriceEpisodeFirstAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeFirstAdditionalPaymentThresholdDate,
+			AppStandardPriceEpisodeSecondAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeSecondAdditionalPaymentThresholdDate,
 			AppStandardPriceEpisodeContractType = FM36PE.PriceEpisodeContractType,
-			AppStandardPriceEpisodeStartDate = FM36PE.EpisodeStartDate,
-			AppStandardPriceEpisodeCompletionElement = COALESCE ( FM36PE.PriceEpisodeCompletionElement, 0 ),
-			AppStandardTotalNegotiatedPriceTNP = COALESCE ( FM36PE.PriceEpisodeTotalTNPPrice, 0 ),
-			AppStandardEmployerContibutionPMRTot = COALESCE ( FM36PE.PriceEpisodeTotalPMRs, 0 ),
-			AppStandardEmployerContibutionPMRCum = COALESCE ( FM36PE.PriceEpisodeCumulativePMRs, 0 ),
+			AppStandardPriceEpisodePreviousEarningsSameProvider = FM36PE.PriceEpisodePreviousEarningsSameProvider,
+			AppStandardPriceEpisodeTotalPMRs = FM36PE.PriceEpisodeTotalPMRs,
+			AppStandardPriceEpisodeCumulativePMRs = FM36PE.PriceEpisodeCumulativePMRs,
+			AppStandardPriceEpisodeCompExemCode = FM36PE.PriceEpisodeCompExemCode,
+			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
+			AppStandardPriceEpisodeRedStartDate = FM36PE.PriceEpisodeRedStartDate,
+			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode,
 	'
 
     SET @SQLString += 
@@ -2945,6 +2995,25 @@ BEGIN
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
+		LEFT JOIN (
+			SELECT
+				ATN.UKPRN,
+				ATN.LearnRefNumber,
+				ATN.PriorLevel,
+				ATN.DateLevelApp,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							ATN.UKPRN,
+							ATN.LearnRefNumber
+						ORDER BY
+							ATN.DateLevelApp DESC
+					)
+			FROM ' + @FISDatabase + '.Valid.LearnerPriorAttain ATN
+		) ATN
+			ON ATN.LearnRefNumber = L.LearnRefNumber
+			AND ATN.UKPRN = L.UKPRN
+			AND ATN.RowNum = 1
 		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
@@ -3361,17 +3430,55 @@ BEGIN
         N'
 		LEFT JOIN (
 			SELECT
+				FM36PE.UKPRN,
 				FM36PE.LearnRefNumber,
 				AimSeqNumber = FM36PE.PriceEpisodeAimSeqNumber,
-				FM36PE.PriceEpisodeContractType,
+				FM36PE.PriceEpisodeIdentifier,
+				FM36PE.TNP1,
+				FM36PE.TNP2,
+				FM36PE.TNP3,
+				FM36PE.TNP4,
 				FM36PE.EpisodeStartDate,
+				FM36PE.PriceEpisode1618FrameworkUpliftRemainingAmount,
+				FM36PE.PriceEpisode1618FrameworkUpliftTotPrevEarnings,
+				FM36PE.PriceEpisode1618FUBalValue,
+				FM36PE.PriceEpisode1618FUMonthInstValue,
+				FM36PE.PriceEpisode1618FUTotEarnings,
+				FM36PE.PriceEpisodeUpperBandLimit,
+				FM36PE.PriceEpisodePlannedEndDate,
+				FM36PE.PriceEpisodeActualEndDate,
+				FM36PE.PriceEpisodeActualEndDateIncEPA,
 				FM36PE.PriceEpisodeTotalTNPPrice,
+				FM36PE.PriceEpisodeUpperLimitAdjustment,
+				FM36PE.PriceEpisodePlannedInstalments,
+				FM36PE.PriceEpisodeActualInstalments,
 				FM36PE.PriceEpisodeCompletionElement,
+				FM36PE.PriceEpisodePreviousEarnings,
+				FM36PE.PriceEpisodeInstalmentValue,
+				FM36PE.PriceEpisodeTotalEarnings,
+				FM36PE.PriceEpisodeCompleted,
+				FM36PE.PriceEpisodeRemainingTNPAmount,
+				FM36PE.PriceEpisodeRemainingAmountWithinUpperLimit,
+				FM36PE.PriceEpisodeCappedRemainingTNPAmount,
+				FM36PE.PriceEpisodeExpectedTotalMonthlyValue,
+				FM36PE.PriceEpisodeAimSeqNumber,
+				FM36PE.PriceEpisodeApplic1618FrameworkUpliftCompElement,
+				FM36PE.PriceEpisodeFundLineType,
+				FM36PE.EpisodeEffectiveTNPStartDate,
+				FM36PE.PriceEpisodeFirstAdditionalPaymentThresholdDate,
+				FM36PE.PriceEpisodeSecondAdditionalPaymentThresholdDate,
+				FM36PE.PriceEpisodeContractType,
+				FM36PE.PriceEpisodePreviousEarningsSameProvider,
 				FM36PE.PriceEpisodeTotalPMRs,
 				FM36PE.PriceEpisodeCumulativePMRs,
+				FM36PE.PriceEpisodeCompExemCode,
+				FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
+				FM36PE.PriceEpisodeRedStartDate,
+				FM36PE.PriceEpisodeRedStatusCode,
 				RowNum =
 					ROW_NUMBER () OVER (
 						PARTITION BY
+							FM36PE.UKPRN,
 							FM36PE.LearnRefNumber,
 							FM36PE.PriceEpisodeAimSeqNumber
 						ORDER BY
@@ -3383,6 +3490,7 @@ BEGIN
 				FM36PE.EpisodeStartDate < ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-08-01''
 		) FM36PE
 			ON FM36PE.LearnRefNumber = FM36.LearnRefNumber
+			AND FM36PE.UKPRN = FM36.UKPRN
 			AND FM36PE.AimSeqNumber = FM36.AimSeqNumber
 			AND FM36PE.RowNum = 1
 	'
@@ -4931,6 +5039,8 @@ BEGIN
 				END
 		LEFT JOIN #Ethnicities ETH
 			ON ETH.Code = L.Ethnicity
+		LEFT JOIN #PriorLevels PLEV
+			ON PLEV.Code = ATN.PriorLevel
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES

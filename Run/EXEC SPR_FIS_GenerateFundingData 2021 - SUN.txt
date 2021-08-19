@@ -1,7 +1,7 @@
 DECLARE @FISDatabase NVARCHAR(100) = 'ILR2021'
 DECLARE @AcademicYear NVARCHAR(5) = '20/21'
 DECLARE @ILRReturn int = 13
-DECLARE @IsFinalReturn BIT = 0
+DECLARE @IsFinalReturn BIT = 1
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 1 --Reapportion the 16-19 funding by the aim prog weighting factor
 DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 10.58 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
