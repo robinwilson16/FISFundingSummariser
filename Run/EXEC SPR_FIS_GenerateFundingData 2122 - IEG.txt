@@ -4,8 +4,10 @@ DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 
 
 
 
+
 DECLARE @FISDatabase NVARCHAR(100) = 'ILR2122'
 DECLARE @AcademicYear NVARCHAR(5) = '21/22'
+
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
@@ -13,7 +15,7 @@ DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if a
 DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
 DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
-DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
+DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
 DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'

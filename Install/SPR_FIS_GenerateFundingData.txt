@@ -11,9 +11,7 @@ CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@FutureAchieveWeighting DECIMAL(5,2),
 	@Mode NCHAR(1),
 	@FISOutputTableLocation NVARCHAR(200),
-	@ProviderFieldFacLocation NCHAR(1),
-	@ProviderFieldTeamLocation NCHAR(1),
-	@ProviderFieldCostCentreLocation NCHAR(1),
+	@FISOutputTableName NVARCHAR(200),
 	@ProviderFieldCourseLocation NCHAR(1),
 	@ProviderFieldParentCourseLocation NCHAR(1),
 	@OverrideEngFac NVARCHAR(50),
@@ -28,7 +26,8 @@ CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@AnonymiseData BIT
 AS
 BEGIN
-	SET NOCOUNT ON;
+	SET XACT_ABORT, NOCOUNT ON;
+
 	DECLARE @TableExists BIT = 1;
 	DECLARE @FileDate DATETIME;
 	DECLARE @NumExistingRecords INT = 0;
@@ -36,33 +35,45 @@ BEGIN
 	DECLARE @SQLString NVARCHAR(MAX);
 	DECLARE @SQLParams NVARCHAR(MAX);
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'Hegel.FIS_CY'
-	--DECLARE @AcademicYear NVARCHAR(5) = '18/19'
-	--DECLARE @ILRReturn int = 11
-	--DECLARE @IsFinalReturn BIT = 1
+	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
+
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223'
+	--DECLARE @AcademicYear NVARCHAR(5) = '22/23'
+
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
-	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0.07 --Deduct this percent from Tot Funding and assign to ALS column
-	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 1 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
+	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
+	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-	--DECLARE @Mode NCHAR(1) = 'R' --I=Insert new ILR return data leaving existing data, R=Replace table
-	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'wlc.dbo.'
-	--DECLARE @ProviderFieldFacLocation NCHAR(1) = 'B'
-	--DECLARE @ProviderFieldTeamLocation NCHAR(1) = 'C'
-	--DECLARE @ProviderFieldCostCentreLocation NCHAR(1) = 'D'
+	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
+	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
+	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
-	--DECLARE @OverrideEngFac NVARCHAR(50) = '14'
-	--DECLARE @OverrideMatFac NVARCHAR(50) = '14'
-	--DECLARE @OverrideEngTeam NVARCHAR(50) = '1410'
-	--DECLARE @OverrideMatTeam NVARCHAR(50) = '1420'
+	--DECLARE @OverrideEngFac NVARCHAR(50) = NULL
+	--DECLARE @OverrideMatFac NVARCHAR(50) = NULL
+	--DECLARE @OverrideEngTeam NVARCHAR(50) = NULL
+	--DECLARE @OverrideMatTeam NVARCHAR(50) = NULL
 	--DECLARE @OverrideEngCostCentre NVARCHAR(50) = NULL
 	--DECLARE @OverrideMatCostCentre NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
-	--DECLARE @AnonymiseData BIT = 0
+	--DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
+
+	DECLARE @ILRReturnSummary NVARCHAR(200) = NULL;
+
+	SET @ILRReturnSummary = 
+		'Importing ' + @AcademicYear + ' R' + FORMAT ( @ILRReturn, '00' ) + ' '
+		+ CASE
+			WHEN @IsFinalReturn = 1 THEN 'Final'
+			ELSE 'Non-Final'
+		END
+		+ ' ILR Return';
+
+	PRINT @ILRReturnSummary;
 
 	--Get date of new ILR Return to be imported
 	IF @AcademicYear >= '19/20'
@@ -88,19 +99,20 @@ BEGIN
         @SQLParams, 
         @FileDateOUT = @FileDate OUTPUT;
 
+	PRINT 'Date of ILR Return to be Imported: ' + FORMAT ( @FileDate, 'dd/MM/yyyy' );
+
 	IF @Mode = 'R'
 		--If mode is to replace then drop the table
-		IF OBJECT_ID('dbo.FIS_FundingData', 'U') IS NOT NULL 
-			BEGIN
-				SET @SQLString = N'
-					DROP TABLE dbo.FIS_FundingData'
+		BEGIN
+			SET @SQLString = N'
+				DROP TABLE IF EXISTS dbo.[' + @FISOutputTableName + ']';
 
-                SET @SQLParams = N'';
+			SET @SQLParams = N'';
 
-				EXECUTE sp_executesql 
-                    @SQLString, 
-                    @SQLParams;
-			END
+			EXECUTE sp_executesql 
+				@SQLString, 
+				@SQLParams;
+		END
 	ELSE
 		--Confirm table exists already
 		IF OBJECT_ID('dbo.FIS_FundingData', 'U') IS NULL 
@@ -110,7 +122,7 @@ BEGIN
 		--If mode is to replace or table does not exist then create it
 		BEGIN
 			SET @SQLString = N'
-				CREATE TABLE ' + @FISOutputTableLocation + 'FIS_FundingData (
+				CREATE TABLE ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] (
 					AcademicYear NVARCHAR(5) NULL,
                     ProviderNumber INT NULL,
 					ProviderName NVARCHAR(50) NULL,
@@ -131,6 +143,7 @@ BEGIN
 					DOB DATETIME NULL,
 					Age31Aug INT NULL,
 					ULN BIGINT NULL,
+					NINumber NVARCHAR(9) NULL,
 					Address1 NVARCHAR(50) NULL,
 					Address2 NVARCHAR(50) NULL,
 					Address3 NVARCHAR(50) NULL,
@@ -142,9 +155,9 @@ BEGIN
 					Email NVARCHAR(100) NULL,
 					PostCodeWardCode NVARCHAR(10) NULL,
 					PostCodeWardName NVARCHAR(100) NULL,
-					PostCodeDistrictCode NVARCHAR(4) NULL,
+					PostCodeDistrictCode NVARCHAR(10) NULL,
 					PostCodeDistrictName NVARCHAR(50) NULL,
-					PostCodeLEACode NVARCHAR(3) NULL,
+					PostCodeLEACode NVARCHAR(10) NULL,
 					PostCodeLEAName NVARCHAR(50) NULL,
 					PostCode1619Uplift DECIMAL(10, 5) NULL,
 					PostCodeAdultUplift DECIMAL(10, 5) NULL,
@@ -167,6 +180,7 @@ BEGIN
 					PriorLevelDate DATE NULL,
 					EthnicityCode INT NULL,
 					EthnicityName NVARCHAR(62) NULL,
+					LLDDHealthProb INT NULL,
 					PrimaryLLDDHealthProblemCode INT NULL,
 					PrimaryLLDDHealthProblemName NVARCHAR(100) NULL,
 					DestinationProgressionType NVARCHAR(3) NULL,
@@ -221,33 +235,43 @@ BEGIN
         N'
 					PostCodeDelivery NVARCHAR(10) NULL,
 					CampusID NVARCHAR(20) NULL,
-					ParentCollegeCode NVARCHAR(20) NULL,
-					ParentCollegeName NVARCHAR(150) NULL,
-					ParentSiteCode NVARCHAR(20) NULL,
-					ParentSiteName NVARCHAR(100) NULL,
-					ParentFacCode NVARCHAR(20) NULL,
-					ParentFacName NVARCHAR(150) NULL,
-					ParentTeamCode NVARCHAR(20) NULL,
-					ParentTeamName NVARCHAR(150) NULL,
-					ParentCostCentre NVARCHAR(20) NULL,
-					CollegeCode NVARCHAR(20) NULL,
-					CollegeName NVARCHAR(150) NULL,
-					SiteCode NVARCHAR(20) NULL,
-					SiteName NVARCHAR(100) NULL,
-					FacCode NVARCHAR(20) NULL,
-					FacName NVARCHAR(150) NULL,
-					TeamCode NVARCHAR(20) NULL,
-					TeamName NVARCHAR(150) NULL,
-					CostCentre NVARCHAR(20) NULL,
-					MainFacCode NVARCHAR(20) NULL,
-					MainFacName NVARCHAR(150) NULL,
-					MainTeamCode NVARCHAR(20) NULL,
-					MainTeamName NVARCHAR(150) NULL,
-					FacCodeOrig NVARCHAR(20) NULL,
-					FacNameOrig NVARCHAR(150) NULL,
-					TeamCodeOrig NVARCHAR(20) NULL,
-					TeamNameOrig NVARCHAR(150) NULL,
-					CostCentreOrig NVARCHAR(20) NULL,
+
+					ParentCollegeLevel1Code NVARCHAR(20) NULL,
+					ParentCollegeLevel1Name NVARCHAR(150) NULL,
+					ParentCollegeLevel2Code NVARCHAR(20) NULL,
+					ParentCollegeLevel2Name NVARCHAR(150) NULL,
+					ParentCollegeLevel3Code NVARCHAR(20) NULL,
+					ParentCollegeLevel3Name NVARCHAR(150) NULL,
+					ParentCollegeLevel4Code NVARCHAR(20) NULL,
+					ParentCollegeLevel4Name NVARCHAR(150) NULL,
+
+					CollegeLevel1Code NVARCHAR(20) NULL,
+					CollegeLevel1Name NVARCHAR(150) NULL,
+					CollegeLevel2Code NVARCHAR(20) NULL,
+					CollegeLevel2Name NVARCHAR(150) NULL,
+					CollegeLevel3Code NVARCHAR(20) NULL,
+					CollegeLevel3Name NVARCHAR(150) NULL,
+					CollegeLevel4Code NVARCHAR(20) NULL,
+					CollegeLevel4Name NVARCHAR(150) NULL,
+
+					OriginalCollegeLevel1Code NVARCHAR(20) NULL,
+					OriginalCollegeLevel1Name NVARCHAR(150) NULL,
+					OriginalCollegeLevel2Code NVARCHAR(20) NULL,
+					OriginalCollegeLevel2Name NVARCHAR(150) NULL,
+					OriginalCollegeLevel3Code NVARCHAR(20) NULL,
+					OriginalCollegeLevel3Name NVARCHAR(150) NULL,
+					OriginalCollegeLevel4Code NVARCHAR(20) NULL,
+					OriginalCollegeLevel4Name NVARCHAR(150) NULL,
+					
+					MainAimCollegeLevel1Code NVARCHAR(20) NULL,
+					MainAimCollegeLevel1Name NVARCHAR(150) NULL,
+					MainAimCollegeLevel2Code NVARCHAR(20) NULL,
+					MainAimCollegeLevel2Name NVARCHAR(150) NULL,
+					MainAimCollegeLevel3Code NVARCHAR(20) NULL,
+					MainAimCollegeLevel3Name NVARCHAR(150) NULL,
+					MainAimCollegeLevel4Code NVARCHAR(20) NULL,
+					MainAimCollegeLevel4Name NVARCHAR(150) NULL,
+
 					SSA1Code NVARCHAR(5) NULL,
 					SSA1Title NVARCHAR(255) NULL,
 					SSA2Code NVARCHAR(5) NULL,
@@ -261,10 +285,11 @@ BEGIN
 					AimTitle NVARCHAR(254) NULL,
 					AimTypeCode NVARCHAR(4) NULL,
 					StartDate DATETIME NULL,
+					OriginalStartDate DATETIME NULL,
 					ExpEndDate DATETIME NULL,
 					ActEndDate DATETIME NULL,
-					LearnerPLH INT NULL,
-					LearnerEEP INT NULL,
+					PlanLearnHours INT NULL,
+					PlanEEPHours INT NULL,
 					FM25PLHAim INT NULL,
 					FM25EEPAim INT NULL,
 					FM25PLHAllAims INT NULL,
@@ -539,21 +564,25 @@ BEGIN
                 @SQLParams;
 
 			SET @SQLString = N'
-				CREATE CLUSTERED INDEX CX_FIS_FundingData ON ' + @FISOutputTableLocation + 'FIS_FundingData ( AcademicYear, ILRReturn, ILRReturnDate )';
+				CREATE CLUSTERED INDEX CX_FIS_FundingData ON ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] ( AcademicYear, ILRReturn, ILRReturnDate )';
 
 			SET @SQLParams = N'';
 
             EXECUTE sp_executesql 
                 @SQLString, 
                 @SQLParams;
+
+			PRINT 'Created ' + @FISOutputTableName + ' Table';
 		END
 	ELSE
 		--If mode is to insert instead of replace then see if this ILR has already been imported
 		BEGIN
+			PRINT 'Inserting into Existing ' + @FISOutputTableName + ' Table';
+			
 			SET @SQLString = N'
 				SELECT
 					@NumExistingRecordsOUT = SUM ( 1 )
-				FROM ' + @FISOutputTableLocation + 'FIS_FundingData FD
+				FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 				WHERE
 					FD.AcademicYear = @AcademicYear
 					AND FD.ILRReturnDate = @FileDate';
@@ -575,7 +604,7 @@ BEGIN
 				BEGIN
                     SET @SQLString = N'
                         DELETE FD
-						FROM ' + @FISOutputTableLocation + 'FIS_FundingData FD
+						FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 						WHERE
 							FD.AcademicYear = @AcademicYear
 							AND FD.ILRReturnDate = @FileDate';
@@ -589,6 +618,8 @@ BEGIN
                         @SQLParams,
 						@AcademicYear = @AcademicYear,
 						@FileDate = @FileDate;
+
+					PRINT 'Deleting ' + CAST ( @NumExistingRecords AS NVARCHAR(10) ) + ' From ' + @FISOutputTableName + ' Table';
 				END
 		END
 
@@ -606,9 +637,7 @@ BEGIN
 			@IncludeAdvLoanBursaryIncome,
 			@FutureAchieveWeighting,
             @FISOutputTableLocation,
-			@ProviderFieldFacLocation,
-			@ProviderFieldTeamLocation,
-			@ProviderFieldCostCentreLocation,
+			@FISOutputTableName,
 			@ProviderFieldCourseLocation,
 			@ProviderFieldParentCourseLocation,
 			@OverrideEngFac,
@@ -633,9 +662,7 @@ BEGIN
 		@IncludeAdvLoanBursaryIncome BIT,
     	@FutureAchieveWeighting DECIMAL(5,2),
         @FISOutputTableLocation NVARCHAR(200),
-    	@ProviderFieldFacLocation CHAR(1),
-		@ProviderFieldTeamLocation CHAR(1),
-		@ProviderFieldCostCentreLocation CHAR(1),
+		@FISOutputTableName NVARCHAR(200),
 		@ProviderFieldCourseLocation CHAR(1),
 		@ProviderFieldParentCourseLocation CHAR(1),
     	@OverrideEngFac NVARCHAR(50),
@@ -664,9 +691,7 @@ BEGIN
 		@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
     	@FutureAchieveWeighting = @FutureAchieveWeighting,
         @FISOutputTableLocation = @FISOutputTableLocation,
-    	@ProviderFieldFacLocation = @ProviderFieldFacLocation,
-		@ProviderFieldTeamLocation = @ProviderFieldTeamLocation,
-		@ProviderFieldCostCentreLocation = @ProviderFieldCostCentreLocation,
+		@FISOutputTableName = @FISOutputTableName,
 		@ProviderFieldCourseLocation = @ProviderFieldCourseLocation,
 		@ProviderFieldParentCourseLocation = @ProviderFieldParentCourseLocation,
     	@OverrideEngFac = @OverrideEngFac,
@@ -679,6 +704,7 @@ BEGIN
     	@OverridePartnerTeam = @OverridePartnerTeam,
     	@OverridePartnerCostCentre = @OverridePartnerCostCentre;
 
+	PRINT @AcademicYear + ' ILR Imported'
 
 	--Anonymise the ILR data if required
 	IF @AnonymiseData = 1
@@ -704,7 +730,7 @@ BEGIN
 				Tel = CASE WHEN FD.Tel IS NOT NULL THEN @AnonTel ELSE NULL END,
 				Email = CASE WHEN FD.Email IS NOT NULL THEN @AnonEmail ELSE NULL END,
 				PostCodeDelivery = CASE WHEN FD.PostCodeDelivery IS NOT NULL THEN @AnonPostCode ELSE NULL END
-			FROM ' + @FISOutputTableLocation + 'FIS_FundingData FD
+			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			WHERE
 				FD.AcademicYear = @AcademicYear
 				AND FD.ILRReturnDate = @FileDate';
@@ -728,6 +754,8 @@ BEGIN
 			@AnonPostCode = @AnonPostCode,
 			@AnonTel = @AnonTel,
 			@AnonEmail = @AnonEmail;
+
+		PRINT @AcademicYear + ' ILR Anonymised'
 	END
 	
 END

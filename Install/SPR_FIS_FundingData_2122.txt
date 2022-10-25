@@ -16,9 +16,7 @@ CREATE PROCEDURE SPR_FIS_FundingData_2122
 	@IncludeAdvLoanBursaryIncome BIT,
 	@FutureAchieveWeighting DECIMAL(5,2),
 	@FISOutputTableLocation NVARCHAR(200),
-	@ProviderFieldFacLocation CHAR(1),
-	@ProviderFieldTeamLocation CHAR(1),
-	@ProviderFieldCostCentreLocation CHAR(1),
+	@FISOutputTableName NVARCHAR(200),
 	@ProviderFieldCourseLocation CHAR(1),
 	@ProviderFieldParentCourseLocation CHAR(1),
 	@OverrideEngFac NVARCHAR(50),
@@ -32,25 +30,25 @@ CREATE PROCEDURE SPR_FIS_FundingData_2122
 	@OverridePartnerCostCentre NVARCHAR(50)
 AS
 BEGIN
-	SET NOCOUNT ON;
+	SET XACT_ABORT, NOCOUNT ON;
+
+	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
 	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2122'
 	--DECLARE @AcademicYear NVARCHAR(5) = '21/22'
-	--DECLARE @ILRReturn int = 1
-	--DECLARE @IsFinalReturn BIT = 1
+
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
-	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 10.58 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
+	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
 	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
 	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
-	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'EPNE.dbo.'
-	--DECLARE @ProviderFieldFacLocation NCHAR(1) = 'B'
-	--DECLARE @ProviderFieldTeamLocation NCHAR(1) = 'C'
-	--DECLARE @ProviderFieldCostCentreLocation NCHAR(1) = 'D'
+	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
+	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
-	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'A'
+	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
 	--DECLARE @OverrideEngFac NVARCHAR(50) = NULL
 	--DECLARE @OverrideMatFac NVARCHAR(50) = NULL
 	--DECLARE @OverrideEngTeam NVARCHAR(50) = NULL
@@ -60,6 +58,7 @@ BEGIN
 	--DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
+	--DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
 
 	DECLARE @SQLString NVARCHAR(MAX);
     DECLARE @SQLParams NVARCHAR(MAX);
@@ -83,18 +82,17 @@ BEGIN
 		DROP TABLE IF EXISTS #CollegeStructure;
 		SELECT
 			CS.AcademicYear,
-			CS.CollegeCode,
-			CS.CollegeName,
-			CS.SiteCode,
-			CS.SiteName,
-			CS.FacCode,
-			CS.FacName,
-			CS.TeamCode,
-			CS.TeamName,
-			CS.CostCentreCode,
+			CS.ProvSpecValue,
 			CS.CourseCode,
 			CS.CourseTitle,
-			CS.ProvSpecField
+			CS.CollegeLevel1Code,
+			CS.CollegeLevel1Name,
+			CS.CollegeLevel2Code,
+			CS.CollegeLevel2Name,
+			CS.CollegeLevel3Code,
+			CS.CollegeLevel3Name,
+			CS.CollegeLevel4Code,
+			CS.CollegeLevel4Name
 		INTO #CollegeStructure
 		FROM FIS_CollegeStructure CS
 		WHERE
@@ -371,7 +369,7 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		INSERT INTO ' + @FISOutputTableLocation + 'FIS_FundingData WITH (TABLOCKX)
+		INSERT INTO ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] WITH (TABLOCKX)
 		SELECT
 			AcademicYear = @AcademicYear,
             ProviderNumber = SRC.UKPRN,
@@ -397,6 +395,7 @@ BEGIN
 					ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
 				END,
 			ULN = L.ULN,
+			NINumber = L.NINumber,
 			Address1 = L.AddLine1,
 			Address2 = L.AddLine2,
 			Address3 = L.AddLine3,
@@ -441,6 +440,7 @@ BEGIN
 			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
+			LLDDHealthProb = L.LLDDHealthProb,
 			PrimaryLLDDHealthProblemCode = LLDD.LLDDCat,
 			PrimaryLLDDHealthProblemName = DIS.Description,
 			DestinationProgressionType = OC.DPOutcomeType,
@@ -1183,125 +1183,83 @@ BEGIN
     SET @SQLString += 
         N'
 			CampusID = L.CampId,
-			ParentCollegeCode = PCS.CollegeCode,
-			ParentCollegeName = PCS.CollegeName,
-			ParentSiteCode = PCS.SiteCode,
-			ParentSiteName = PCS.SiteName,
-			ParentFacCode = PCS.FacCode,
-			ParentFacName = PCS.FacName,
-			ParentTeamCode = PCS.TeamCode,
-			ParentTeamName = PCS.TeamName,
-			ParentCostCentre = PCS.CostCentreCode,
-			CollegeCode = COALESCE ( CS.CollegeCode, ''-'' ),
-			CollegeName = COALESCE ( CS.CollegeName, ''-- Unknown --'' ),
-			SiteCode = COALESCE ( CS.SiteCode, ''-'' ),
-			SiteName = COALESCE ( CS.SiteName, ''-- Unknown --'' ),
+			ParentCollegeLevel1Code = COALESCE ( PCS.CollegeLevel1Code, ''-''),
+			ParentCollegeLevel1Name = COALESCE ( PCS.CollegeLevel1Name, ''-- Unknown --''),
+			ParentCollegeLevel2Code = COALESCE ( PCS.CollegeLevel2Code, ''-''),
+			ParentCollegeLevel2Name = COALESCE ( PCS.CollegeLevel2Name, ''-- Unknown --''),
+			ParentCollegeLevel3Code = COALESCE ( PCS.CollegeLevel3Code, ''-''),
+			ParentCollegeLevel3Name = COALESCE ( PCS.CollegeLevel3Name, ''-- Unknown --''),
+			ParentCollegeLevel4Code = COALESCE ( PCS.CollegeLevel4Code, ''-''),
+			ParentCollegeLevel4Name = COALESCE ( PCS.CollegeLevel4Name, ''-- Unknown --''),
+
+			CollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
+			CollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
+			CollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
+			CollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
     '
 
     SET @SQLString += 
         N'
-			FacCode = 
+			CollegeLevel3Code = 
 				COALESCE (
 					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN @OverrideEngFac END,
 					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN @OverrideMatFac END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN @OverridePartnerFac END,
-					CS.FacCode,
+					CS.CollegeLevel3Code,
 					''-''
 				),
-			FacName = 
+			CollegeLevel3Name = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN FENG.FacName END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN FMAT.FacName END,
-					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN FPAR.FacName END,
-					CS.FacName,
+					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN FENG.CollegeLevel3Name END,
+					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN FMAT.CollegeLevel3Name END,
+					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN FPAR.CollegeLevel3Name END,
+					CS.CollegeLevel3Name,
 					''-- Unknown --''
 				),
-			TeamCode = 
+			CollegeLevel4Code = 
 				COALESCE (
 					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN @OverrideEngTeam END,
 					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN @OverrideMatTeam END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN @OverridePartnerTeam END,
-					CS.TeamCode,
+					CS.CollegeLevel4Code,
 					''-''
 				),
-			TeamName = 
+			CollegeLevel4Name = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN TENG.TeamName END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN TMAT.TeamName END,
-					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN TPAR.TeamName END,
-					CS.TeamName,
+					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN TENG.CollegeLevel4Name END,
+					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN TMAT.CollegeLevel4Name END,
+					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN TPAR.CollegeLevel4Name END,
+					CS.CollegeLevel4Name,
 					''-- Unknown --''
-				),
-			CostCentre = 
-				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN @OverrideEngCostCentre END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN @OverrideMatCostCentre END,
-					CS.CostCentreCode,
-					''-''
 				),
 	'
 
     SET @SQLString += 
         N'
-			MainFacCode = COALESCE ( MCS.FacCode COLLATE DATABASE_DEFAULT, MA.FacCode COLLATE DATABASE_DEFAULT, ''-'' ),
-			MainFacName = COALESCE ( MCS.FacName, ''-- Unknown --'' ),
-			MainTeamCode = COALESCE ( MCS.TeamCode COLLATE DATABASE_DEFAULT, MA.TeamCode COLLATE DATABASE_DEFAULT, ''-'' ),
-			MainTeamName = COALESCE ( MCS.TeamName, ''-- Unknown --'' ),
-			FacCodeOrig = 
-				CASE
-					WHEN @ProviderFieldFacLocation = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProviderFieldFacLocation = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProviderFieldFacLocation = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProviderFieldFacLocation = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''-''
-				END,
-			FacNameOrig = COALESCE ( CS.FacName, ''--Unknown --'' ),
-			TeamCodeOrig = 
-				CASE
-					WHEN @ProviderFieldTeamLocation = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProviderFieldTeamLocation = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProviderFieldTeamLocation = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProviderFieldTeamLocation = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''-''
-				END,
-			TeamNameOrig = COALESCE ( CS.TeamName, ''--Unknown --'' ),
-			CostCentreOrig = 
-				CASE
-					WHEN @ProviderFieldCostCentreLocation = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProviderFieldCostCentreLocation = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProviderFieldCostCentreLocation = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProviderFieldCostCentreLocation = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''-''
-				END,
+			OriginalCollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
+			OriginalCollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
+			OriginalCollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
+			OriginalCollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
+			OriginalCollegeLevel3Code = COALESCE ( CS.CollegeLevel3Code, ''-''),
+			OriginalCollegeLevel3Name = COALESCE ( CS.CollegeLevel3Name, ''-- Unknown --''),
+			OriginalCollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
+			OriginalCollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
+			
+			MainAimCollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
+			MainAimCollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
+			MainAimCollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
+			MainAimCollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
+			MainAimCollegeLevel3Code = COALESCE ( CS.CollegeLevel3Code, ''-''),
+			MainAimCollegeLevel3Name = COALESCE ( CS.CollegeLevel3Name, ''-- Unknown --''),
+			MainAimCollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
+			MainAimCollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
+
 			SSA1Code = AIM.SSA1Code,
 			SSA1Title = AIM.SSA1Name,
 			SSA2Code = AIM.SSA2Code,
 			SSA2Title = AIM.SSA2Name,
-			CourseCode = 
-				CASE
-					WHEN @ProviderFieldCourseLocation = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProviderFieldCourseLocation = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProviderFieldCourseLocation = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProviderFieldCourseLocation = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''-'' 
-				END,
-			CourseTitle = CS.CourseTitle,
+			CourseCode = COALESCE ( CS.CourseCode, ''-''),
+			CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 
 			AimSequence = LD.AimSeqNumber,
 			AimType = LD.AimType,
@@ -1309,10 +1267,11 @@ BEGIN
 			AimTitle = AIM.AimTitle,
 			AimTypeCode = AIM.AimTypeCode,
 			StartDate = LD.LearnStartDate,
+			OriginalStartDate = LD.OrigLearnStartDate,
 			ExpEndDate = LD.LearnPlanEndDate,
 			ActEndDate = LD.LearnActEndDate,
-			LearnerPLH = COALESCE ( L.PlanLearnHours, 0 ),
-			LearnerEEP = COALESCE ( L.PlanEEPHours, 0 ),
+			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
+			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
 			FM25PLHAim = COALESCE ( CASE WHEN LD.FundModel = ''25'' AND ( COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' OR HRS.TFerOnly = 1 ) THEN CH.PLH END, 0 ),
 			FM25EEPAim = COALESCE ( CASE WHEN LD.FundModel = ''25'' AND ( COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' OR HRS.TFerOnly = 1 ) THEN CH.EEP END, 0 ),
 			FM25PLHAllAims = COALESCE ( HRS.PLH, 0 ),
@@ -2815,54 +2774,16 @@ BEGIN
 			SELECT
 				LD.LearnRefNumber,
 				LD.AimSeqNumber,
-				FacCode = 
-					CASE
-						WHEN @ProviderFieldFacLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				TeamCode = 
-					CASE
-						WHEN @ProviderFieldTeamLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				CostCentreCode = 
-					CASE
-						WHEN @ProviderFieldCostCentreLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				CourseCode = 
-					CASE
-						WHEN @ProviderFieldCourseLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
+				CollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
+				CollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
+				CollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
+				CollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
+				CollegeLevel3Code = COALESCE ( CS.CollegeLevel3Code, ''-''),
+				CollegeLevel3Name = COALESCE ( CS.CollegeLevel3Name, ''-- Unknown --''),
+				CollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
+				CollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
+				CourseCode = COALESCE ( CS.CourseCode, ''-''),
+				CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 				RowNum = 
 					ROW_NUMBER () OVER ( 
 						PARTITION BY
@@ -2916,6 +2837,19 @@ BEGIN
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
+			LEFT JOIN #CollegeStructure CS
+				ON CS.AcademicYear = @AcademicYear
+				AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
+					CASE
+						WHEN @ProviderFieldCourseLocation = ''A'' THEN
+							PSDMA.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''B'' THEN
+							PSDMB.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''C'' THEN
+							PSDMC.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''D'' THEN
+							PSDMD.ProvSpecDelMon
+					END COLLATE DATABASE_DEFAULT
 
 			--16-19
 			LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
@@ -4532,7 +4466,7 @@ BEGIN
 			ON AIM.AimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
-			AND CS.ProvSpecField COLLATE DATABASE_DEFAULT =
+			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4545,7 +4479,7 @@ BEGIN
 				END COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure PCS
 			ON PCS.AcademicYear = @AcademicYear
-			AND PCS.ProvSpecField COLLATE DATABASE_DEFAULT =
+			AND PCS.ProvSpecValue COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldParentCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4558,53 +4492,53 @@ BEGIN
 				END COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure MCS
 			ON MCS.AcademicYear = @AcademicYear
-			AND MCS.ProvSpecField COLLATE DATABASE_DEFAULT = MA.CourseCode COLLATE DATABASE_DEFAULT
+			AND MCS.ProvSpecValue COLLATE DATABASE_DEFAULT = MA.CourseCode COLLATE DATABASE_DEFAULT
 		LEFT JOIN (
 			SELECT
-				FacName = MIN ( CS.FacName )
+				CollegeLevel3Name = MIN ( CS.CollegeLevel3Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.FacCode = @OverrideEngFac
+				CS.CollegeLevel3Code = @OverrideEngFac
 		) FENG
 			ON 1 = 1
 		LEFT JOIN (
 			SELECT
-				FacName = MIN ( CS.FacName )
+				CollegeLevel3Name = MIN ( CS.CollegeLevel3Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.FacCode = @OverrideMatFac
+				CS.CollegeLevel3Code = @OverrideMatFac
 		) FMAT
 			ON 1 = 1
 		LEFT JOIN (
 			SELECT
-				FacName = MIN ( CS.FacName )
+				CollegeLevel3Name = MIN ( CS.CollegeLevel3Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.FacCode = @OverridePartnerFac
+				CS.CollegeLevel3Code = @OverridePartnerFac
 		) FPAR
 			ON 1 = 1
 		LEFT JOIN (
 			SELECT
-				TeamName = MIN ( CS.TeamName )
+				CollegeLevel4Name = MIN ( CS.CollegeLevel4Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.TeamCode = @OverrideEngTeam
+				CS.CollegeLevel4Code = @OverrideEngTeam
 		) TENG
 			ON 1 = 1
 		LEFT JOIN (
 			SELECT
-				TeamName = MIN ( CS.TeamName )
+				CollegeLevel4Name = MIN ( CS.CollegeLevel4Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.TeamCode = @OverrideMatTeam
+				CS.CollegeLevel4Code = @OverrideMatTeam
 		) TMAT
 			ON 1 = 1
 		LEFT JOIN (
 			SELECT
-				TeamName = MIN ( CS.TeamName )
+				CollegeLevel4Name = MIN ( CS.CollegeLevel4Name )
 			FROM #CollegeStructure CS
 			WHERE
-				CS.TeamCode = @OverridePartnerTeam
+				CS.CollegeLevel4Code = @OverridePartnerTeam
 		) TPAR
 			ON 1 = 1
 		LEFT JOIN #CourseHours CH
@@ -4765,54 +4699,16 @@ BEGIN
 					),
 				LD.FundModel,
 				LD.AimSeqNumber,
-				FacCode = 
-					CASE
-						WHEN @ProviderFieldFacLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldFacLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				TeamCode = 
-					CASE
-						WHEN @ProviderFieldTeamLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldTeamLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				CostCentreCode = 
-					CASE
-						WHEN @ProviderFieldCostCentreLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldCostCentreLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
-				CourseCode = 
-					CASE
-						WHEN @ProviderFieldCourseLocation = ''A'' THEN
-							PSDMA.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''B'' THEN
-							PSDMB.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''C'' THEN
-							PSDMC.ProvSpecDelMon
-						WHEN @ProviderFieldCourseLocation = ''D'' THEN
-							PSDMD.ProvSpecDelMon
-						ELSE ''-''
-					END,
+				CollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
+				CollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
+				CollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
+				CollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
+				CollegeLevel3Code = COALESCE ( CS.CollegeLevel3Code, ''-''),
+				CollegeLevel3Name = COALESCE ( CS.CollegeLevel3Name, ''-- Unknown --''),
+				CollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
+				CollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
+				CourseCode = COALESCE ( CS.CourseCode, ''-''),
+				CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 				RowNum = 
 					ROW_NUMBER () OVER ( 
 						PARTITION BY
@@ -4876,6 +4772,19 @@ BEGIN
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
+			LEFT JOIN #CollegeStructure CS
+				ON CS.AcademicYear = @AcademicYear
+				AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
+					CASE
+						WHEN @ProviderFieldCourseLocation = ''A'' THEN
+							PSDMA.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''B'' THEN
+							PSDMB.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''C'' THEN
+							PSDMC.ProvSpecDelMon
+						WHEN @ProviderFieldCourseLocation = ''D'' THEN
+							PSDMD.ProvSpecDelMon
+					END COLLATE DATABASE_DEFAULT
 
 			--16-19
 			LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
@@ -5067,9 +4976,7 @@ BEGIN
 		@IncludeAdvLoanBursaryIncome BIT,
 		@FutureAchieveWeighting DECIMAL(5,2),
 		@FISOutputTableLocation NVARCHAR(200),
-		@ProviderFieldFacLocation CHAR(1),
-		@ProviderFieldTeamLocation CHAR(1),
-		@ProviderFieldCostCentreLocation CHAR(1),
+		@FISOutputTableName NVARCHAR(200),
 		@ProviderFieldCourseLocation CHAR(1),
 		@ProviderFieldParentCourseLocation CHAR(1),
 		@OverrideEngFac NVARCHAR(50),
@@ -5095,9 +5002,7 @@ BEGIN
 		@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
 		@FutureAchieveWeighting = @FutureAchieveWeighting,
 		@FISOutputTableLocation = @FISOutputTableLocation,
-		@ProviderFieldFacLocation = @ProviderFieldFacLocation,
-		@ProviderFieldTeamLocation = @ProviderFieldTeamLocation,
-		@ProviderFieldCostCentreLocation = @ProviderFieldCostCentreLocation,
+		@FISOutputTableName = @FISOutputTableName,
 		@ProviderFieldCourseLocation = @ProviderFieldCourseLocation,
 		@ProviderFieldParentCourseLocation = @ProviderFieldParentCourseLocation,
 		@OverrideEngFac = @OverrideEngFac,

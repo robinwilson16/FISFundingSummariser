@@ -1,7 +1,12 @@
+DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
+
+
+
+
+
 DECLARE @FISDatabase NVARCHAR(100) = 'ILR1819_R10F_EPNE'
 DECLARE @AcademicYear NVARCHAR(5) = '18/19'
-DECLARE @ILRReturn int = 14
-DECLARE @IsFinalReturn BIT = 1
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding and assign to ALS column
@@ -10,9 +15,7 @@ DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not in
 DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
 DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
 DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
-DECLARE @ProviderFieldFacLocation NCHAR(1) = NULL
-DECLARE @ProviderFieldTeamLocation NCHAR(1) = 'C'
-DECLARE @ProviderFieldCostCentreLocation NCHAR(1) = 'D'
+DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
 DECLARE @OverrideEngFac NVARCHAR(50) = NULL
@@ -32,20 +35,18 @@ DECLARE @SQLParams NVARCHAR(MAX);
 SET @SQLString = N'
 	EXEC SPR_FIS_GenerateFundingData
 		@FISDatabase,
-        @AcademicYear,
+		@AcademicYear,
 		@ILRReturn,
 		@IsFinalReturn,
 		@Split1619Funding,
 		@Reapportion1619FundingByAimWeighting,
-        @1619ALSFundingPercent,
+		@1619ALSFundingPercent,
 		@IncludeHEAdvLoanPossIncome,
 		@IncludeAdvLoanBursaryIncome,
 		@FutureAchieveWeighting,
 		@Mode,
 		@FISOutputTableLocation,
-		@ProviderFieldFacLocation,
-		@ProviderFieldTeamLocation,
-		@ProviderFieldCostCentreLocation,
+		@FISOutputTableName,
 		@ProviderFieldCourseLocation,
 		@ProviderFieldParentCourseLocation,
 		@OverrideEngFac,
@@ -60,61 +61,57 @@ SET @SQLString = N'
 		@AnonymiseData';
 
 SET @SQLParams = 
-        N'@FISDatabase NVARCHAR(100),
-        @AcademicYear NVARCHAR(5),
-        @ILRReturn int,
-        @IsFinalReturn BIT,
-        @Split1619Funding BIT,
-		@Reapportion1619FundingByAimWeighting BIT,
-        @1619ALSFundingPercent DECIMAL(5,2),
-		@IncludeHEAdvLoanPossIncome BIT,
-		@IncludeAdvLoanBursaryIncome BIT,
-        @FutureAchieveWeighting DECIMAL(3,2),
-        @Mode NCHAR(1),
-        @FISOutputTableLocation NVARCHAR(200),
-        @ProviderFieldFacLocation NCHAR(1),
-		@ProviderFieldTeamLocation NCHAR(1),
-		@ProviderFieldCostCentreLocation NCHAR(1),
-		@ProviderFieldCourseLocation NCHAR(1),
-		@ProviderFieldParentCourseLocation NCHAR(1),
-        @OverrideEngFac NVARCHAR(50),
-        @OverrideMatFac NVARCHAR(50),
-        @OverrideEngTeam NVARCHAR(50),
-        @OverrideMatTeam NVARCHAR(50),
-        @OverrideEngCostCentre NVARCHAR(50),
-        @OverrideMatCostCentre NVARCHAR(50),
-        @OverridePartnerFac NVARCHAR(50),
-        @OverridePartnerTeam NVARCHAR(50),
-        @OverridePartnerCostCentre NVARCHAR(50),
-		@AnonymiseData BIT';
+	N'@FISDatabase NVARCHAR(100),
+	@AcademicYear NVARCHAR(5),
+	@ILRReturn int,
+	@IsFinalReturn BIT,
+	@Split1619Funding BIT,
+	@Reapportion1619FundingByAimWeighting BIT,
+	@1619ALSFundingPercent DECIMAL(5,2),
+	@IncludeHEAdvLoanPossIncome BIT,
+	@IncludeAdvLoanBursaryIncome BIT,
+	@FutureAchieveWeighting DECIMAL(3,2),
+	@Mode NCHAR(1),
+	@FISOutputTableLocation NVARCHAR(200),
+	@FISOutputTableName NVARCHAR(200),
+	@ProviderFieldCourseLocation NCHAR(1),
+	@ProviderFieldParentCourseLocation NCHAR(1),
+	@OverrideEngFac NVARCHAR(50),
+	@OverrideMatFac NVARCHAR(50),
+	@OverrideEngTeam NVARCHAR(50),
+	@OverrideMatTeam NVARCHAR(50),
+	@OverrideEngCostCentre NVARCHAR(50),
+	@OverrideMatCostCentre NVARCHAR(50),
+	@OverridePartnerFac NVARCHAR(50),
+	@OverridePartnerTeam NVARCHAR(50),
+	@OverridePartnerCostCentre NVARCHAR(50),
+	@AnonymiseData BIT';
     
 EXECUTE sp_executesql 
-    @SQLString, 
-    @SQLParams, 
-    @FISDatabase = @FISDatabase,
-    @AcademicYear = @AcademicYear,
-    @ILRReturn = @ILRReturn,
-    @IsFinalReturn = @IsFinalReturn,
-    @Split1619Funding = @Split1619Funding,
+	@SQLString, 
+	@SQLParams, 
+	@FISDatabase = @FISDatabase,
+	@AcademicYear = @AcademicYear,
+	@ILRReturn = @ILRReturn,
+	@IsFinalReturn = @IsFinalReturn,
+	@Split1619Funding = @Split1619Funding,
 	@Reapportion1619FundingByAimWeighting = @Reapportion1619FundingByAimWeighting,
-    @1619ALSFundingPercent = @1619ALSFundingPercent,
+	@1619ALSFundingPercent = @1619ALSFundingPercent,
 	@IncludeHEAdvLoanPossIncome = @IncludeHEAdvLoanPossIncome,
 	@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
-    @FutureAchieveWeighting = @FutureAchieveWeighting,
-    @Mode = @Mode,
-    @FISOutputTableLocation = @FISOutputTableLocation,
-    @ProviderFieldFacLocation = @ProviderFieldFacLocation,
-	@ProviderFieldTeamLocation = @ProviderFieldTeamLocation,
-	@ProviderFieldCostCentreLocation = @ProviderFieldCostCentreLocation,
+	@FutureAchieveWeighting = @FutureAchieveWeighting,
+	@Mode = @Mode,
+	@FISOutputTableLocation = @FISOutputTableLocation,
+	@FISOutputTableName = @FISOutputTableName,
 	@ProviderFieldCourseLocation = @ProviderFieldCourseLocation,
 	@ProviderFieldParentCourseLocation = @ProviderFieldParentCourseLocation,
-    @OverrideEngFac = @OverrideEngFac,
-    @OverrideMatFac = @OverrideMatFac,
-    @OverrideEngTeam = @OverrideEngTeam,
-    @OverrideMatTeam = @OverrideMatTeam,
-    @OverrideEngCostCentre = @OverrideEngCostCentre,
-    @OverrideMatCostCentre = @OverrideMatCostCentre,
-    @OverridePartnerFac = @OverridePartnerFac,
-    @OverridePartnerTeam = @OverridePartnerTeam,
-    @OverridePartnerCostCentre = @OverridePartnerCostCentre,
+	@OverrideEngFac = @OverrideEngFac,
+	@OverrideMatFac = @OverrideMatFac,
+	@OverrideEngTeam = @OverrideEngTeam,
+	@OverrideMatTeam = @OverrideMatTeam,
+	@OverrideEngCostCentre = @OverrideEngCostCentre,
+	@OverrideMatCostCentre = @OverrideMatCostCentre,
+	@OverridePartnerFac = @OverridePartnerFac,
+	@OverridePartnerTeam = @OverridePartnerTeam,
+	@OverridePartnerCostCentre = @OverridePartnerCostCentre,
 	@AnonymiseData = @AnonymiseData;

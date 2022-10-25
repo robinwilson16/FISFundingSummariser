@@ -2,26 +2,23 @@ CREATE VIEW [dbo].[FIS_CollegeStructure]
 AS
     SELECT DISTINCT
 		AcademicYear = CRS.AcademicYearID,
-		CollegeCode = COL.Code,
-		CollegeName = COL.Name,
-		SiteCode = STE.Code,
-		SiteName = STE.Description,
-		FacCode = FAC.Code,
-		FacName = FAC.Name,
-		TeamCode = TEAM.Code,
-		TeamName = TEAM.Name,
-		CostCentreCode = CRS.LedgerCode,
+		ProvSpecValue = CRS.Code,
 		CourseCode = CRS.Code,
 		CourseTitle = CRS.Name,
-		ProvSpecField = CRS.Code
+		CollegeLevel1Code = COALESCE ( RTRIM ( COL.Code ), '-' ),
+		CollegeLevel1Name = COALESCE ( COL.Name, '-- Unknown --' ),
+		CollegeLevel2Code = COALESCE ( STE.Code, '-' ),
+		CollegeLevel2Name = COALESCE ( STE.Description, '-- Unknown --' ),
+		CollegeLevel3Code = COALESCE ( RTRIM ( FAC.Code ), '-' ),
+		CollegeLevel3Name = COALESCE ( FAC.Name, '-- Unknown --' ),
+		CollegeLevel4Code = COALESCE ( RTRIM ( TEAM.Code ), '-' ),
+		CollegeLevel4Name = COALESCE ( TEAM.Name, '-- Unknown --' )
 	FROM ProSolution.dbo.Offering CRS
-	INNER JOIN ProSolution.dbo.Site STE
-		ON STE.SiteID = CRS.SiteID
-	INNER JOIN ProSolution.dbo.CollegeLevel TEAM
+	LEFT JOIN ProSolution.dbo.CollegeLevel TEAM
 		ON TEAM.SID = CRS.SID
-	INNER JOIN ProSolution.dbo.CollegeLevel FAC
+	LEFT JOIN ProSolution.dbo.CollegeLevel FAC
 		ON FAC.SID = TEAM.ParentSID
-	INNER JOIN ProSolution.dbo.CollegeLevel COL
+	LEFT JOIN ProSolution.dbo.CollegeLevel COL
 		ON COL.SID = FAC.ParentSID
-	LEFT JOIN ProSolution.dbo.OfferingGroup GRP
-		ON GRP.OfferingID = CRS.OfferingID
+	LEFT JOIN ProSolution.dbo.Site STE
+		ON STE.SiteID = CRS.SiteID

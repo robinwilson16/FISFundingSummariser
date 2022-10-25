@@ -2,73 +2,52 @@ CREATE VIEW [dbo].[FIS_CollegeStructure]
 AS
     SELECT DISTINCT
         AcademicYear = CRS.AcademicYearID,
-		CollegeCode = RTRIM ( CGRP.Code ),
-		CollegeName = CGRP.Name,
-		SiteCode = STE.Code,
-		SiteName = STE.Description,
-        FacCode = RTRIM ( FAC.Code ),
-		FacName = FAC.Name,
-		TeamCode = RTRIM ( TEAM.Code ),
-		TeamName = TEAM.Name,
-        CostCentreCode = CRS.LedgerCode,
-		CourseCode = CRS.Code,
-		CourseTitle = CRS.Name,
-        ProvSpecField = 
+		ProvSpecValue = 
 			CASE
 				WHEN CRS.AcademicYearID >= '19/20' THEN CRS.Code
 				ELSE CRS.Code + '-' + GRP.Code
-			END
+			END,
+		CourseCode = CRS.Code,
+		CourseTitle = CRS.Name,
+		CollegeLevel1Code = COALESCE ( RTRIM ( CGRP.Code ), '-' ),
+		CollegeLevel1Name = COALESCE ( CGRP.Name, '-- Unknown --' ),
+		CollegeLevel2Code = COALESCE ( STE.Code, '-' ),
+		CollegeLevel2Name = COALESCE ( STE.Description, '-- Unknown --' ),
+        CollegeLevel3Code = COALESCE ( RTRIM ( FAC.Code ), '-' ),
+		CollegeLevel3Name = COALESCE ( FAC.Name, '-- Unknown --' ),
+		CollegeLevel4Code = COALESCE ( RTRIM ( TEAM.Code ), '-' ),
+		CollegeLevel4Name = COALESCE ( TEAM.Name, '-- Unknown --' )
     FROM ProSolution.dbo.Offering CRS
-	INNER JOIN ProSolution.dbo.Site STE
+	LEFT JOIN ProSolution.dbo.Site STE
 		ON STE.SiteID = CRS.SiteID
-	INNER JOIN ProSolution.dbo.CollegeLevel TEAM
+	LEFT JOIN ProSolution.dbo.CollegeLevel TEAM
 		ON TEAM.SID = CRS.SID
-	INNER JOIN ProSolution.dbo.CollegeLevel FAC
+	LEFT JOIN ProSolution.dbo.CollegeLevel FAC
 		ON FAC.SID = TEAM.ParentSID
-	INNER JOIN ProSolution.dbo.CollegeLevel EXE
+	LEFT JOIN ProSolution.dbo.CollegeLevel EXE
 		ON EXE.SID = FAC.ParentSID
-	INNER JOIN ProSolution.dbo.CollegeLevel CGRP
+	LEFT JOIN ProSolution.dbo.CollegeLevel CGRP
 		ON CGRP.SID = EXE.ParentSID
 	LEFT JOIN ProSolution.dbo.OfferingGroup GRP
         ON GRP.OfferingID = CRS.OfferingID
-
-	--UNION ALL
-	
-	--SELECT
-	--	AcademicYear = YR.AcademicYearID,
-	--	CollegeCode = 'SCO',
-	--	CollegeName = 'Sunderland College',
-	--	SiteCode = NULL,
-	--	SiteName = NULL,
- --       FacCode = 'F00',
- --       FacName = 'Subcontractors',
- --       TeamCode = 'T00',
- --       TeamName = 'Subcontractors',
- --       CostCentreCode = '9800',
-	--	CourseCode = NULL,
-	--	CourseTitle = NULL,
- --       ProvSpecField = NULL
-	--FROM ProSolution.dbo.AcademicYear YR
 
 	UNION ALL
 	
 	--Hartlepool Prior To Merger
 	SELECT
 		AcademicYear = CS.AcademicYearID,
-		CollegeCode = RTRIM ( CGRP.Code ),
-		CollegeName = CGRP.Name,
-		SiteCode = 'H6',
-		SiteName = 'Hartlepool Sixth Form',
-        FacCode = RTRIM ( FAC.Code ),
-		FacName = FAC.Name,
-		TeamCode = RTRIM ( TEAM.Code ),
-		TeamName = TEAM.Name,
-        CostCentreCode = NULL,
+		ProvSpecValue = CS.SpCourseCode,
 		CourseCode = CS.SpCourseCode,
 		CourseTitle = CS.CourseName,
-        ProvSpecField = CS.SpCourseCode
+		CollegeLevel1Code = RTRIM ( CGRP.Code ),
+		CollegeLevel1Name = CGRP.Name,
+		CollegeLevel2Code = 'H6',
+		CollegeLevel2Name = 'Hartlepool Sixth Form',
+        CollegeLevel3Code = RTRIM ( FAC.Code ),
+		CollegeLevel3Name = FAC.Name,
+		CollegeLevel4Code = RTRIM ( TEAM.Code ),
+		CollegeLevel4Name = TEAM.Name
 	FROM ProSolutionReports.dbo.HartlepoolCourseStructure CS
-
 	INNER JOIN ProSolution.dbo.CollegeLevel TEAM
 		ON TEAM.Code = CS.Level3Code
 	INNER JOIN ProSolution.dbo.CollegeLevel FAC
@@ -84,18 +63,17 @@ AS
 
 	SELECT
 		AcademicYear = NC.AcademicYear,
-		CollegeCode = MAX ( NC.CollegeCode ),
-		CollegeName = MAX ( NC.CollegeName ),
-		SiteCode = NULL,
-		SiteName = NULL,
-        FacCode = MAX ( NC.FacCode ),
-		FacName = MAX ( NC.FacName ),
-		TeamCode = MAX ( NC.TeamCode ),
-		TeamName = MAX ( NC.TeamName ),
-        CostCentreCode = NULL,
+		ProvSpecValue = MAX ( NC.CourseCode ),
 		CourseCode = NC.CourseCode,
 		CourseTitle = MAX ( NC.CourseTitle ),
-        ProvSpecField = MAX ( NC.CourseCode )
+		CollegeLevel1Code = MAX ( NC.CollegeCode ),
+		CollegeLevel1Name = MAX ( NC.CollegeName ),
+		CollegeLevel2Code = NULL,
+		CollegeLevel2Name = NULL,
+        CollegeLevel3Code = MAX ( NC.FacCode ),
+		CollegeLevel3Name = MAX ( NC.FacName ),
+		CollegeLevel4Code = MAX ( NC.TeamCode ),
+		CollegeLevel4Name = MAX ( NC.TeamName )		
 	FROM (
 		SELECT
 			CourseCode = CS.Course_Code,

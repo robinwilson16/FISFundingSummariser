@@ -1,11 +1,11 @@
-CREATE VIEW FIS_Providers
+CREATE VIEW [dbo].[FIS_Providers]
 AS
 	SELECT
-		ProviderID = 10004760,
-		ProviderName = 'Northumberland'
+		ProviderID = 10005077,
+		ProviderName = 'Inspire Education Group'
 
 	UNION ALL
 
 	SELECT
-		ProviderID = 10001475,
-		ProviderName = 'Sunderland'
+		ProviderID = 10006303,
+		ProviderName = 'Stamford College'
