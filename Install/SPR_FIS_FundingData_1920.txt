@@ -4441,7 +4441,7 @@ BEGIN
     SET @SQLString += 
         N'
 		LEFT JOIN #LearningAims AIM
-			ON AIM.AimCode = LD.LearnAimRef
+			ON AIM.AimCode = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
 			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
@@ -4521,7 +4521,7 @@ BEGIN
 			ON 1 = 1
 		LEFT JOIN #CourseHours CH
 			ON CH.AcademicYear = @AcademicYear
-			AND CH.ProvSpecField =
+			AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4531,7 +4531,7 @@ BEGIN
 						PSDMC.ProvSpecDelMon
 					WHEN @ProviderFieldCourseLocation = ''D'' THEN
 						PSDMD.ProvSpecDelMon
-				END
+				END COLLATE DATABASE_DEFAULT
 	'
     
     SET @SQLString += 
@@ -4590,7 +4590,7 @@ BEGIN
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
 			LEFT JOIN #CourseHours CH
 				ON CH.AcademicYear = @AcademicYear
-				AND CH.ProvSpecField =
+				AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 					CASE
 						WHEN @ProviderFieldCourseLocation = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -4600,7 +4600,7 @@ BEGIN
 							PSDMC.ProvSpecDelMon
 						WHEN @ProviderFieldCourseLocation = ''D'' THEN
 							PSDMD.ProvSpecDelMon
-					END
+					END COLLATE DATABASE_DEFAULT
 			LEFT JOIN (
 				SELECT DISTINCT
 					LD.LearnRefNumber
@@ -4856,7 +4856,7 @@ BEGIN
 					AND PSDMD.ProvSpecDelMonOccur = ''D''
 				LEFT JOIN #CourseHours CH
 					ON CH.AcademicYear = @AcademicYear
-					AND CH.ProvSpecField =
+					AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 						CASE
 							WHEN @ProviderFieldCourseLocation = ''A'' THEN
 								PSDMA.ProvSpecDelMon
@@ -4866,7 +4866,7 @@ BEGIN
 								PSDMC.ProvSpecDelMon
 							WHEN @ProviderFieldCourseLocation = ''D'' THEN
 								PSDMD.ProvSpecDelMon
-						END
+						END COLLATE DATABASE_DEFAULT
 				LEFT JOIN (
 					SELECT DISTINCT
 						LD.LearnRefNumber
@@ -4929,10 +4929,10 @@ BEGIN
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES
-			ON DES.OutcomeType = OC.DPOutcomeType
+			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
 			AND DES.OutcomeCode = OC.DPOutcomeCode
 		LEFT JOIN #CarryIn CI
-			ON CI.LearnRefNumber = LD.LearnRefNumber
+			ON CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
 			AND CI.AimSeqNumber = LD.AimSeqNumber
 
 		--WHERE
