@@ -4441,7 +4441,7 @@ BEGIN
     SET @SQLString += 
         N'
 		LEFT JOIN #LearningAims AIM
-			ON AIM.AimCode = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.AimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
 			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =

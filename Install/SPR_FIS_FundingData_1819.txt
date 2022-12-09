@@ -4439,16 +4439,16 @@ BEGIN
 			AND PWAY.ProgType = LD.ProgType
 			AND PWAY.PathwayCode = LD.PwayCode
 		LEFT JOIN #PostCodes PC
-			ON PC.PostCode = L.Postcode
+			ON PC.PostCode COLLATE DATABASE_DEFAULT = L.Postcode COLLATE DATABASE_DEFAULT
 	'
     
     SET @SQLString += 
         N'
 		LEFT JOIN #LearningAims AIM
-			ON AIM.AimCode = LD.LearnAimRef
+			ON AIM.AimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
-			AND CS.ProvSpecValue =
+			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4458,10 +4458,10 @@ BEGIN
 						PSDMC.ProvSpecDelMon
 					WHEN @ProviderFieldCourseLocation = ''D'' THEN
 						PSDMD.ProvSpecDelMon
-				END
+				END COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure PCS
 			ON PCS.AcademicYear = @AcademicYear
-			AND PCS.ProvSpecValue =
+			AND PCS.ProvSpecValue COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldParentCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4471,10 +4471,10 @@ BEGIN
 						PSDMC.ProvSpecDelMon
 					WHEN @ProviderFieldParentCourseLocation = ''D'' THEN
 						PSDMD.ProvSpecDelMon
-				END
+				END COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure MCS
 			ON MCS.AcademicYear = @AcademicYear
-			AND MCS.ProvSpecValue = MA.CourseCode
+			AND MCS.ProvSpecValue COLLATE DATABASE_DEFAULT = MA.CourseCode COLLATE DATABASE_DEFAULT
 		LEFT JOIN (
 			SELECT
 				CollegeLevel3Name = MIN ( CS.CollegeLevel3Name )
@@ -4525,7 +4525,7 @@ BEGIN
 			ON 1 = 1
 		LEFT JOIN #CourseHours CH
 			ON CH.AcademicYear = @AcademicYear
-			AND CH.ProvSpecField =
+			AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 				CASE
 					WHEN @ProviderFieldCourseLocation = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -4535,7 +4535,7 @@ BEGIN
 						PSDMC.ProvSpecDelMon
 					WHEN @ProviderFieldCourseLocation = ''D'' THEN
 						PSDMD.ProvSpecDelMon
-				END
+				END COLLATE DATABASE_DEFAULT
 	'
     
     SET @SQLString += 
@@ -4594,7 +4594,7 @@ BEGIN
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
 			LEFT JOIN #CourseHours CH
 				ON CH.AcademicYear = @AcademicYear
-				AND CH.ProvSpecField =
+				AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 					CASE
 						WHEN @ProviderFieldCourseLocation = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -4604,7 +4604,7 @@ BEGIN
 							PSDMC.ProvSpecDelMon
 						WHEN @ProviderFieldCourseLocation = ''D'' THEN
 							PSDMD.ProvSpecDelMon
-					END
+					END COLLATE DATABASE_DEFAULT
 			LEFT JOIN (
 				SELECT DISTINCT
 					LD.LearnRefNumber
@@ -4861,7 +4861,7 @@ BEGIN
 					AND PSDMD.ProvSpecDelMonOccur = ''D''
 				LEFT JOIN #CourseHours CH
 					ON CH.AcademicYear = @AcademicYear
-					AND CH.ProvSpecField =
+					AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
 						CASE
 							WHEN @ProviderFieldCourseLocation = ''A'' THEN
 								PSDMA.ProvSpecDelMon
@@ -4871,7 +4871,7 @@ BEGIN
 								PSDMC.ProvSpecDelMon
 							WHEN @ProviderFieldCourseLocation = ''D'' THEN
 								PSDMD.ProvSpecDelMon
-						END
+						END COLLATE DATABASE_DEFAULT
 				LEFT JOIN (
 					SELECT DISTINCT
 						LD.LearnRefNumber
@@ -4934,10 +4934,10 @@ BEGIN
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES
-			ON DES.OutcomeType = OC.DPOutcomeType
+			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
 			AND DES.OutcomeCode = OC.DPOutcomeCode
 		LEFT JOIN #CarryIn CI
-			ON CI.LearnRefNumber = LD.LearnRefNumber
+			ON CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
 			AND CI.AimSeqNumber = LD.AimSeqNumber
 
 		--WHERE
