@@ -71,10 +71,14 @@ BEGIN
 			AIM.SSA1Name,
 			AIM.SSA2Code,
 			AIM.SSA2Name,
-			AIM.AimCode,
-			AIM.AimTitle,
-			AIM.AimTypeCode,
-			AIM.AimLevel,
+			AIM.LearningAimCode,
+			AIM.LearningAimTitle,
+			AIM.LearningAimTypeCode,
+			AIM.LearningAimTypeName,
+			AIM.NVQLevelCode,
+			AIM.NVQLevelName,
+			AIM.NVQLevelOrder,
+			AIM.IsMathsAndEnglish,
 			AIM.AwardBodyCode
 		INTO #LearningAims
 		FROM FIS_LearningAims AIM
@@ -1238,7 +1242,7 @@ BEGIN
 			IsHighGrade = 
 				CASE
 					WHEN COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0 THEN 0
-					WHEN AIM.AimTypeCode IN ( ''0003'', ''1081'', ''1422'', ''2999'' ) THEN 
+					WHEN AIM.LearningAimTypeCode IN ( ''0003'', ''1081'', ''1422'', ''2999'' ) THEN 
 						CASE
 							WHEN LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) THEN 1
 							ELSE 0
@@ -1332,32 +1336,32 @@ BEGIN
         N'
 			CollegeLevel3Code = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN @OverrideEngFac END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN @OverrideMatFac END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @OverrideEngFac END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @OverrideMatFac END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN @OverridePartnerFac END,
 					CS.CollegeLevel3Code,
 					''-''
 				),
 			CollegeLevel3Name = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN FENG.CollegeLevel3Name END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN FMAT.CollegeLevel3Name END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN FENG.CollegeLevel3Name END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN FMAT.CollegeLevel3Name END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN FPAR.CollegeLevel3Name END,
 					CS.CollegeLevel3Name,
 					''-- Unknown --''
 				),
 			CollegeLevel4Code = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN @OverrideEngTeam END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN @OverrideMatTeam END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @OverrideEngTeam END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @OverrideMatTeam END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN @OverridePartnerTeam END,
 					CS.CollegeLevel4Code,
 					''-''
 				),
 			CollegeLevel4Name = 
 				COALESCE (
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%English%'' THEN TENG.CollegeLevel4Name END,
-					CASE WHEN AIM.AimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.AimTitle LIKE ''%Math%'' THEN TMAT.CollegeLevel4Name END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN TENG.CollegeLevel4Name END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN TMAT.CollegeLevel4Name END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( ''25'', ''35'' ) THEN TPAR.CollegeLevel4Name END,
 					CS.CollegeLevel4Name,
 					''-- Unknown --''
@@ -1393,9 +1397,19 @@ BEGIN
 
 			AimSequence = LD.AimSeqNumber,
 			AimType = LD.AimType,
-			AimCode = LD.LearnAimRef,
-			AimTitle = AIM.AimTitle,
-			AimTypeCode = AIM.AimTypeCode,
+			LearningAimCode = LD.LearnAimRef,
+			LearningAimTitle = AIM.LearningAimTitle,
+			LearningAimTypeCode = AIM.LearningAimTypeCode,
+			LearningAimTypeName = AIM.LearningAimTypeName,
+			NVQLevelCode = AIM.NVQLevelCode,
+			NVQLevelName = AIM.NVQLevelName,
+			NVQLevelCode = AIM.NVQLevelOrder,
+			IsMathsAndEnglish = AIM.IsMathsAndEnglish,
+			MainAimNVQLevelCode = COALESCE ( MA.NVQLevelCode, AIM.NVQLevelCode ),
+			MainAimNVQLevelName = COALESCE ( MA.NVQLevelName, AIM.NVQLevelName ),
+			MainAimNVQLevelCode = COALESCE ( MA.NVQLevelOrder, AIM.NVQLevelOrder ),
+			MainAimIsMathsAndEnglish = COALESCE ( MA.IsMathsAndEnglish, AIM.IsMathsAndEnglish ),
+
 			StartDate = LD.LearnStartDate,
 			OriginalStartDate = LD.OrigLearnStartDate,
 			ExpEndDate = LD.LearnPlanEndDate,
@@ -1454,7 +1468,7 @@ BEGIN
 			ProgWeightFactor = FM35.ApplicProgWeightFact,
 			UnweightFundRate = FM35.ApplicUnweightFundRate,
 			WeightFundRate = FM35.ApplicWeightFundRate,
-			NVQLevel = AIM.AimLevel,
+
 			CoFundingIndicator = 
 				CASE
 					WHEN FFI.LearnDelFAMCode IS NULL THEN NULL
@@ -2914,12 +2928,26 @@ BEGIN
 				CollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
 				CourseCode = COALESCE ( CS.CourseCode, ''-''),
 				CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
+				SSA1Code = AIM.SSA1Code,
+				SSA1Name = AIM.SSA1Name,
+				SSA2Code = AIM.SSA2Code,
+				SSA2Name = AIM.SSA2Name,
+				LearningAimCode = AIM.LearningAimCode,
+				LearningAimTitle = AIM.LearningAimTitle,
+				LearningAimTypeCode = AIM.LearningAimTypeCode,
+				LearningAimTypeName = AIM.LearningAimTypeName,
+				NVQLevelCode = AIM.NVQLevelCode,
+				NVQLevelName = AIM.NVQLevelName,
+				NVQLevelOrder = AIM.NVQLevelOrder,
+				IsMathsAndEnglish = AIM.IsMathsAndEnglish,
+				AwardBodyCode = AIM.AwardBodyCode,
 				RowNum = 
 					ROW_NUMBER () OVER ( 
 						PARTITION BY
 							LD.LearnRefNumber
 						ORDER BY
 							COALESCE ( FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) DESC,
+							LD.CompStatus,
                             CASE
                                 COALESCE ( 
                                     FM25.FundLine, 
@@ -2938,9 +2966,16 @@ BEGIN
 								WHEN LD.AimType = 2 THEN 4.5
 								ELSE LD.AimType
 							END DESC,
-							LD.CompStatus,
-							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
+							CASE
+								WHEN AIM.LearningAimTypeCode IN (
+									''0003'', --GCSE
+									''1439'' --Functional Skills
+								) THEN 2
+								ELSE 1
+							END,
+							AIM.NVQLevelOrder DESC,
 							COALESCE ( L.PlanLearnHours, 0 ) + COALESCE ( L.PlanEEPHours, 0 ) DESC,
+							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
 					)
@@ -2951,6 +2986,8 @@ BEGIN
 			FROM ' + @FISDatabase + '.Valid.Learner L
 			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
+			LEFT JOIN #LearningAims AIM
+				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -4614,7 +4651,7 @@ BEGIN
     SET @SQLString += 
         N'
 		LEFT JOIN #LearningAims AIM
-			ON AIM.AimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
 			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =

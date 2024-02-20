@@ -303,9 +303,21 @@ BEGIN
 
 					AimSequence INT NULL,
 					AimType INT NULL,
-					AimCode NVARCHAR(8) NULL,
-					AimTitle NVARCHAR(254) NULL,
-					AimTypeCode NVARCHAR(4) NULL,
+
+					LearningAimCode NVARCHAR(8) NULL,
+					LearningAimTitle NVARCHAR(254) NULL,
+					LearningAimTypeCode NVARCHAR(4) NULL,
+					LearningAimTypeName NVARCHAR(150) NULL,
+
+					NVQLevelCode NCHAR(1) NULL,
+					NVQLevelName NVARCHAR(50) NULL,
+					NVQLevelOrder DECIMAL(10, 5) NULL,
+					IsMathsAndEnglish NCHAR(1) NULL,
+					MainAimNVQLevelCode NCHAR(1) NULL,
+					MainAimNVQLevelName NVARCHAR(50) NULL,
+					MainAimNVQLevelOrder DECIMAL(10, 5) NULL,
+					MainAimIsMathsAndEnglish NCHAR(1) NULL,
+
 					StartDate DATETIME NULL,
 					OriginalStartDate DATETIME NULL,
 					ExpEndDate DATETIME NULL,
@@ -342,7 +354,6 @@ BEGIN
 					ProgWeightFactor NCHAR(1) NULL,
 					UnweightFundRate DECIMAL(10, 5) NULL,
 					WeightFundRate DECIMAL(10, 5) NULL,
-					NVQLevel NCHAR(1) NULL,
 					CoFundingIndicator NVARCHAR(10) NULL,
 					IsCarryIn INT NULL,
 					HEQualEnt3 NVARCHAR(3) NULL,
