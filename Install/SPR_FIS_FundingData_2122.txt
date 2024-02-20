@@ -1324,6 +1324,10 @@ BEGIN
 						THEN 0
 					ELSE 1
 				END,
+			Block1DisadvUplift = FM25.Block1DisadvUpliftNew,
+			Block2DisadvElements = FM25.Block2DisadvElementsNew,
+			ProgWeightingFactor = FM25.ProgWeightNew,
+			ThresholdDays = FM25.ThresholdDays,
 			FAMLearningDeliverySOF = FAMA.FAMLearningDeliverySOF,
 			FAMLearningDeliveryFFI = FAMA.FAMLearningDeliveryFFI,
 			FAMLearningDeliveryEEF = FAMA.FAMLearningDeliveryEEF,
