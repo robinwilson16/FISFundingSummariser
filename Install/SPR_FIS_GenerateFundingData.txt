@@ -328,6 +328,7 @@ BEGIN
 					FM25EEPAim INT NULL,
 					FM25PLHAllAims INT NULL,
 					FM25EEPAllAims INT NULL,
+					IsPartTime NCHAR(1) NULL,
 
 					CompletionCode INT NULL,
 					CompletionDesc NVARCHAR(20) NULL,

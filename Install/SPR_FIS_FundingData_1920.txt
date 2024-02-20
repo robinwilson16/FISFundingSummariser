@@ -1449,6 +1449,15 @@ BEGIN
 			FM25EEPAim = COALESCE ( CASE WHEN LD.FundModel = ''25'' AND ( COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' OR HRS.TFerOnly = 1 ) THEN CH.EEP END, 0 ),
 			FM25PLHAllAims = COALESCE ( HRS.PLH, 0 ),
 			FM25EEPAllAims = COALESCE ( HRS.EEP, 0 ),
+			IsPartTime = 
+				CASE
+					WHEN FM25.RateBand LIKE ''%Band 5%'' THEN ''N''
+					WHEN FM25.RateBand LIKE ''%Band 4a%'' THEN ''N''
+					WHEN FM25.RateBand LIKE ''%T level%'' THEN ''N''
+					WHEN HE.MODESTUD = 1 THEN ''N''
+					WHEN COALESCE ( L.PlanLearnHours, 0 ) + COALESCE ( L.PlanEEPHours, 0 ) >= 450 THEN ''N''
+					ELSE ''Y''
+				END,
     '
 
     SET @SQLString += 
