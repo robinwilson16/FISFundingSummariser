@@ -844,6 +844,33 @@ BEGIN
 							CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
 						) LIKE ''%Eligible for MCA/GLA funding%''
                             THEN ''Adult - Devolved''
+	'
+
+    SET @SQLString += 
+        N'
+                    WHEN 
+						COALESCE ( 
+							CASE WHEN LD.FundModel = ''25'' THEN HRS.FundLine END,
+							FM25.FundLine, 
+							CASE WHEN ALB.AdvLoan = 1 THEN ''Advanced Learner Loan (ALL)'' END,
+							FM36P.FundLineType,
+							FM35.FundLine,
+							CASE WHEN HE.LearnRefNumber IS NOT NULL THEN ''Higher Education'' END,
+							CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
+						) = ''Advanced Learner Loan (ALL)''
+                            THEN ''Adult - ESFA''
+
+					WHEN 
+						COALESCE ( 
+							CASE WHEN LD.FundModel = ''25'' THEN HRS.FundLine END,
+							FM25.FundLine, 
+							CASE WHEN ALB.AdvLoan = 1 THEN ''Advanced Learner Loan (ALL)'' END,
+							FM36P.FundLineType,
+							FM35.FundLine,
+							CASE WHEN HE.LearnRefNumber IS NOT NULL THEN ''Higher Education'' END,
+							CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
+						) = ''ESFA NSF Free Courses for Jobs (non-procured)''
+                            THEN ''Adult - ESFA''
 
                     WHEN 
 						COALESCE ( 
@@ -877,7 +904,7 @@ BEGIN
 							CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
 						)
 				END,
-     '
+	'
 
     SET @SQLString += 
         N'
