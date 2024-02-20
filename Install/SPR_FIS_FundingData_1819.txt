@@ -154,6 +154,7 @@ BEGIN
 		INTO #Pathways
 		FROM FIS_Pathways PWAY
 
+		DROP TABLE IF EXISTS #PostCodes;
 		SELECT
 			PC.PostCode,
 			PC.WardCode,
@@ -162,9 +163,8 @@ BEGIN
 			PC.DistrictName,
 			PC.LEACode,
 			PC.LEAName,
-			PC.Uplift1619,
-			PC.UpliftAdult,
-			PC.UpliftApp
+			PC.SourceOfFunding,
+			PC.DisadvUplift
 		INTO #PostCodes
 		FROM FIS_PostCodes PC
 
@@ -187,6 +187,124 @@ BEGIN
 			OC.Description
 		INTO #DestinationProgressionOutcomes
 		FROM FIS_DestinationProgressionOutcomes OC
+	'
+
+	SET @SQLString += 
+        N'
+		DROP TABLE IF EXISTS #FAMLearner
+		SELECT
+			LearnRefNumber = FAML.LearnRefNumber,
+			FAMLearnerHNS = FAML.HNS,
+			FAMLearnerEHC = FAML.EHC,
+			FAMLearnerDLA = FAML.DLA,
+			FAMLearnerLSR = FAML.LSR,
+			FAMLearnerSEN = FAML.SEN,
+			FAMLearnerNLM = FAML.NLM,
+			FAMLearnerEDF = FAML.EDF,
+			FAMLearnerMCF = FAML.MCF,
+			FAMLearnerECF = FAML.ECF,
+			FAMLearnerFME = FAML.FME
+			INTO #FAMLearner
+		FROM (
+			SELECT
+				FAML.LearnRefNumber,
+				FAML.LearnFAMType,
+				FAML.LearnFAMCode
+			FROM ' + @FISDatabase + '.dbo.Valid_LearnerFAM FAML
+		) FAML
+		PIVOT (
+			MAX ( FAML.LearnFAMCode )
+			FOR
+				FAML.LearnFAMType IN (
+					[HNS],
+					[EHC],
+					[DLA],
+					[LSR],
+					[SEN],
+					[NLM],
+					[EDF],
+					[MCF],
+					[ECF],
+					[FME]
+				)
+		) FAML
+
+	'
+
+	SET @SQLString += 
+        N'
+		DROP TABLE IF EXISTS #FAMLearningDelivery
+		SELECT
+			LearnRefNumber = FAMA.LearnRefNumber,
+			AimSeqNumber = FAMA.AimSeqNumber,
+			FAMLearningDeliverySOF = FAMA.SOF,
+			FAMLearningDeliveryFFI = FAMA.FFI,
+			FAMLearningDeliveryEEF = FAMA.EEF,
+			FAMLearningDeliveryRES = FAMA.RES,
+			FAMLearningDeliveryLSF = FAMA.LSF,
+			FAMLearningDeliveryADL = FAMA.ADL,
+			FAMLearningDeliveryALB = FAMA.ALB,
+			FAMLearningDeliveryASL = FAMA.ASL,
+			FAMLearningDeliveryFLN = FAMA.FLN,
+			FAMLearningDeliveryLDM = FAMA.LDM,
+			FAMLearningDeliveryDAM = FAMA.DAM,
+			FAMLearningDeliveryACT = FAMA.ACT,
+			FAMLearningDeliveryACL = FAMA.ACL,
+			FAMLearningDeliveryAFL = FAMA.AFL
+			INTO #FAMLearningDelivery
+		FROM (
+			SELECT
+				FAMA.LearnRefNumber,
+				FAMA.AimSeqNumber,
+				FAMA.LearnDelFAMType,
+				FAMA.LearnDelFAMCode
+			FROM (
+				SELECT
+					FAMA.LearnRefNumber,
+					FAMA.AimSeqNumber,
+					FAMA.LearnDelFAMType,
+					FAMA.LearnDelFAMCode,
+					FAMA.LearnDelFAMDateFrom,
+					FAMA.LearnDelFAMDateTo,
+					RowNum = 
+						ROW_NUMBER () OVER (
+							PARTITION BY
+								FAMA.LearnRefNumber,
+								FAMA.AimSeqNumber,
+								FAMA.LearnDelFAMType
+							ORDER BY
+								FAMA.LearnDelFAMDateFrom DESC,
+								CASE
+									WHEN FAMA.LearnDelFAMDateTo IS NULL THEN 1
+									ELSE 2
+								END,
+								FAMA.LearnDelFAMDateTo DESC
+						)
+				FROM ' + @FISDatabase + '.dbo.Valid_LearningDeliveryFAM FAMA
+			) FAMA
+			WHERE
+				FAMA.RowNum = 1
+		) FAMA
+		PIVOT (
+			MAX ( FAMA.LearnDelFAMCode )
+			FOR
+				FAMA.LearnDelFAMType IN (
+					[SOF],
+					[FFI],
+					[EEF],
+					[RES],
+					[LSF],
+					[ADL],
+					[ALB],
+					[ASL],
+					[FLN],
+					[LDM],
+					[DAM],
+					[ACT],
+					[ACL],
+					[AFL]
+				)
+		) FAMA
 	'
 
 	SET @SQLString += 
@@ -403,18 +521,8 @@ BEGIN
 			PostCodeDistrictName = PC.DistrictName,
 			PostCodeLEACode = PC.LEACode,
 			PostCodeLEAName = PC.LEAName,
-			PostCode1619Uplift = COALESCE ( PC.Uplift1619, 1 ),
-			PostCodeAdultUplift = COALESCE ( PC.UpliftAdult, 1 ),
-			PostCodeAppUplift = COALESCE ( PC.UpliftApp, 1 ),
-			PostCodeUpliftApplied =
-				CASE
-					WHEN LD.FundModel = ''25'' THEN COALESCE ( PC.Uplift1619, 1 )
-					WHEN LD.FundModel = ''35'' AND LD.FworkCode IS NULL THEN COALESCE ( PC.UpliftAdult, 1 )
-					WHEN LD.FundModel = ''35'' AND LD.FworkCode IS NOT NULL THEN COALESCE ( PC.UpliftApp, 1 )
-					WHEN LD.FundModel = ''35'' THEN COALESCE ( PC.UpliftApp, 1 )
-					WHEN LD.FundModel = ''36'' THEN COALESCE ( PC.UpliftApp, 1 )
-					ELSE 1
-				END,
+			PostCodeSourceOfFundingCode = PC.SourceOfFunding,
+			PostCodeDisadvUplift = COALESCE ( PC.DisadvUplift, 1 ),
 			EmpStatusCode = EMP.EmpStatusCode,
 			EmpStatusName = EMP.EmpStatusName,
 			EmpStatusAppliesDate = EMP.EmpStatusAppliesDate,
@@ -435,6 +543,16 @@ BEGIN
 			LLDDHealthProb = L.LLDDHealthProb,
 			PrimaryLLDDHealthProblemCode = LLDD.LLDDCat,
 			PrimaryLLDDHealthProblemName = DIS.Description,
+			FAMLearnerHNS = FAML.FAMLearnerHNS,
+			FAMLearnerEHC = FAML.FAMLearnerEHC,
+			FAMLearnerDLA = FAML.FAMLearnerDLA,
+			FAMLearnerLSR = FAML.FAMLearnerLSR,
+			FAMLearnerSEN = FAML.FAMLearnerSEN,
+			FAMLearnerNLM = FAML.FAMLearnerNLM,
+			FAMLearnerEDF = FAML.FAMLearnerEDF,
+			FAMLearnerMCF = FAML.FAMLearnerMCF,
+			FAMLearnerECF = FAML.FAMLearnerECF,
+			FAMLearnerFME = FAML.FAMLearnerFME,
 			DestinationProgressionType = OC.DPOutcomeType,
 			DestinationProgressionNumber = OC.DPOutcomeCode,
 			DestinationProgressionCode = DES.Code,
@@ -1168,7 +1286,20 @@ BEGIN
 						THEN 0
 					ELSE 1
 				END,
-			
+			FAMLearningDeliverySOF = FAMA.FAMLearningDeliverySOF,
+			FAMLearningDeliveryFFI = FAMA.FAMLearningDeliveryFFI,
+			FAMLearningDeliveryEEF = FAMA.FAMLearningDeliveryEEF,
+			FAMLearningDeliveryRES = FAMA.FAMLearningDeliveryRES,
+			FAMLearningDeliveryLSF = FAMA.FAMLearningDeliveryLSF,
+			FAMLearningDeliveryADL = FAMA.FAMLearningDeliveryADL,
+			FAMLearningDeliveryALB = FAMA.FAMLearningDeliveryALB,
+			FAMLearningDeliveryASL = FAMA.FAMLearningDeliveryASL,
+			FAMLearningDeliveryFLN = FAMA.FAMLearningDeliveryFLN,
+			FAMLearningDeliveryLDM = FAMA.FAMLearningDeliveryLDM,
+			FAMLearningDeliveryDAM = FAMA.FAMLearningDeliveryDAM,
+			FAMLearningDeliveryACT = FAMA.FAMLearningDeliveryACT,
+			FAMLearningDeliveryACL = FAMA.FAMLearningDeliveryACL,
+			FAMLearningDeliveryAFL = FAMA.FAMLearningDeliveryAFL,
 			PostCodeDelivery = LD.DelLocPostCode,
 	'
 
@@ -4429,7 +4560,11 @@ BEGIN
 			FROM ' + @FISDatabase + '.dbo.Invalid_Learner L
 		) INV
 			ON 1 = 1
-
+		LEFT JOIN #FAMLearner FAML
+			ON FAML.LearnRefNumber = L.LearnRefNumber
+		LEFT JOIN #FAMLearningDelivery FAMA
+			ON FAMA.LearnRefNumber = LD.LearnRefNumber
+			AND FAMA.AimSeqNumber = LD.AimSeqNumber
 		LEFT JOIN #Standards STD
 			ON STD.StandardCode = LD.StdCode
 		LEFT JOIN #Frameworks FW
@@ -4440,6 +4575,7 @@ BEGIN
 			AND PWAY.PathwayCode = LD.PwayCode
 		LEFT JOIN #PostCodes PC
 			ON PC.PostCode COLLATE DATABASE_DEFAULT = L.Postcode COLLATE DATABASE_DEFAULT
+			AND PC.SourceOfFunding COLLATE DATABASE_DEFAULT = ''105/107'' COLLATE DATABASE_DEFAULT
 	'
     
     SET @SQLString += 
@@ -4930,12 +5066,12 @@ BEGIN
 					ELSE LD.PartnerUKPRN
 				END 
 		LEFT JOIN #Ethnicities ETH
-			ON ETH.Code = L.Ethnicity
+			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES
 			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
-			AND DES.OutcomeCode = OC.DPOutcomeCode
+			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
 		LEFT JOIN #CarryIn CI
 			ON CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
 			AND CI.AimSeqNumber = LD.AimSeqNumber

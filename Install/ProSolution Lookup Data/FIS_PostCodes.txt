@@ -8,9 +8,11 @@ AS
 		DistrictName = PCW.DistrictName,
 		LEACode = PCW.LEACode,
 		LEAName = PCW.LEAName,
-		Uplift1619 = COALESCE ( PCU.EFA_UPLIFT, 1 ),
-		UpliftAdult = COALESCE ( PCU.SFA_UPLIFT, 1 ),
-		UpliftApp = COALESCE ( PCU.APP_FUNDING_UPLIFT, 1 )
-	FROM besql05.ProGeneral.dbo.PostCodeWard PCW
-	LEFT JOIN besql05.ProGeneral.dbo.PostCodeUplift PCU
+		--Uplift1619 = COALESCE ( PCU.EFA_UPLIFT, 1 ),
+		--UpliftAdult = COALESCE ( PCU.SFA_UPLIFT, 1 ),
+		--UpliftApp = COALESCE ( PCU.APP_FUNDING_UPLIFT, 1 ),
+		SourceOfFunding = CAST ( NULL AS VARCHAR(50) ),
+		DisadvUplift = COALESCE ( PCU.EFA_UPLIFT, 1 )
+	FROM ProGeneral.dbo.PostCodeWard PCW
+	LEFT JOIN ProGeneral.dbo.PostCodeUplift PCU
 		ON  PCU.POSTCODE = PCW.Postcode

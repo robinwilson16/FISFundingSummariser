@@ -1,10 +1,10 @@
 /*
-Changes since 19/20
-Database collation changed to SQL_Latin1_General_CP1_CI_AS
-Added LearningDelivery.OTJActHours
+Changes since 22/23
+HE Percent Taught First, Second and Third LDCS Depricated and Removed
+
 */
 
-CREATE PROCEDURE SPR_FIS_FundingData_2021
+CREATE PROCEDURE SPR_FIS_FundingData_2324
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn INT,
@@ -35,8 +35,8 @@ BEGIN
 	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2021'
-	--DECLARE @AcademicYear NVARCHAR(5) = '20/21'
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324'
+	--DECLARE @AcademicYear NVARCHAR(5) = '23/24'
 
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
@@ -66,18 +66,6 @@ BEGIN
 	SET @SQLString = 
         N'
 		DROP TABLE IF EXISTS #LearningAims;
-		DROP TABLE IF EXISTS #CollegeStructure;
-		DROP TABLE IF EXISTS #CourseHours;
-		DROP TABLE IF EXISTS #Employers;
-		DROP TABLE IF EXISTS #Partners;
-		DROP TABLE IF EXISTS #Standards;
-		DROP TABLE IF EXISTS #Frameworks;
-		DROP TABLE IF EXISTS #Pathways;
-		DROP TABLE IF EXISTS #PostCodes;
-		DROP TABLE IF EXISTS #Ethnicities;
-		DROP TABLE IF EXISTS #Disabilities;
-		DROP TABLE IF EXISTS #DestinationProgressionOutcomes;
-
 		SELECT
 			AIM.SSA1Code,
 			AIM.SSA1Name,
@@ -110,6 +98,7 @@ BEGIN
 		WHERE
 			CS.AcademicYear = @AcademicYear
 
+		DROP TABLE IF EXISTS #CourseHours;
 		SELECT
 			HRS.AcademicYear,
 			HRS.ProvSpecField,
@@ -121,30 +110,35 @@ BEGIN
 		WHERE
 			HRS.AcademicYear = @AcademicYear
 
+		DROP TABLE IF EXISTS #Employers;
 		SELECT
 			EMP.EmployerEDRS,
 			EMP.EmployerName
 		INTO #Employers
 		FROM FIS_Employers EMP
 
+		DROP TABLE IF EXISTS #Partners;
 		SELECT
 			PAR.PartnerUKPRN,
 			PAR.PartnerName
 		INTO #Partners
 		FROM FIS_Partners PAR
 
+		DROP TABLE IF EXISTS #Standards;
 		SELECT
 			STD.StandardCode,
 			STD.StandardName
 		INTO #Standards
 		FROM FIS_Standards STD
 
+		DROP TABLE IF EXISTS #Frameworks;
 		SELECT
 			FW.FrameworkCode,
 			FW.FrameworkName
 		INTO #Frameworks
 		FROM FIS_Frameworks FW
 
+		DROP TABLE IF EXISTS #Pathways;
 		SELECT
 			PWAY.FrameworkCode,
 			PWAY.ProgType,
@@ -167,18 +161,28 @@ BEGIN
 		INTO #PostCodes
 		FROM FIS_PostCodes PC
 
+		DROP TABLE IF EXISTS #PriorLevels;
+		SELECT
+			PLEV.Code,
+			PLEV.Description
+		INTO #PriorLevels
+		FROM FIS_PriorLevels PLEV
+
+		DROP TABLE IF EXISTS #Ethnicities;
 		SELECT
 			ETH.Code,
 			ETH.Description
 		INTO #Ethnicities
 		FROM FIS_Ethnicities ETH
 
+		DROP TABLE IF EXISTS #Disabilities;
 		SELECT
 			DIS.Code,
 			DIS.Description
 		INTO #Disabilities
 		FROM FIS_Disabilities DIS
 
+		DROP TABLE IF EXISTS #DestinationProgressionOutcomes;
 		SELECT
 			OC.OutcomeCode,
 			OC.OutcomeType,
@@ -538,9 +542,9 @@ BEGIN
 			EmployIntensityInd = ESM.EII,
 			IsFirstFullLevel2 = NULL,
 			IsFirstFullLevel3 = NULL,
-			PriorLevelCode = NULL,
-			PriorLevelName = NULL,
-			PriorLevelDate = NULL,
+			PriorLevelCode = ATN.PriorLevel,
+			PriorLevelName = PLEV.Description,
+			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
 			LLDDHealthProb = L.LLDDHealthProb,
@@ -1475,9 +1479,9 @@ BEGIN
 			HEYearStu = HE.YEARSTU,
 			HEMajorSourceStuFee = HE.MSTUFEE,
 			HEPercentageNotTaught = HE.PCOLAB,
-			HEPercentTaughtFirstLDCS = HE.PCFLDCS,
-			HEPercentTaughtSecondLDCS = HE.PCSLDCS,
-			HEPercentTaughtThirdLDCS = HE.PCTLDCS,
+			HEPercentTaughtFirstLDCS = NULL,
+			HEPercentTaughtSecondLDCS = NULL,
+			HEPercentTaughtThirdLDCS = NULL,
 			HESpecialFeeIndicator = HE.SPECFEE,
 			HENetTuitionFee = HE.NETFEE,
 			HEGrossTuitionFee = HE.GROSSFEE,
@@ -3055,6 +3059,25 @@ BEGIN
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
+		LEFT JOIN (
+			SELECT
+				ATN.UKPRN,
+				ATN.LearnRefNumber,
+				ATN.PriorLevel,
+				ATN.DateLevelApp,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							ATN.UKPRN,
+							ATN.LearnRefNumber
+						ORDER BY
+							ATN.DateLevelApp DESC
+					)
+			FROM ' + @FISDatabase + '.Valid.LearnerPriorAttain ATN
+		) ATN
+			ON ATN.LearnRefNumber = L.LearnRefNumber
+			AND ATN.UKPRN = L.UKPRN
+			AND ATN.RowNum = 1
 		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
@@ -5076,6 +5099,8 @@ BEGIN
 				END
 		LEFT JOIN #Ethnicities ETH
 			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
+		LEFT JOIN #PriorLevels PLEV
+			ON PLEV.Code = ATN.PriorLevel
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES

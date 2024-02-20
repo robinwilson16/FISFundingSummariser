@@ -1,11 +1,13 @@
-DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
-DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
+DECLARE @ILRReturn int = 6 -- CHANGE THIS TO CORRECT RETURN
+DECLARE @IsFinalReturn BIT = 0 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
 
 
 
-DECLARE @FISDatabase NVARCHAR(100) = 'ILR2122_R14F_PETROC'
-DECLARE @AcademicYear NVARCHAR(5) = '21/22'
+
+DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223'
+DECLARE @AcademicYear NVARCHAR(5) = '22/23'
+
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
