@@ -4932,6 +4932,19 @@ BEGIN
 				CollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
 				CourseCode = COALESCE ( CS.CourseCode, ''-''),
 				CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
+				SSA1Code = AIM.SSA1Code,
+				SSA1Name = AIM.SSA1Name,
+				SSA2Code = AIM.SSA2Code,
+				SSA2Name = AIM.SSA2Name,
+				LearningAimCode = AIM.LearningAimCode,
+				LearningAimTitle = AIM.LearningAimTitle,
+				LearningAimTypeCode = AIM.LearningAimTypeCode,
+				LearningAimTypeName = AIM.LearningAimTypeName,
+				NVQLevelCode = AIM.NVQLevelCode,
+				NVQLevelName = AIM.NVQLevelName,
+				NVQLevelOrder = AIM.NVQLevelOrder,
+				IsMathsAndEnglish = AIM.IsMathsAndEnglish,
+				AwardBodyCode = AIM.AwardBodyCode,
 				RowNum = 
 					ROW_NUMBER () OVER ( 
 						PARTITION BY
@@ -4948,6 +4961,7 @@ BEGIN
 							)
 						ORDER BY
 							COALESCE ( FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) DESC,
+							LD.CompStatus,
                             CASE
                                 COALESCE ( 
                                     FM25.FundLine, 
@@ -4966,9 +4980,16 @@ BEGIN
 								WHEN LD.AimType = 2 THEN 4.5
 								ELSE LD.AimType
 							END DESC,
-							LD.CompStatus,
-							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
+							CASE
+								WHEN AIM.LearningAimTypeCode IN (
+									''0003'', --GCSE
+									''1439'' --Functional Skills
+								) THEN 2
+								ELSE 1
+							END,
+							AIM.NVQLevelOrder DESC,
 							COALESCE ( L.PlanLearnHours, 0 ) + COALESCE ( L.PlanEEPHours, 0 ) DESC,
+							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
 					)
@@ -4979,6 +5000,8 @@ BEGIN
 			FROM ' + @FISDatabase + '.Valid.Learner L
 			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
+			LEFT JOIN #LearningAims AIM
+				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
