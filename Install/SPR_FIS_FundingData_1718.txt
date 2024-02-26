@@ -4715,7 +4715,7 @@ BEGIN
     SET @SQLString += 
         N'
         LEFT JOIN ' + @FISOutputTableLocation + 'FIS_Providers PROV
-			ON PROV.ProviderID = SRC.UKPRN
+			ON PROV.ProviderUKPRN = SRC.UKPRN
 	'
 
     SET @SQLString += 
