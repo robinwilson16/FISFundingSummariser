@@ -200,6 +200,132 @@ BEGIN
 
 	SET @SQLString += 
         N'
+		--Dates for Hybrid End Year Calculation
+		DROP TABLE IF EXISTS #EnrolDates
+		SELECT
+			LD.LearnRefNumber,
+			LD.AimSeqNumber,
+			LD.LearnStartDate,
+			LD.LearnPlanEndDate,
+			LD.LearnActEndDate,
+			LD.AchDate,
+			AchievementYear = 
+				RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.AchDate ) <= 7 THEN 
+								YEAR ( LD.AchDate ) - 1
+							ELSE 
+								YEAR ( LD.AchDate )
+						END
+						AS VARCHAR(4)
+					),
+					2
+				)
+				+ ''/''
+				+ RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.AchDate ) <= 7 THEN 
+								YEAR ( LD.AchDate )
+							ELSE 
+								YEAR ( LD.AchDate ) + 1
+						END
+						AS VARCHAR(4)
+					),
+					2
+				),
+			PlannedEndYear = 
+				RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnPlanEndDate ) <= 7 THEN 
+								YEAR ( LD.LearnPlanEndDate ) - 1
+							ELSE 
+								YEAR ( LD.LearnPlanEndDate )
+						END
+						AS VARCHAR(4)
+					),
+					2
+				)
+				+ ''/''
+				+ RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnPlanEndDate ) <= 7 THEN 
+								YEAR ( LD.LearnPlanEndDate )
+							ELSE 
+								YEAR ( LD.LearnPlanEndDate ) + 1
+						END
+						AS VARCHAR(4)
+					),
+					2
+				),
+			ActualEndYear = 
+				RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnActEndDate ) <= 7 THEN 
+								YEAR ( LD.LearnActEndDate ) - 1
+							ELSE 
+								YEAR ( LD.LearnActEndDate )
+						END
+						AS VARCHAR(4)
+					),
+					2
+				)
+				+ ''/''
+				+ RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnActEndDate ) <= 7 THEN 
+								YEAR ( LD.LearnActEndDate )
+							ELSE 
+								YEAR ( LD.LearnActEndDate ) + 1
+						END
+						AS VARCHAR(4)
+					),
+					2
+				),
+			ReportingYear = @AcademicYear
+			INTO #EnrolDates
+		FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
+	'
+
+	SET @SQLString += 
+        N'
+		--Hybrid End Years - Following QAR Rules
+		--Latest of achievement year, planned end year, actual end year, reporting year
+		DROP TABLE IF EXISTS #HybridEndYears
+		SELECT
+			ENR.LearnRefNumber,
+			ENR.AimSeqNumber,
+			ENR.LearnStartDate,
+			ENR.LearnPlanEndDate,
+			ENR.LearnActEndDate,
+			ENR.AchDate,
+			ENR.AchievementYear,
+			ENR.PlannedEndYear,
+			ENR.ActualEndYear,
+			ENR.ReportingYear,
+			HybridEndYear = (
+				SELECT 
+					MAX(years)
+				FROM (
+					VALUES
+						(ENR.AchievementYear),
+						(ENR.PlannedEndYear),
+						(ENR.ActualEndYear),
+						(ENR.ReportingYear)
+				)
+				AS VALUE(years)
+			)
+			INTO #HybridEndYears
+		FROM #EnrolDates ENR
+	'
+
+	SET @SQLString += 
+        N'
 		DROP TABLE IF EXISTS #FAMLearner
 		SELECT
 			LearnRefNumber = FAML.LearnRefNumber,
@@ -1448,6 +1574,12 @@ BEGIN
 			PlannedEndDate = LD.LearnPlanEndDate,
 			ActualEndDate = LD.LearnActEndDate,
 			AchievementDate = LD.AchDate,
+			AchievementYear = EY.AchievementYear,
+			PlannedEndYear = EY.PlannedEndYear,
+			ActualEndYear = EY.ActualEndYear,
+			ReportingYear = EY.ReportingYear,
+			HybridEndYear = EY.HybridEndYear,
+
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
 			FM25PLHAim = COALESCE ( CASE WHEN LD.FundModel = ''25'' AND ( COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' OR HRS.TFerOnly = 1 ) THEN CH.PLH END, 0 ),
@@ -2952,6 +3084,9 @@ BEGIN
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		INNER JOIN ' + @FISDatabase + '.Valid.Source SRC
 			ON 1 = 1
+		INNER JOIN #HybridEndYears EY
+			ON EY.LearnRefNumber = LD.LearnRefNumber
+			AND EY.AimSeqNumber = LD.AimSeqNumber
 	'
     
     SET @SQLString += 

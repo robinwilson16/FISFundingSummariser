@@ -1,0 +1,51 @@
+DECLARE @ProviderNumber INT = 10002599
+DECLARE @AcademicYear NVARCHAR(5) = '23/24'
+DECLARE @ILRReturn  NVARCHAR(3) = 'R04'
+DECLARE @IsFinalReturn BIT = 1
+DECLARE @IsFunded BIT = 1
+
+
+DECLARE @LastYear NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 1 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 1 AS NVARCHAR(2) )
+DECLARE @TwoYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 2 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 2 AS NVARCHAR(2) )
+DECLARE @ThreeYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 3 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 3 AS NVARCHAR(2) )
+DECLARE @FourYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 4 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 4 AS NVARCHAR(2) )
+DECLARE @FiveYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 5 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 5 AS NVARCHAR(2) )
+DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
+
+SELECT
+	FD.ProviderNumber,
+	FD.LearnerRef,
+	FD.LearningAimCode,
+	FD.StandardCode,
+	FD.FrameworkCode,
+	FD.PathwayCode,
+	FD.StartDate,
+	FD.PlannedEndDate,
+	FD.ActualEndDate,
+	FD.AchievementDate,
+
+	RowNum = 
+		ROW_NUMBER () OVER (
+			PARTITION BY
+				FD.ProviderNumber,
+				FD.LearnerRef,
+				FD.LearningAimCode,
+				FD.StandardCode,
+				FD.FrameworkCode,
+				FD.StartDate,
+				FD.PlannedEndDate
+			ORDER BY
+				FD.IsMainAim DESC,
+				FD.IsMainAimInFundModel DESC,
+				FD.CompletionStatusCode,
+				FD.AimSequence
+		)
+FROM FIS_FundingDataNew FD
+WHERE
+	FD.ProviderNumber = @ProviderNumber
+	AND FD.AcademicYear = @AcademicYear
+	AND FD.ILRReturn = @ILRReturn
+	AND FD.IsFinalReturn = @IsFinalReturn
+	AND FD.IsFunded = @IsFunded
+	AND FD.LearningAimTitle LIKE '%Extended Diploma%'
+	--AND FD.LearnerRef = '40021139'

@@ -340,6 +340,12 @@ BEGIN
 					PlannedEndDate DATETIME NULL,
 					ActualEndDate DATETIME NULL,
 					AchievementDate DATETIME NULL,
+					AchievementYear NVARCHAR(5) NULL,
+					PlannedEndYear NVARCHAR(5) NULL,
+					ActualEndYear NVARCHAR(5) NULL,
+					ReportingYear NVARCHAR(5) NULL,
+					HybridEndYear NVARCHAR(5) NULL,
+
 					PlanLearnHours INT NULL,
 					PlanEEPHours INT NULL,
 					FM25PLHAim INT NULL,
