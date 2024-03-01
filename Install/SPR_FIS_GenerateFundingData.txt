@@ -318,7 +318,8 @@ BEGIN
 					CourseCode NVARCHAR(20) NULL,
 					CourseTitle NVARCHAR(255) NULL,
 
-					AimSequence INT NULL,
+					AimSeqNumber INT NULL,
+					LearnerAndAimRowNum INT NULL,
 					AimType INT NULL,
 
 					LearningAimCode NVARCHAR(8) NULL,

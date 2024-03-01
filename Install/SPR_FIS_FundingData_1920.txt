@@ -1554,7 +1554,30 @@ BEGIN
 			CourseCode = COALESCE ( CS.CourseCode, ''-''),
 			CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 
-			AimSequence = LD.AimSeqNumber,
+			AimSeqNumber = LD.AimSeqNumber,
+			LearnerAndAimRowNum = 
+				ROW_NUMBER () OVER (
+					PARTITION BY
+						LD.LearnRefNumber,
+						LD.LearnAimRef,
+						LD.StdCode,
+						LD.FworkCode,
+						LD.PwayCode,
+						LD.LearnStartDate,
+						LD.LearnPlanEndDate
+					ORDER BY
+						LD.CompStatus,
+						COALESCE ( LD.ProgType, ''99'' ),
+						CASE
+							WHEN LD.AimType = 1 THEN 1 --Programme Aim
+							WHEN LD.AimType = 5 THEN 2 --Core Aim
+							ELSE 3
+						END,
+						COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+						DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
+						LD.LearnStartDate,
+						LD.AimSeqNumber
+				),
 			AimType = LD.AimType,
 			LearningAimCode = LD.LearnAimRef,
 			LearningAimTitle = AIM.LearningAimTitle,
