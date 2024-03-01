@@ -1445,8 +1445,9 @@ BEGIN
 
 			StartDate = LD.LearnStartDate,
 			OriginalStartDate = LD.OrigLearnStartDate,
-			ExpEndDate = LD.LearnPlanEndDate,
-			ActEndDate = LD.LearnActEndDate,
+			PlannedEndDate = LD.LearnPlanEndDate,
+			ActualEndDate = LD.LearnActEndDate,
+			AchievementDate = LD.AchDate,
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
 			FM25PLHAim = COALESCE ( CASE WHEN LD.FundModel = ''25'' AND ( COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' OR HRS.TFerOnly = 1 ) THEN CH.PLH END, 0 ),
@@ -1466,8 +1467,8 @@ BEGIN
 
     SET @SQLString += 
         N'
-			CompletionCode = LD.CompStatus,
-			CompletionDesc = 
+			CompletionStatusCode = LD.CompStatus,
+			CompletionStatusName = 
 				CASE
 					WHEN LD.CompStatus = ''1'' THEN ''Continuing''
 					WHEN LD.CompStatus = ''2'' THEN ''Completed''
@@ -1476,7 +1477,7 @@ BEGIN
 					ELSE ''Unknown''
 				END,
 			OutcomeCode = LD.Outcome,
-			OutcomeDesc = 
+			OutcomeName = 
 				CASE
 					WHEN LD.Outcome IS NULL THEN NULL
 					WHEN LD.Outcome = ''1'' THEN ''Achieved''
