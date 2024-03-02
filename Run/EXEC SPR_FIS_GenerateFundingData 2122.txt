@@ -26,6 +26,7 @@ DECLARE @OverrideMatCostCentre NVARCHAR(50) = NULL
 DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
+DECLARE @RunQARCalculation BIT = 1 --Calculate which records should be included in QAR measures for each year
 DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
 
 DECLARE @SQLString NVARCHAR(MAX);
@@ -57,6 +58,7 @@ SET @SQLString = N'
 		@OverridePartnerFac,
 		@OverridePartnerTeam,
 		@OverridePartnerCostCentre,
+		@RunQARCalculation,
 		@AnonymiseData';
 
 SET @SQLParams = 
@@ -84,6 +86,7 @@ SET @SQLParams =
 	@OverridePartnerFac NVARCHAR(50),
 	@OverridePartnerTeam NVARCHAR(50),
 	@OverridePartnerCostCentre NVARCHAR(50),
+	@RunQARCalculation BIT,
 	@AnonymiseData BIT';
     
 EXECUTE sp_executesql 
@@ -113,4 +116,5 @@ EXECUTE sp_executesql
 	@OverridePartnerFac = @OverridePartnerFac,
 	@OverridePartnerTeam = @OverridePartnerTeam,
 	@OverridePartnerCostCentre = @OverridePartnerCostCentre,
+	@RunQARCalculation = @RunQARCalculation,
 	@AnonymiseData = @AnonymiseData;

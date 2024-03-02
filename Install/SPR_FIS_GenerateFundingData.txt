@@ -23,35 +23,31 @@ CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@OverridePartnerFac NVARCHAR(50),
 	@OverridePartnerTeam NVARCHAR(50),
 	@OverridePartnerCostCentre NVARCHAR(50),
+	@RunQARCalculation BIT,
 	@AnonymiseData BIT
 AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
-
-	DECLARE @TableExists BIT = 1;
-	DECLARE @FileDate DATETIME;
-	DECLARE @NumExistingRecords INT = 0;
 	
-	DECLARE @SQLString NVARCHAR(MAX);
-	DECLARE @SQLParams NVARCHAR(MAX);
-
-	DECLARE @Message NVARCHAR(MAX);
-
-	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+	--DECLARE @ILRReturn int = 04 -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223'
-	--DECLARE @AcademicYear NVARCHAR(5) = '22/23'
 
+
+
+
+
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324_R04F_Furness'
+	--DECLARE @AcademicYear NVARCHAR(5) = '23/24'
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
 	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
-	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
-	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
+	--DECLARE @Mode NCHAR(1) = 'R' --I=Insert new ILR return data leaving existing data, R=Replace table
+	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
+	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingDataNew'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
 	--DECLARE @OverrideEngFac NVARCHAR(50) = NULL
@@ -63,7 +59,19 @@ BEGIN
 	--DECLARE @OverridePartnerFac NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerTeam NVARCHAR(50) = NULL
 	--DECLARE @OverridePartnerCostCentre NVARCHAR(50) = NULL
+	--DECLARE @RunQARCalculation BIT = 1 --Calculate which records should be included in QAR measures for each year
 	--DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
+
+
+	DECLARE @TableExists BIT = 1;
+	DECLARE @ProviderNumber INT;
+	DECLARE @FileDate DATETIME;
+	DECLARE @NumExistingRecords INT = 0;
+	
+	DECLARE @SQLString NVARCHAR(MAX);
+	DECLARE @SQLParams NVARCHAR(MAX);
+
+	DECLARE @Message NVARCHAR(MAX);
 
 	DECLARE @ILRReturnSummary NVARCHAR(200) = NULL;
 
@@ -92,24 +100,29 @@ BEGIN
 	BEGIN
 		SET @SQLString = N'
 			SELECT
-				@FileDateOUT = SRC.DateTime
+				@ProviderNumber = SRC.UKPRN,
+				@FileDate = SRC.DateTime
 			FROM ' + @FISDatabase + '.Valid.Source SRC';
 	END
 	ELSE
 	BEGIN
 		SET @SQLString = N'
 			SELECT
-				@FileDateOUT = SRC.DateTime
+				@ProviderNumber = SRC.UKPRN,
+				@FileDate = SRC.DateTime
 			FROM ' + @FISDatabase + '.dbo.Valid_Source SRC';
 	END
 
     SET @SQLParams = 
-        N'@FileDateOUT DATETIME OUTPUT';
+	N'
+		@ProviderNumber INT OUTPUT,
+		@FileDate DATETIME OUTPUT';
 
     EXECUTE sp_executesql 
         @SQLString, 
         @SQLParams, 
-        @FileDateOUT = @FileDate OUTPUT;
+		@ProviderNumber = @ProviderNumber OUTPUT,
+        @FileDate = @FileDate OUTPUT;
 
 	SET @Message = 'Date of ILR Return to be Imported: ' + FORMAT ( @FileDate, 'dd/MM/yyyy' );
 	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
@@ -876,6 +889,165 @@ BEGIN
 			@AnonEmail = @AnonEmail;
 
 		SET @Message = @AcademicYear + ' ILR Anonymised'
+		RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	END
+
+	--Calculate which records should be included for each year for this provider
+	--Latest record for each enrolment matching on provider, learner and learning aim (Art can have 2)
+	IF @RunQARCalculation = 1
+	BEGIN
+		DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
+		DECLARE @ProviderName NVARCHAR(200)
+		DECLARE @CurrentYearLatestImportedILRReturn NVARCHAR(5)
+		DECLARE @CurrentYearLatestImportedILRReturnIsFinal BIT
+		
+		SET @SQLString = N'
+			SELECT TOP 1
+				@ProviderName = FD.ProviderName,
+				@CurrentYearLatestImportedILRReturn = FD.ILRReturn,
+				@CurrentYearLatestImportedILRReturnIsFinal = FD.IsFinalReturn
+			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
+			WHERE
+				FD.ProviderNumber = @ProviderNumber
+			ORDER BY
+				FD.ILRReturn DESC,
+				FD.IsFinalReturn';
+
+		SET @SQLParams = 
+		N'
+			@AcademicYear NVARCHAR(5),
+			@ProviderNumber INT,
+			@ProviderName NVARCHAR(200) OUTPUT,
+			@CurrentYearLatestImportedILRReturn NVARCHAR(5) OUTPUT,
+			@CurrentYearLatestImportedILRReturnIsFinal BIT OUTPUT';
+
+		EXECUTE sp_executesql 
+			@SQLString, 
+			@SQLParams,
+			@AcademicYear = @AcademicYear,
+			@ProviderNumber = @ProviderNumber,
+			@ProviderName = @ProviderName OUTPUT,
+			@CurrentYearLatestImportedILRReturn = @CurrentYearLatestImportedILRReturn OUTPUT,
+			@CurrentYearLatestImportedILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal OUTPUT;
+
+
+		--Clear existing values
+		SET @SQLString = N'
+			UPDATE FD
+			SET
+				FD.IncludeInQARMeasures = 0,
+				FD.QARCalculationCurrentYearILRReturn = NULL,
+				FD.QARCalculationCurrentYearILRReturnIsFinal = NULL
+			FROM FIS_FundingDataNew FD
+			WHERE
+				FD.ProviderNumber = @ProviderNumber
+				AND FD.ReportingYear >= @SixYearsAgo';
+
+		SET @SQLParams = 
+			N'@AcademicYear NVARCHAR(5),
+			@ProviderNumber INT,
+			@SixYearsAgo NVARCHAR(5)';
+
+		EXECUTE sp_executesql 
+			@SQLString, 
+			@SQLParams,
+			@AcademicYear = @AcademicYear,
+			@ProviderNumber = @ProviderNumber,
+			@SixYearsAgo = @SixYearsAgo;
+
+
+		--Set records which should be includes in QAR measures
+		SET @SQLString = N'
+			DROP TABLE IF EXISTS #MergedData
+			SELECT
+				FD.ProviderNumber,
+				FD.LearnerRef,
+				FD.LearningAimCode,
+				FD.LearnerAndAimRowNum,
+				FD.StandardCode,
+				FD.FrameworkCode,
+				FD.PathwayCode,
+				FD.StartDate,
+				FD.PlannedEndDate,
+				FD.CompletionStatusCode,
+				FD.StartYear,
+				FD.PlannedEndYear,
+				FD.AchievementYear,
+				FD.HybridEndYear,
+				EarliestReportingYear = MIN ( FD.ReportingYear ),
+				LatestReportingYear = MAX ( FD.ReportingYear),
+				NumMergedRecords = COUNT ( FD.LearningAimCode )
+				INTO #MergedData
+			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
+			WHERE
+				FD.ProviderNumber = @ProviderNumber
+				--AND FD.HybridEndYear = @AcademicYear
+				AND FD.ReportingYear >= @SixYearsAgo
+				AND FD.ILRReturn = 
+					CASE
+						WHEN FD.AcademicYear = @AcademicYear THEN @CurrentYearLatestImportedILRReturn
+						ELSE ''R14''
+					END
+				AND FD.IsFinalReturn = 
+					CASE
+						WHEN FD.AcademicYear = @AcademicYear THEN @CurrentYearLatestImportedILRReturnIsFinal
+						ELSE 1
+					END
+				AND FD.IsFundedStart = 1
+			GROUP BY
+				FD.ProviderNumber,
+				FD.LearnerRef,
+				FD.LearningAimCode,
+				FD.LearnerAndAimRowNum,
+				FD.StandardCode,
+				FD.FrameworkCode,
+				FD.PathwayCode,
+				FD.StartDate,
+				FD.PlannedEndDate,
+				FD.CompletionStatusCode,
+				FD.StartYear,
+				FD.PlannedEndYear,
+				FD.AchievementYear,
+				FD.HybridEndYear
+		'
+
+		SET @SQLString += 
+		N'
+			UPDATE FD
+			SET
+				FD.IncludeInQARMeasures = 1,
+				FD.QARCalculationCurrentYearILRReturn = @CurrentYearLatestImportedILRReturn,
+				FD.QARCalculationCurrentYearILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal
+			FROM #MergedData MD
+			INNER JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
+				ON FD.ProviderNumber = MD.ProviderNumber
+				AND FD.ReportingYear = MD.LatestReportingYear
+				AND FD.LearnerRef = MD.LearnerRef
+				AND FD.LearningAimCode = MD.LearningAimCode
+				AND COALESCE ( FD.StandardCode, 0 ) = COALESCE ( MD.StandardCode, 0 )
+				AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
+				AND COALESCE ( FD.PathwayCode, 0 ) = COALESCE ( MD.PathwayCode, 0 )
+				AND FD.StartDate = MD.StartDate
+				AND FD.PlannedEndDate = MD.PlannedEndDate
+				AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum';
+
+		SET @SQLParams = 
+			N'@AcademicYear NVARCHAR(5),
+			@ProviderNumber INT,
+			@SixYearsAgo NVARCHAR(5),
+			@CurrentYearLatestImportedILRReturn NVARCHAR(5),
+			@CurrentYearLatestImportedILRReturnIsFinal BIT';
+
+		EXECUTE sp_executesql 
+			@SQLString, 
+			@SQLParams,
+			@AcademicYear = @AcademicYear,
+			@ProviderNumber = @ProviderNumber,
+			@SixYearsAgo = @SixYearsAgo,
+			@CurrentYearLatestImportedILRReturn = @CurrentYearLatestImportedILRReturn,
+			@CurrentYearLatestImportedILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal;
+
+		SET @Message = 'Number Of Records Included In QAR Measures Across All Years for ' + @ProviderName + ': ' + CAST ( @@ROWCOUNT AS VARCHAR(50) );
 		RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
 	END
 
