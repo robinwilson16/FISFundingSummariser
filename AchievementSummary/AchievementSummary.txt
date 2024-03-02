@@ -5,47 +5,102 @@ DECLARE @IsFinalReturn BIT = 1
 DECLARE @IsFunded BIT = 1
 
 
-DECLARE @LastYear NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 1 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 1 AS NVARCHAR(2) )
-DECLARE @TwoYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 2 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 2 AS NVARCHAR(2) )
-DECLARE @ThreeYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 3 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 3 AS NVARCHAR(2) )
-DECLARE @FourYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 4 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 4 AS NVARCHAR(2) )
-DECLARE @FiveYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 5 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 5 AS NVARCHAR(2) )
 DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
 
+DROP TABLE IF EXISTS #MergedData
 SELECT
 	FD.ProviderNumber,
 	FD.LearnerRef,
 	FD.LearningAimCode,
+	FD.LearnerAndAimRowNum,
 	FD.StandardCode,
 	FD.FrameworkCode,
 	FD.PathwayCode,
 	FD.StartDate,
 	FD.PlannedEndDate,
-	FD.ActualEndDate,
-	FD.AchievementDate,
-
-	RowNum = 
-		ROW_NUMBER () OVER (
-			PARTITION BY
-				FD.ProviderNumber,
-				FD.LearnerRef,
-				FD.LearningAimCode,
-				FD.StandardCode,
-				FD.FrameworkCode,
-				FD.StartDate,
-				FD.PlannedEndDate
-			ORDER BY
-				FD.IsMainAim DESC,
-				FD.IsMainAimInFundModel DESC,
-				FD.CompletionStatusCode,
-				FD.AimSequence
-		)
+	FD.CompletionStatusCode,
+	FD.StartYear,
+	FD.PlannedEndYear,
+	FD.AchievementYear,
+	FD.HybridEndYear,
+	EarliestReportingYear = MIN ( FD.ReportingYear ),
+	LatestReportingYear = MAX ( FD.ReportingYear),
+	NumMergedRecords = COUNT ( FD.LearningAimCode )
+	INTO #MergedData
 FROM FIS_FundingDataNew FD
 WHERE
 	FD.ProviderNumber = @ProviderNumber
-	AND FD.AcademicYear = @AcademicYear
-	AND FD.ILRReturn = @ILRReturn
+	AND FD.HybridEndYear = @AcademicYear
+	AND FD.ReportingYear >= @SixYearsAgo
+	AND FD.ILRReturn = 
+		CASE
+			WHEN FD.AcademicYear = @AcademicYear THEN @ILRReturn
+			ELSE 'R14'
+		END
 	AND FD.IsFinalReturn = @IsFinalReturn
-	AND FD.IsFunded = @IsFunded
-	AND FD.LearningAimTitle LIKE '%Extended Diploma%'
-	--AND FD.LearnerRef = '40021139'
+	--AND FD.IsFunded = @IsFunded
+	--AND FD.LearningAimTitle LIKE '%Extended Diploma%'
+	--AND FD.LearnerRef = '40023505'
+GROUP BY
+	FD.ProviderNumber,
+	FD.LearnerRef,
+	FD.LearningAimCode,
+	FD.LearnerAndAimRowNum,
+	FD.StandardCode,
+	FD.FrameworkCode,
+	FD.PathwayCode,
+	FD.StartDate,
+	FD.PlannedEndDate,
+	FD.CompletionStatusCode,
+	FD.StartYear,
+	FD.PlannedEndYear,
+	FD.AchievementYear,
+	FD.HybridEndYear
+ORDER BY
+	FD.LearningAimCode
+
+
+SELECT
+	MD.ProviderNumber,
+	MD.LearnerRef,
+	MD.LearningAimCode,
+	MD.LearnerAndAimRowNum,
+	MD.StandardCode,
+	MD.FrameworkCode,
+	MD.PathwayCode,
+	MD.StartDate,
+	MD.PlannedEndDate,
+	FD.ActualEndDate,
+	FD.AchievementDate,
+	MD.CompletionStatusCode,
+	MD.StartYear,
+	MD.PlannedEndYear,
+	MD.AchievementYear,
+	MD.HybridEndYear,
+	MD.EarliestReportingYear,
+	MD.LatestReportingYear,
+	MD.NumMergedRecords,
+	FD.IsFunded,
+	FD.IsPre42DayWdrAllYr,
+	FD.IsXfrAllYr,
+	FD.IsStartAllYr,
+	FD.IsPost42DayWdrAllYr,
+	FD.IsCompAllYr,
+	FD.IsAchAllYr,
+	FD.IsHighGrade
+FROM #MergedData MD
+INNER JOIN FIS_FundingDataNew FD
+	ON FD.ProviderNumber = MD.ProviderNumber
+	AND FD.ReportingYear = MD.LatestReportingYear
+	AND FD.LearnerRef = MD.LearnerRef
+	AND FD.LearningAimCode = MD.LearningAimCode
+	AND COALESCE ( FD.StandardCode, 0 ) = COALESCE ( MD.StandardCode, 0 )
+	AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
+	AND COALESCE ( FD.PathwayCode, 0 ) = COALESCE ( MD.PathwayCode, 0 )
+	AND FD.StartDate = MD.StartDate
+	AND FD.PlannedEndDate = MD.PlannedEndDate
+	AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum
+WHERE
+	MD.LearningAimCode = '60141700'
+ORDER BY
+	MD.LearningAimCode
