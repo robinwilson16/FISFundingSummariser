@@ -35,9 +35,8 @@ BEGIN
 	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324'
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324_R04F_Furness'
 	--DECLARE @AcademicYear NVARCHAR(5) = '23/24'
-
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
@@ -45,8 +44,8 @@ BEGIN
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
 	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
-	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
-	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
+	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
+	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingDataNew'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
 	--DECLARE @OverrideEngFac NVARCHAR(50) = NULL
@@ -1549,110 +1548,885 @@ BEGIN
 	SET @SQLString += 
         N'
 			IsFundedStart = COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
-			IsPre42DayWdrAllYr = 
-				CASE 
-					WHEN 
-						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0 
-						AND LD.CompStatus = ''3''
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsXfrAllYr = 
-				CASE 
-					WHEN 
-						LD.CompStatus = ''3'' 
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsStartAllYr = 
-				CASE 
-					WHEN COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 THEN 1 
-					ELSE 0 
-				END,
-			IsPost42DayWdrAllYr = 
-				CASE 
-					WHEN 
-						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''3'' 
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsCompAllYr = 
-				CASE 
-					WHEN 
-						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''2'' THEN 1 
-					ELSE 0 
-				END,
-			IsAchAllYr = 
-				CASE 
-					WHEN 
-						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''2'' 
-						AND LD.Outcome IN ( 1, 7 ) THEN 1 
-					ELSE 0 
-				END,
-			IsPre42DayWdrCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0 
-						AND LD.CompStatus = ''3'' 
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsXfrCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND LD.CompStatus = ''3'' 
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsStartCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 THEN 1
-					ELSE 0 
-				END,
-			IsPost42DayWdrCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''3'' 
-						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' THEN 1 
-					ELSE 0 
-				END,
-			IsCompCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''2'' THEN 1 
-					ELSE 0 
-				END,
-			IsAchCurYr = 
-				CASE 
-					WHEN 
-						LD.LearnPlanEndDate <= ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31''
-						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1 
-						AND LD.CompStatus = ''2'' 
-						AND LD.Outcome IN ( 1, 7 ) THEN 1 
-					ELSE 0 
-				END,
-			IsHighGrade = 
+			IsPastPlannedEndDate =
 				CASE
-					WHEN COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0 THEN 0
-					WHEN AIM.LearningAimTypeCode IN ( ''0003'', ''1081'', ''1422'', ''2999'' ) THEN 
-						CASE
-							WHEN LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) THEN 1
-							ELSE 0
-						END
-					WHEN LD.OutGrade LIKE ''D%'' THEN 1
+					WHEN 
+						COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+						THEN 1
 					ELSE 0
 				END,
+			IsOverallLeaver = 
+				CASE
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						THEN 1
+					ELSE 0
+				END,
+			IsTimelyLeaver = 
+				CASE
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						THEN 1
+					ELSE 0
+				END,
+			IsOverallLeaverBestCase = 
+				CASE
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
+						THEN 1
+					ELSE 0
+				END,
+			IsTimelyLeaverBestCase = 
+				CASE
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
+						THEN 1
+					ELSE 0
+				END,
+			IsOverallAchieverBestCase = 
+				CASE
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						AND NOT LD.Outcome = 3
+						THEN 1
+					ELSE 0
+				END,
+			IsTimelyAchieverBestCase = 
+				CASE
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						AND NOT LD.Outcome = 3
+						THEN 1
+					ELSE 0
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallContinuer = 
+				CASE 
+					WHEN 
+						LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyContinuer = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallContinuerNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''1''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyContinuerNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''1''
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallContinuerFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyContinuerFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallCompleted = 
+				CASE 
+					WHEN 
+						LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyCompleted = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND LD.CompStatus = ''1''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallCompletedNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyCompletedNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallCompletedFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyCompletedFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallRetained = 
+				CASE 
+					WHEN 
+						LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyRetained = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallRetainedNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyRetainedNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallRetainedFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyRetainedFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallWithdrawn = 
+				CASE 
+					WHEN 
+						LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyWithdrawn = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallWithdrawnNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyWithdrawnNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallWithdrawnFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyWithdrawnFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) <> ''40'' 
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallTransfer = 
+				CASE 
+					WHEN 
+						LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyTransfer = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallTransferNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyTransferNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallTransferFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyTransferFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) = ''40'' 
+						THEN 1 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''4''
+						THEN 1
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallBreakInLearning = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''6''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyBreakInLearning = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''6''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallBreakInLearningNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''6''
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyBreakInLearningNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''6''
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallBreakInLearningFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''6''
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyBreakInLearningFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''6''
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallAchiever = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyAchiever = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallAchieverNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyAchieverNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallAchieverFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyAchieverFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallFailed = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyFailed = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallFailedNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyFailedNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallFailedFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyFailedFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 3
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallResultUnknown = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyResultUnknown = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1 
+					ELSE 0 
+				END,
+			IsOverallResultUnknownNotFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1
+					ELSE 0 
+				END,
+			IsTimelyResultUnknownNotFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 0
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1
+					ELSE 0 
+				END,
+			IsOverallResultUnknownFunded = 
+				CASE 
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1 
+					ELSE 0 
+				END,
+			IsTimelyResultUnknownFunded = 
+				CASE 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 8
+						THEN 1 
+					ELSE 0 
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOverallHighGrade = 
+				CASE
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
+						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
+							THEN 1
+					WHEN 
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
+						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
+							THEN 1
+					WHEN 
+						LD.OutGrade LIKE ''D%'' 
+							THEN 1
+					ELSE 0
+				END,
+			IsTimelyHighGrade = 
+				CASE
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
+						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
+						THEN 1
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND LD.CompStatus = ''2''
+						AND LD.Outcome = 1
+						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
+						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
+							THEN 1
+					WHEN 
+						LD.OutGrade LIKE ''D%'' 
+							THEN 1
+					ELSE 0
+				END,
+	'
+
+    SET @SQLString += 
+        N'
+			IsOutOfFunding30Days = 
+				CASE
+					WHEN
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND
+							COALESCE ( 
+								CASE WHEN LD.FundModel = ''25'' THEN HRS.FundLine END,
+								FM25.FundLine, 
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine = ''None'' THEN ''Advanced Learner Loan (ALL)'' END,
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine <> ''None'' THEN ALB.FundLine END,
+								FM36P.FundLineType,
+								FM35.FundLine,
+								CASE WHEN HE.LearnRefNumber IS NOT NULL THEN ''Higher Education'' END,
+								CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
+							) LIKE ''%Apprenticeship%''
+						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 30
+							THEN 1
+					ELSE 0
+				END,
+			IsOutOfFunding60Days = 
+				CASE
+					WHEN
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND
+							COALESCE ( 
+								CASE WHEN LD.FundModel = ''25'' THEN HRS.FundLine END,
+								FM25.FundLine, 
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine = ''None'' THEN ''Advanced Learner Loan (ALL)'' END,
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine <> ''None'' THEN ALB.FundLine END,
+								FM36P.FundLineType,
+								FM35.FundLine,
+								CASE WHEN HE.LearnRefNumber IS NOT NULL THEN ''Higher Education'' END,
+								CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
+							) LIKE ''%Apprenticeship%''
+						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 60
+							THEN 1
+					ELSE 0
+				END,
+			IsOutOfFunding90Days = 
+				CASE
+					WHEN
+						COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+						AND
+							COALESCE ( 
+								CASE WHEN LD.FundModel = ''25'' THEN HRS.FundLine END,
+								FM25.FundLine, 
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine = ''None'' THEN ''Advanced Learner Loan (ALL)'' END,
+								CASE WHEN ALB.AdvLoan = 1 AND ALB.FundLine <> ''None'' THEN ALB.FundLine END,
+								FM36P.FundLineType,
+								FM35.FundLine,
+								CASE WHEN HE.LearnRefNumber IS NOT NULL THEN ''Higher Education'' END,
+								CASE WHEN LD.FundModel = ''99'' THEN ''Full Cost'' END 
+							) LIKE ''%Apprenticeship%''
+						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 90
+							THEN 1
+					ELSE 0
+				END,
+
 	'
 
     SET @SQLString += 
