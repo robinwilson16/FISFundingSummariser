@@ -206,6 +206,32 @@ BEGIN
 			LD.LearnPlanEndDate,
 			LD.LearnActEndDate,
 			LD.AchDate,
+			StartYear = 
+				RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnStartDate ) <= 7 THEN 
+								YEAR ( LD.LearnStartDate ) - 1
+							ELSE 
+								YEAR ( LD.LearnStartDate )
+						END
+						AS VARCHAR(4)
+					),
+					2
+				)
+				+ ''/''
+				+ RIGHT (
+					CAST (
+						CASE
+							WHEN MONTH ( LD.LearnStartDate ) <= 7 THEN 
+								YEAR ( LD.LearnStartDate )
+							ELSE 
+								YEAR ( LD.LearnStartDate ) + 1
+						END
+						AS VARCHAR(4)
+					),
+					2
+				),
 			AchievementYear = 
 				RIGHT (
 					CAST (
@@ -301,6 +327,7 @@ BEGIN
 			ENR.LearnPlanEndDate,
 			ENR.LearnActEndDate,
 			ENR.AchDate,
+			ENR.StartYear,
 			ENR.AchievementYear,
 			ENR.PlannedEndYear,
 			ENR.ActualEndYear,
@@ -1594,6 +1621,7 @@ BEGIN
 			PlannedEndDate = LD.LearnPlanEndDate,
 			ActualEndDate = LD.LearnActEndDate,
 			AchievementDate = LD.AchDate,
+			StartYear = EY.StartYear,
 			AchievementYear = EY.AchievementYear,
 			PlannedEndYear = EY.PlannedEndYear,
 			ActualEndYear = EY.ActualEndYear,
