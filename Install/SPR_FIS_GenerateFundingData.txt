@@ -938,7 +938,7 @@ BEGIN
 				FD.IncludeInQARMeasures = 0,
 				FD.QARCalculationCurrentYearILRReturn = NULL,
 				FD.QARCalculationCurrentYearILRReturnIsFinal = NULL
-			FROM FIS_FundingDataNew FD
+			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			WHERE
 				FD.ProviderNumber = @ProviderNumber
 				AND FD.ReportingYear >= @SixYearsAgo';
