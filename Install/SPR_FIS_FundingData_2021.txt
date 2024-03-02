@@ -1549,6 +1549,9 @@ BEGIN
 	SET @SQLString += 
         N'
 			IsFundedStart = COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
+			IncludeInQARMeasures = NULL,
+			QARCalculationCurrentYearILRReturn = NULL,
+			QARCalculationCurrentYearILRReturnIsFinal = NULL,
 			IsPastPlannedEndDate =
 				CASE
 					WHEN 
