@@ -6,7 +6,7 @@ Changes since 21/22
 CREATE PROCEDURE SPR_FIS_FundingData_2223
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
-	@ILRReturn INT,
+	@ILRReturn NVARCHAR(3),
 	@IsFinalReturn BIT,
 	@Split1619Funding BIT,
 	@Reapportion1619FundingByAimWeighting BIT,
@@ -31,7 +31,7 @@ AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
 
-	--DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+	--DECLARE @ILRReturn NVARCHAR(3) = 'R14' -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
 	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223'
@@ -43,7 +43,7 @@ BEGIN
 	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
+	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table, D=Delete import
 	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
 	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
@@ -647,7 +647,7 @@ BEGIN
 			AcademicYear = @AcademicYear,
             ProviderNumber = SRC.UKPRN,
 			ProviderName = PROV.ProviderName,
-			ILRReturn = ''R'' + FORMAT ( @ILRReturn, ''#00'' ),
+			ILRReturn = @ILRReturn,
 			IsFinalReturn = @IsFinalReturn,
 			ILRReturnDate = DATEADD ( MS, - DATEPART ( MS, SRC.DateTime ), SRC.DateTime ), --Remove milliseconds as SSRS truncates these in parameters
 			SQLDatabase = ''' + @FISDatabase + ''',
@@ -2587,7 +2587,7 @@ BEGIN
 						ELSE
 							0
 					END
-				END / 12 ) * @ILRReturn END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * @ILRReturn, 0 ),
+				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
 			LearnSuppPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -2612,7 +2612,7 @@ BEGIN
 						ELSE
 							0
 					END
-				END / 12 ) * @ILRReturn END, FM35P.LearnSuppPaymentToPeriod, FM36P.LearnSuppPaymentToPeriod, 0 ),
+				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, FM35P.LearnSuppPaymentToPeriod, FM36P.LearnSuppPaymentToPeriod, 0 ),
 			AchCompPaymentToPeriod = COALESCE ( FM35P.AchCompPaymentToPeriod, FM36P.AchCompPaymentToPeriod, 0 ),
 			BalancePaymentToPeriod = COALESCE ( FM35P.BalancePaymentToPeriod, FM36P.BalancePaymentToPeriod, 0 ),
 			EmpOutcomePayToPeriod = COALESCE ( FM35P.EmpOutcomePayToPeriod, 0 ),
@@ -2634,7 +2634,7 @@ BEGIN
 							)
 						ELSE FM25.OnProgPayment
 					END
-				END / 12 ) * @ILRReturn END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.TotFundToPeriod, FM36P.TotFundToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * @ILRReturn, 0 ),
+				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.TotFundToPeriod, FM36P.TotFundToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
 	'
 
     SET @SQLString += 
@@ -4256,29 +4256,29 @@ BEGIN
 				ALBV.AimSeqNumber,
 				TotFundToPeriod = 
 					CASE
-						WHEN @ILRReturn = 1 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 1 THEN
 							ALBV.Period_1
-						WHEN @ILRReturn = 2 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 2 THEN
 							ALBV.Period_1 + ALBV.Period_2
-						WHEN @ILRReturn = 3 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 3 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3
-						WHEN @ILRReturn = 4 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 4 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4
-						WHEN @ILRReturn = 5 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 5 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5
-						WHEN @ILRReturn = 6 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 6 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6
-						WHEN @ILRReturn = 7 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 7 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7
-						WHEN @ILRReturn = 8 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 8 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8
-						WHEN @ILRReturn = 9 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 9 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9
-						WHEN @ILRReturn = 10 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 10 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10
-						WHEN @ILRReturn = 11 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 11 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10 + ALBV.Period_11
-						WHEN @ILRReturn = 12 THEN
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 12 THEN
 							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10 + ALBV.Period_11 + ALBV.Period_12
 						ELSE 0
 					END,
@@ -4311,12 +4311,12 @@ BEGIN
 				FM35P.LearnRefNumber,
 				FM35P.AimSeqNumber,
 
-				OnProgPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN FM35P.OnProgPayment ELSE 0 END ),
-				LearnSuppPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN FM35P.LearnSuppFundCash ELSE 0 END ),
-				AchCompPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN FM35P.AchievePayment ELSE 0 END ),
-				BalancePaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN FM35P.BalancePayment ELSE 0 END ),
-				EmpOutcomePayToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN FM35P.EmpOutcomePay ELSE 0 END ),
-				TotFundToPeriod = SUM ( CASE WHEN FM35P.Period <= @ILRReturn THEN 
+				OnProgPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.OnProgPayment ELSE 0 END ),
+				LearnSuppPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.LearnSuppFundCash ELSE 0 END ),
+				AchCompPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.AchievePayment ELSE 0 END ),
+				BalancePaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.BalancePayment ELSE 0 END ),
+				EmpOutcomePayToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.EmpOutcomePay ELSE 0 END ),
+				TotFundToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 					FM35P.OnProgPayment 
 					+ FM35P.LearnSuppFundCash
 					+ FM35P.AchievePayment
@@ -4610,7 +4610,7 @@ BEGIN
 				FM36P.FundLineType,
 
 				OnProgPaymentToPeriod = 
-					SUM ( CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
@@ -4622,12 +4622,12 @@ BEGIN
 						ELSE 0 END
 					),
 				LearnSuppPaymentToPeriod = 
-					SUM ( CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
 				AchCompPaymentToPeriod = 
-					SUM ( CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
@@ -4637,20 +4637,20 @@ BEGIN
 						ELSE 0 END
 					),
 				BalancePaymentToPeriod = 
-					SUM ( CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
 				OtherPaymentToPeriod = 
-					SUM ( CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
 						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotFundToPeriod = 
-					SUM (  CASE WHEN FM36P.Period <= @ILRReturn THEN 
+					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
@@ -6183,7 +6183,7 @@ BEGIN
 
 	SET @SQLParams = 
 		N'@AcademicYear NVARCHAR(5),
-		@ILRReturn INT,
+		@ILRReturn NVARCHAR(3),
 		@IsFinalReturn BIT,
 		@Split1619Funding BIT,
 		@Reapportion1619FundingByAimWeighting BIT,

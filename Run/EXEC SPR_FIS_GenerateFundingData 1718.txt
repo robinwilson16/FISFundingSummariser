@@ -1,4 +1,4 @@
-DECLARE @ILRReturn int = 14 -- CHANGE THIS TO CORRECT RETURN
+DECLARE @ILRReturn NVARCHAR(3) = 'R14' -- CHANGE THIS TO CORRECT RETURN
 DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
 
@@ -13,7 +13,7 @@ DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot F
 DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
+DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table, D=Delete import
 DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
 DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
 DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'

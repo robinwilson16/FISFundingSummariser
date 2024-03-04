@@ -1,6 +1,5 @@
-DECLARE @ILRReturn int = 04 -- CHANGE THIS TO CORRECT RETURN
+DECLARE @ILRReturn NVARCHAR(3) = 'R04' -- CHANGE THIS TO CORRECT RETURN
 DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
-
 
 
 
@@ -65,7 +64,7 @@ SET @SQLString = N'
 SET @SQLParams = 
 	N'@FISDatabase NVARCHAR(100),
 	@AcademicYear NVARCHAR(5),
-	@ILRReturn int,
+	@ILRReturn NVARCHAR(3),
 	@IsFinalReturn BIT,
 	@Split1619Funding BIT,
 	@Reapportion1619FundingByAimWeighting BIT,
