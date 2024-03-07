@@ -209,7 +209,12 @@ BEGIN
 							Forename NVARCHAR(100) NULL,
 							Sex NVARCHAR(1) NULL,
 							DOB DATETIME NULL,
-							Age31Aug INT NULL,
+							Age31AugCurrentYear INT NULL,
+							Age31AugEarliestStartYear INT NULL,
+							AgeGroupCurrentYear NVARCHAR(5) NULL,
+							AgeGroupEarliestStartYear NVARCHAR(5) NULL,
+							EarliestStartDate DATETIME NULL,
+							LatestEndDate DATETIME NULL,
 							ULN BIGINT NULL,
 							NINumber NVARCHAR(9) NULL,
 							Address1 NVARCHAR(50) NULL,
@@ -521,6 +526,15 @@ BEGIN
     
 					SET @SQLString += 
 						N'
+							ProvSpecLearnMonA NVARCHAR(20) NULL,
+							ProvSpecLearnMonB NVARCHAR(20) NULL,
+							ProvSpecLearnMonC NVARCHAR(20) NULL,
+							ProvSpecLearnMonD NVARCHAR(20) NULL,
+							ProvSpecDelMonA NVARCHAR(20) NULL,
+							ProvSpecDelMonB NVARCHAR(20) NULL,
+							ProvSpecDelMonC NVARCHAR(20) NULL,
+							ProvSpecDelMonD NVARCHAR(20) NULL,
+
 							NumPlannedOnProgPayments INT NULL,
 							NumOutstandingOnProgPayments INT NULL,
 							AchieveElement DECIMAL(10, 5) NULL,

@@ -352,6 +352,50 @@ BEGIN
 
 	SET @SQLString += 
         N'
+		DROP TABLE IF EXISTS #LearnerOverallDates
+		SELECT
+			LearnRefNumber = L.LearnRefNumber,
+			EarliestStartDate = MIN ( LD.LearnStartDate ),
+			LatestEndDate = MAX ( COALESCE ( LD.AchDate, LD.LearnActEndDate, LD.LearnPlanEndDate ) )
+			INTO #LearnerOverallDates
+		FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			ON LD.LearnRefNumber = L.LearnRefNumber
+		--16-19
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			ON FM25.LearnRefNumber = LD.LearnRefNumber
+			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
+
+		--AEB and Apps (Legacy)
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+			ON FM35.LearnRefNumber = LD.LearnRefNumber
+			AND FM35.AimSeqNumber = LD.AimSeqNumber
+
+		--Apps (Reformed)
+		LEFT JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+			ON FM36.LearnRefNumber = LD.LearnRefNumber
+			AND FM36.AimSeqNumber = LD.AimSeqNumber
+
+		--Loans and Bursaries
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery ALB
+			ON ALB.LearnRefNumber = LD.LearnRefNumber
+			AND ALB.AimSeqNumber = LD.AimSeqNumber
+
+		--Higher Education
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryHE HE
+			ON HE.LearnRefNumber = LD.LearnRefNumber
+			AND HE.AimSeqNumber = LD.AimSeqNumber
+		WHERE
+			(
+				COALESCE ( FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ) = 1
+				OR COALESCE ( ALB.LearnRefNumber, HE.LearnRefNumber ) IS NOT NULL
+			)
+		GROUP BY
+			L.LearnRefNumber
+	'
+
+	SET @SQLString += 
+        N'
 		DROP TABLE IF EXISTS #FAMLearner
 		SELECT
 			LearnRefNumber = FAML.LearnRefNumber,
@@ -664,7 +708,70 @@ BEGIN
 			Forename = L.GivenNames,
 			Sex = L.Sex,
 			DOB = L.DateOfBirth,
-			Age31Aug = DV.Learn_Age31Aug,
+			Age31AugCurrentYear = 
+				CASE
+					WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
+					ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
+				END,
+			Age31AugEarliestStartYear = 
+				CASE
+					WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
+					ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
+				END,
+			AgeGroupCurrentYear = 
+				CASE
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
+							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
+						END <= 15 THEN ''14-15''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
+							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
+						END <= 18 THEN ''16-18''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
+							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
+						END <= 24 THEN ''19-24''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
+							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
+						END >= 25 THEN ''25+''
+					ELSE ''-''
+				END,
+			AgeGroupEarliestStartYear = 
+				CASE
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
+							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
+						END <= 15 THEN ''14-15''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
+							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
+						END <= 18 THEN ''16-18''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
+							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
+						END <= 24 THEN ''19-24''
+					WHEN
+						CASE
+							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
+							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
+						END >= 25 THEN ''25+''
+					ELSE ''-''
+				END,
+	'
+
+	SET @SQLString += 
+        N'
+			EarliestStartDate = COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ),
+			LatestEndDate = COALESCE ( LOD.LatestEndDate, LD.AchDate, LD.LearnActEndDate, LD.LearnPlanEndDate ),
 			ULN = L.ULN,
 			NINumber = L.NINumber,
 			Address1 = L.AddLine1,
@@ -1497,7 +1604,7 @@ BEGIN
 							WHEN LD.AimType = 5 THEN 2 --Core Aim
 							ELSE 3
 						END,
-						COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+						COALESCE ( LD.AddHours, 0 ) DESC,
 						DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 						LD.LearnStartDate,
 						LD.AimSeqNumber
@@ -2523,6 +2630,15 @@ BEGIN
 
     SET @SQLString += 
         N'
+			ProvSpecLearnMonA = PSLMA.ProvSpecLearnMon,
+			ProvSpecLearnMonB = PSLMB.ProvSpecLearnMon,
+			ProvSpecLearnMonC = PSLMC.ProvSpecLearnMon,
+			ProvSpecLearnMonD = PSLMD.ProvSpecLearnMon,
+			ProvSpecDelMonA = PSDMA.ProvSpecDelMon,
+			ProvSpecDelMonB = PSDMB.ProvSpecDelMon,
+			ProvSpecDelMonC = PSDMC.ProvSpecDelMon,
+			ProvSpecDelMonD = PSDMD.ProvSpecDelMon,
+
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
 			AchieveElement = FM35.AchieveElement,
@@ -4197,6 +4313,19 @@ BEGIN
 			ON PTR.LearnRefNumber = L.LearnRefNumber
 			AND PTR.RowNum = 1
 
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMA
+			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMA.ProvSpecLearnMonOccur = ''A''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMB
+			ON PSLMB.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMB.ProvSpecLearnMonOccur = ''B''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMC
+			ON PSLMC.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMC.ProvSpecLearnMonOccur = ''C''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMD
+			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMD.ProvSpecLearnMonOccur = ''D''
+		
 		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -5607,6 +5736,8 @@ BEGIN
 			FROM ' + @FISDatabase + '.dbo.Invalid_Learner L
 		) INV
 			ON 1 = 1
+		LEFT JOIN #LearnerOverallDates LOD
+			ON LOD.LearnRefNumber = L.LearnRefNumber
 		LEFT JOIN #FAMLearner FAML
 			ON FAML.LearnRefNumber = L.LearnRefNumber
 		LEFT JOIN #FAMLearningDelivery FAMA

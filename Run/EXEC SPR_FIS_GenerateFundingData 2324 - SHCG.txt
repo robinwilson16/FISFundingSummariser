@@ -1,4 +1,4 @@
-DECLARE @ILRReturn NVARCHAR(3) = 'R06' -- CHANGE THIS TO CORRECT RETURN
+DECLARE @ILRReturn NVARCHAR(3) = 'R07' -- CHANGE THIS TO CORRECT RETURN
 DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
 
