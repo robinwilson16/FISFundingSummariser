@@ -1159,7 +1159,7 @@ BEGIN
 		--Get learner mappings between years for QAR calculations - Using LearnRefNumber
 		SET @SQLString += 
 		N'
-			DROP TABLE IF EXISTS #LearnerMappingData
+			DROP TABLE IF EXISTS #LearnerMappingDataOnRef
 			SELECT
 				CurrentProviderNumber = COALESCE ( FDN5.ProviderNumber, FDN4.ProviderNumber, FDN3.ProviderNumber, FDN2.ProviderNumber, FDN1.ProviderNumber, FD.ProviderNumber ),
 				CurrentLearnRefNumber = COALESCE ( FDN5.LearnRefNumber, FDN4.LearnRefNumber, FDN3.LearnRefNumber, FDN2.LearnRefNumber, FDN1.LearnRefNumber, FD.LearnRefNumber ),
@@ -1188,7 +1188,7 @@ BEGIN
 				NextLearnRefNumber5 = FDN5.LearnRefNumber,
 				NextUKPRN5 = FDN5.ProviderNumber
 	
-				INTO #LearnerMappingData
+				INTO #LearnerMappingDataOnRef
 			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN1
 				ON COALESCE ( FDN1.PrevUKPRN, FDN1.ProviderNumber ) = FD.ProviderNumber
