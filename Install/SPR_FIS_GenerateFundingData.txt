@@ -1176,7 +1176,8 @@ BEGIN
 				AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
 				AND COALESCE ( FD.PathwayCode, 0 ) = COALESCE ( MD.PathwayCode, 0 )
 				AND COALESCE ( FD.OriginalStartDate, FD.StartDate ) = MD.StartDate
-				AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum';
+				AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum
+				AND FD.CompletionStatusCode <> ''6''';
 
 		SET @SQLParams = 
 			N'@AcademicYear NVARCHAR(5),
