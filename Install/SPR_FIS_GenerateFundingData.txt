@@ -968,31 +968,86 @@ BEGIN
 	--Latest record for each enrolment matching on provider, learner and learning aim (Art can have 2)
 	IF @RunQARCalculation = 1
 	BEGIN
-		DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
+		--Get Current Academic Year
+		DECLARE @CurrentAcademicYear NVARCHAR(5)
+
+		SET @SQLString = 
+		N'
+			SELECT
+				@CurrentAcademicYear = 
+					RIGHT (
+						CAST (
+							CASE
+								WHEN MONTH ( CAST ( GETDATE() AS DATE ) ) <= 7 THEN 
+									YEAR ( CAST ( GETDATE() AS DATE ) ) - 1
+								ELSE 
+									YEAR ( CAST ( GETDATE() AS DATE ) )
+							END
+							AS VARCHAR(4)
+						),
+						2
+					)
+					+ ''/''
+					+ RIGHT (
+						CAST (
+							CASE
+								WHEN MONTH ( CAST ( GETDATE() AS DATE ) ) <= 7 THEN 
+									YEAR ( CAST ( GETDATE() AS DATE ) )
+								ELSE 
+									YEAR ( CAST ( GETDATE() AS DATE ) ) + 1
+							END
+							AS VARCHAR(4)
+						),
+						2
+					)';
+
+		SET @SQLParams = 
+		N'
+			@CurrentAcademicYear NVARCHAR(5) OUTPUT';
+
+
+
+		EXECUTE sp_executesql 
+			@SQLString, 
+			@SQLParams,
+			@CurrentAcademicYear = @CurrentAcademicYear OUTPUT;
+
+
+
+		DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @CurrentAcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @CurrentAcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
+
 		DECLARE @ProviderName NVARCHAR(200)
-		DECLARE @CurrentYearLatestImportedILRReturn NVARCHAR(5)
-		DECLARE @CurrentYearLatestImportedILRReturnIsFinal BIT
+		DECLARE @LatestImportedFileAcademicYear NVARCHAR(5)
+		DECLARE @LatestImportedFileILRReturnDate DATETIME
+		DECLARE @LatestImportedFileILRReturn NVARCHAR(3)
+		DECLARE @LatestImportedFileIsFinalReturn BIT
 		
 		SET @SQLString = 
 		N'
 			SELECT TOP 1
 				@ProviderName = FD.ProviderName,
-				@CurrentYearLatestImportedILRReturn = FD.ILRReturn,
-				@CurrentYearLatestImportedILRReturnIsFinal = FD.IsFinalReturn
+				@LatestImportedFileAcademicYear = FD.AcademicYear,
+				@LatestImportedFileILRReturnDate = FD.ILRReturnDate,
+				@LatestImportedFileILRReturn = FD.ILRReturn,
+				@LatestImportedFileIsFinalReturn = FD.IsFinalReturn
 			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			WHERE
 				FD.ProviderNumber = @ProviderNumber
 			ORDER BY
+				FD.AcademicYear DESC,
 				FD.ILRReturn DESC,
 				FD.IsFinalReturn';
+
 
 		SET @SQLParams = 
 		N'
 			@AcademicYear NVARCHAR(5),
 			@ProviderNumber INT,
 			@ProviderName NVARCHAR(200) OUTPUT,
-			@CurrentYearLatestImportedILRReturn NVARCHAR(5) OUTPUT,
-			@CurrentYearLatestImportedILRReturnIsFinal BIT OUTPUT';
+			@LatestImportedFileAcademicYear NVARCHAR(5) OUTPUT,
+			@LatestImportedFileILRReturnDate DATETIME OUTPUT,
+			@LatestImportedFileILRReturn NVARCHAR(3) OUTPUT,
+			@LatestImportedFileIsFinalReturn BIT OUTPUT';
 
 		EXECUTE sp_executesql 
 			@SQLString, 
@@ -1000,8 +1055,10 @@ BEGIN
 			@AcademicYear = @AcademicYear,
 			@ProviderNumber = @ProviderNumber,
 			@ProviderName = @ProviderName OUTPUT,
-			@CurrentYearLatestImportedILRReturn = @CurrentYearLatestImportedILRReturn OUTPUT,
-			@CurrentYearLatestImportedILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal OUTPUT;
+			@LatestImportedFileAcademicYear = @LatestImportedFileAcademicYear OUTPUT,
+			@LatestImportedFileILRReturnDate = @LatestImportedFileILRReturnDate OUTPUT,
+			@LatestImportedFileILRReturn = @LatestImportedFileILRReturn OUTPUT,
+			@LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn OUTPUT;
 
 
 		--Clear existing values
@@ -1010,8 +1067,10 @@ BEGIN
 			UPDATE FD
 			SET
 				FD.IncludeInQARMeasures = 0,
-				FD.QARCalculationCurrentYearILRReturn = NULL,
-				FD.QARCalculationCurrentYearILRReturnIsFinal = NULL
+				FD.LatestImportedFileAcademicYear = NULL,
+				FD.LatestImportedFileILRReturnDate = NULL,
+				FD.LatestImportedFileILRReturn = NULL,
+				FD.LatestImportedFileIsFinalReturn = NULL
 			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			WHERE
 				FD.ProviderNumber = @ProviderNumber
@@ -1037,19 +1096,18 @@ BEGIN
 			DROP TABLE IF EXISTS #MergedData
 			SELECT
 				FD.ProviderNumber,
-				FD.LearnRefNumber,
+				FD.LearnerRef,
 				FD.LearningAimCode,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
 				FD.FrameworkCode,
 				FD.PathwayCode,
-				FD.StartDate,
-				FD.PlannedEndDate,
-				FD.CompletionStatusCode,
+				StartDate = COALESCE ( FD.OriginalStartDate, FD.StartDate ),
+				CompletionStatusCode = MAX ( FD.CompletionStatusCode ),
 				FD.StartYear,
-				FD.PlannedEndYear,
-				FD.AchievementYear,
-				FD.HybridEndYear,
+				PlannedEndYear = MAX ( FD.PlannedEndYear ),
+				AchievementYear = MAX ( FD.AchievementYear ),
+				HybridEndYear = MAX ( FD.HybridEndYear ),
 				EarliestReportingYear = MIN ( FD.ReportingYear ),
 				LatestReportingYear = MAX ( FD.ReportingYear),
 				NumMergedRecords = COUNT ( FD.LearningAimCode )
@@ -1061,29 +1119,42 @@ BEGIN
 				AND FD.ReportingYear >= @SixYearsAgo
 				AND FD.ILRReturn = 
 					CASE
-						WHEN FD.AcademicYear = @AcademicYear THEN @CurrentYearLatestImportedILRReturn
+						WHEN 
+							FD.AcademicYear = @CurrentAcademicYear 
+							AND @LatestImportedFileAcademicYear = @CurrentAcademicYear
+								THEN @LatestImportedFileILRReturn
 						ELSE ''R14''
 					END
 				AND FD.IsFinalReturn = 
 					CASE
-						WHEN FD.AcademicYear = @AcademicYear THEN @CurrentYearLatestImportedILRReturnIsFinal
+						WHEN 
+							FD.AcademicYear = @CurrentAcademicYear 
+							AND @LatestImportedFileAcademicYear = @CurrentAcademicYear
+								THEN @LatestImportedFileIsFinalReturn
 						ELSE 1
 					END
+				AND 
+					CASE
+						WHEN 
+							FD.AcademicYear = @CurrentAcademicYear 
+							AND @LatestImportedFileAcademicYear = @CurrentAcademicYear THEN
+								CASE
+									WHEN FORMAT ( FD.ILRReturnDate, ''yyyy-MM-dd HH:mm:ss'' ) = FORMAT ( @LatestImportedFileILRReturnDate, ''yyyy-MM-dd HH:mm:ss'' ) THEN 1
+									ELSE 0
+								END
+						ELSE 1
+					END = 1
+				AND FD.CompletionStatusCode <> ''6''
 			GROUP BY
 				FD.ProviderNumber,
-				FD.LearnRefNumber,
+				FD.LearnerRef,
 				FD.LearningAimCode,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
 				FD.FrameworkCode,
 				FD.PathwayCode,
-				FD.StartDate,
-				FD.PlannedEndDate,
-				FD.CompletionStatusCode,
-				FD.StartYear,
-				FD.PlannedEndYear,
-				FD.AchievementYear,
-				FD.HybridEndYear
+				COALESCE ( FD.OriginalStartDate, FD.StartDate ),
+				FD.StartYear
 		'
 
 		SET @SQLString += 
@@ -1091,8 +1162,10 @@ BEGIN
 			UPDATE FD
 			SET
 				FD.IncludeInQARMeasures = 1,
-				FD.QARCalculationCurrentYearILRReturn = @CurrentYearLatestImportedILRReturn,
-				FD.QARCalculationCurrentYearILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal
+				FD.LatestImportedFileAcademicYear = @LatestImportedFileAcademicYear,
+				FD.LatestImportedFileILRReturnDate = @LatestImportedFileILRReturnDate,
+				FD.LatestImportedFileILRReturn = @LatestImportedFileILRReturn,
+				FD.LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn
 			FROM #MergedData MD
 			INNER JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 				ON FD.ProviderNumber = MD.ProviderNumber
@@ -1102,25 +1175,30 @@ BEGIN
 				AND COALESCE ( FD.StandardCode, 0 ) = COALESCE ( MD.StandardCode, 0 )
 				AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
 				AND COALESCE ( FD.PathwayCode, 0 ) = COALESCE ( MD.PathwayCode, 0 )
-				AND FD.StartDate = MD.StartDate
-				AND FD.PlannedEndDate = MD.PlannedEndDate
+				AND COALESCE ( FD.OriginalStartDate, FD.StartDate ) = MD.StartDate
 				AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum';
 
 		SET @SQLParams = 
 			N'@AcademicYear NVARCHAR(5),
 			@ProviderNumber INT,
+			@CurrentAcademicYear NVARCHAR(5),
 			@SixYearsAgo NVARCHAR(5),
-			@CurrentYearLatestImportedILRReturn NVARCHAR(5),
-			@CurrentYearLatestImportedILRReturnIsFinal BIT';
+			@LatestImportedFileAcademicYear NVARCHAR(5) OUTPUT,
+			@LatestImportedFileILRReturnDate DATETIME OUTPUT,
+			@LatestImportedFileILRReturn NVARCHAR(3) OUTPUT,
+			@LatestImportedFileIsFinalReturn BIT OUTPUT';
 
 		EXECUTE sp_executesql 
 			@SQLString, 
 			@SQLParams,
 			@AcademicYear = @AcademicYear,
 			@ProviderNumber = @ProviderNumber,
+			@CurrentAcademicYear = @CurrentAcademicYear,
 			@SixYearsAgo = @SixYearsAgo,
-			@CurrentYearLatestImportedILRReturn = @CurrentYearLatestImportedILRReturn,
-			@CurrentYearLatestImportedILRReturnIsFinal = @CurrentYearLatestImportedILRReturnIsFinal;
+			@LatestImportedFileAcademicYear = @LatestImportedFileAcademicYear,
+			@LatestImportedFileILRReturnDate = @LatestImportedFileILRReturnDate,
+			@LatestImportedFileILRReturn = @LatestImportedFileILRReturn,
+			@LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn;
 
 		SET @Message = N'Number Of Records Included In QAR Measures Across All Years for ' + @ProviderName + ': ' + CAST ( @@ROWCOUNT AS VARCHAR(50) );
 		RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
