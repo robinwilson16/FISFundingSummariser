@@ -1163,6 +1163,7 @@ BEGIN
 			SELECT
 				CurrentProviderNumber = COALESCE ( FDN5.ProviderNumber, FDN4.ProviderNumber, FDN3.ProviderNumber, FDN2.ProviderNumber, FDN1.ProviderNumber, FD.ProviderNumber ),
 				CurrentLearnRefNumber = COALESCE ( FDN5.LearnRefNumber, FDN4.LearnRefNumber, FDN3.LearnRefNumber, FDN2.LearnRefNumber, FDN1.LearnRefNumber, FD.LearnRefNumber ),
+				ULN = FD.ULN,
 
 				OriginalAcademicYear = FD.AcademicYear,
 				OriginalProviderNumber = FD.ProviderNumber,
