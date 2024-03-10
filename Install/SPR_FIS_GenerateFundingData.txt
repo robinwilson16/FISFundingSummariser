@@ -1096,7 +1096,7 @@ BEGIN
 			DROP TABLE IF EXISTS #MergedData
 			SELECT
 				FD.ProviderNumber,
-				FD.LearnerRef,
+				FD.LearnRefNumber,
 				FD.LearningAimCode,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
@@ -1147,7 +1147,7 @@ BEGIN
 				AND FD.CompletionStatusCode <> ''6''
 			GROUP BY
 				FD.ProviderNumber,
-				FD.LearnerRef,
+				FD.LearnRefNumber,
 				FD.LearningAimCode,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
