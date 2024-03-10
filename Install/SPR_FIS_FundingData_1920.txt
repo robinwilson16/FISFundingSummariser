@@ -63,7 +63,7 @@ BEGIN
 	--DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
 
 	DECLARE @SQLString NVARCHAR(MAX);
-    DECLARE @SQLParams NVARCHAR(MAX);
+    	DECLARE @SQLParams NVARCHAR(MAX);
 
 	SET @SQLString = 
         N'
@@ -205,6 +205,7 @@ BEGIN
 		SELECT
 			LD.LearnRefNumber,
 			LD.AimSeqNumber,
+			LD.OrigLearnStartDate,
 			LD.LearnStartDate,
 			LD.LearnPlanEndDate,
 			LD.LearnActEndDate,
@@ -213,10 +214,10 @@ BEGIN
 				RIGHT (
 					CAST (
 						CASE
-							WHEN MONTH ( LD.LearnStartDate ) <= 7 THEN 
-								YEAR ( LD.LearnStartDate ) - 1
+							WHEN MONTH ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) ) <= 7 THEN 
+								YEAR ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) ) - 1
 							ELSE 
-								YEAR ( LD.LearnStartDate )
+								YEAR ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) )
 						END
 						AS VARCHAR(4)
 					),
@@ -226,10 +227,10 @@ BEGIN
 				+ RIGHT (
 					CAST (
 						CASE
-							WHEN MONTH ( LD.LearnStartDate ) <= 7 THEN 
-								YEAR ( LD.LearnStartDate )
+							WHEN MONTH ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) ) <= 7 THEN 
+								YEAR ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) )
 							ELSE 
-								YEAR ( LD.LearnStartDate ) + 1
+								YEAR ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) ) + 1
 						END
 						AS VARCHAR(4)
 					),
@@ -326,6 +327,7 @@ BEGIN
 		SELECT
 			ENR.LearnRefNumber,
 			ENR.AimSeqNumber,
+			ENR.OrigLearnStartDate,
 			ENR.LearnStartDate,
 			ENR.LearnPlanEndDate,
 			ENR.LearnActEndDate,
@@ -704,7 +706,9 @@ BEGIN
 			Is1619FundingReapportionedByAim = @Reapportion1619FundingByAimWeighting,
 			InvalidLearners = INV.InvalidLearners,
 
-			LearnerRef = L.LearnRefNumber,
+			LearnRefNumber = L.LearnRefNumber,
+			PrevLearnRefNumber = L.PrevLearnRefNumber,
+			PrevUKPRN = L.PrevUKPRN,
 			Surname = L.FamilyName,
 			Forename = L.GivenNames,
 			Sex = L.Sex,
@@ -1584,8 +1588,7 @@ BEGIN
 						LD.StdCode,
 						LD.FworkCode,
 						LD.PwayCode,
-						LD.LearnStartDate,
-						LD.LearnPlanEndDate
+						COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate )
 					ORDER BY
 						LD.CompStatus,
 						COALESCE ( LD.ProgType, ''99'' ),
@@ -1640,6 +1643,7 @@ BEGIN
 			PlannedEndDate = LD.LearnPlanEndDate,
 			ActualEndDate = LD.LearnActEndDate,
 			AchievementDate = LD.AchDate,
+			RestartIndicator = COALESCE ( FM35.Restart, 0 ),
 			WithdrawReason = LD.WithdrawReason,
 			Grade = LD.OutGrade,
 			AwardBody = AIM.AwardBodyCode,
@@ -1649,13 +1653,15 @@ BEGIN
 			ActualEndYear = EY.ActualEndYear,
 			ReportingYear = EY.ReportingYear,
 			HybridEndYear = EY.HybridEndYear,
+			LatestImportedFileAcademicYear = NULL,
+			LatestImportedFileILRReturnDate = NULL,
+			LatestImportedFileILRReturn = NULL,
+			LatestImportedFileIsFinalReturn = NULL,
 	'
 
 	SET @SQLString += 
         N'
 			IncludeInQARMeasures = NULL,
-			QARCalculationCurrentYearILRReturn = NULL,
-			QARCalculationCurrentYearILRReturnIsFinal = NULL,
 			IsFundedStart = COALESCE ( CASE WHEN LD.FundModel = ''25'' THEN HRS.IsFunded END, FM25.StartFund, ALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
 			IsPastPlannedEndDate =
 				CASE
