@@ -1090,8 +1090,74 @@ BEGIN
 			@SixYearsAgo = @SixYearsAgo;
 
 
-		--Get learner mappings between years for QAR calculations
+		--Get learner mappings between years for QAR calculations - Using ULN
 		SET @SQLString = 
+		N'
+			DROP TABLE IF EXISTS #LearnerMappingDataOnULN
+			SELECT
+				CurrentProviderNumber = COALESCE ( FDN5.ProviderNumber, FDN4.ProviderNumber, FDN3.ProviderNumber, FDN2.ProviderNumber, FDN1.ProviderNumber, FD.ProviderNumber ),
+				CurrentLearnRefNumber = COALESCE ( FDN5.LearnRefNumber, FDN4.LearnRefNumber, FDN3.LearnRefNumber, FDN2.LearnRefNumber, FDN1.LearnRefNumber, FD.LearnRefNumber ),
+				ULN = FD.ULN,
+
+				OriginalAcademicYear = FD.AcademicYear,
+				OriginalProviderNumber = FD.ProviderNumber,
+				OriginalLearnRefNumber = FD.LearnRefNumber,
+
+				NextAcademicYear1 = FDN1.AcademicYear,
+				NextLearnRefNumber1 = FDN1.LearnRefNumber,
+				NextUKPRN1 = FDN1.ProviderNumber,
+	
+				NextAcademicYear2 = FDN2.AcademicYear,
+				NextLearnRefNumber2 = FDN2.LearnRefNumber,
+				NextUKPRN2 = FDN2.ProviderNumber,
+	
+				NextAcademicYear3 = FDN3.AcademicYear,
+				NextLearnRefNumber3 = FDN3.LearnRefNumber,
+				NextUKPRN3 = FDN3.ProviderNumber,
+	
+				NextAcademicYear4 = FDN4.AcademicYear,
+				NextLearnRefNumber4 = FDN4.LearnRefNumber,
+				NextUKPRN4 = FDN4.ProviderNumber,
+	
+				NextAcademicYear5 = FDN5.AcademicYear,
+				NextLearnRefNumber5 = FDN5.LearnRefNumber,
+				NextUKPRN5 = FDN5.ProviderNumber
+	
+				INTO #LearnerMappingDataOnULN
+			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
+			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN1
+				ON COALESCE ( FDN1.PrevUKPRN, FDN1.ProviderNumber ) = FD.ProviderNumber
+				AND FDN1.AcademicYear = CAST ( CAST ( LEFT ( FD.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) ) + ''/'' + CAST ( CAST ( RIGHT ( FD.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) )
+				AND FDN1.ULN = FD.ULN
+				AND FDN1.IsMainAim = 1
+			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN2
+				ON COALESCE ( FDN2.PrevUKPRN, FDN2.ProviderNumber ) = FDN1.ProviderNumber
+				AND FDN2.AcademicYear = CAST ( CAST ( LEFT ( FDN1.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) ) + ''/'' + CAST ( CAST ( RIGHT ( FDN1.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) )
+				AND FDN2.ULN = FDN1.ULN
+				AND FDN2.IsMainAim = 1
+			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN3
+				ON COALESCE ( FDN3.PrevUKPRN, FDN3.ProviderNumber ) = FDN2.ProviderNumber
+				AND FDN3.AcademicYear = CAST ( CAST ( LEFT ( FDN2.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) ) + ''/'' + CAST ( CAST ( RIGHT ( FDN2.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) )
+				AND FDN3.ULN = FDN2.ULN
+				AND FDN3.IsMainAim = 1
+			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN4
+				ON COALESCE ( FDN4.PrevUKPRN, FDN4.ProviderNumber ) = FDN3.ProviderNumber
+				AND FDN4.AcademicYear = CAST ( CAST ( LEFT ( FDN3.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) ) + ''/'' + CAST ( CAST ( RIGHT ( FDN3.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) )
+				AND FDN4.ULN = FDN3.ULN
+				AND FDN4.IsMainAim = 1
+			LEFT JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FDN5
+				ON COALESCE ( FDN5.PrevUKPRN, FDN5.ProviderNumber ) = FDN4.ProviderNumber
+				AND FDN5.AcademicYear = CAST ( CAST ( LEFT ( FDN4.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) ) + ''/'' + CAST ( CAST ( RIGHT ( FDN4.AcademicYear, 2 ) AS INT ) + 1 AS NVARCHAR(2) )
+				AND FDN5.ULN = FDN4.ULN
+				AND FDN5.IsMainAim = 1
+			WHERE
+				COALESCE ( FDN5.ProviderNumber, FDN4.ProviderNumber, FDN3.ProviderNumber, FDN2.ProviderNumber, FDN1.ProviderNumber, FD.ProviderNumber ) = 10004599
+				AND FD.IsMainAim = 1
+				AND FD.ULN <> ''9999999999''';
+
+
+		--Get learner mappings between years for QAR calculations - Using LearnRefNumber
+		SET @SQLString += 
 		N'
 			DROP TABLE IF EXISTS #LearnerMappingData
 			SELECT
@@ -1156,17 +1222,21 @@ BEGIN
 
 		--Take most recent values for learner ref and provider QKPRN and map to previous years where they differ 
 		--Using UNION in case of multiple mappings to same values for different previous years
+		--Mapping using ULN and prior or current UKPRN
 		SET @SQLString += 
 		N'
+			--Take most recent values and map to previous years where they differ
+			--Match on same ULN and previous or same UKPRN
 			DROP TABLE IF EXISTS #YearlyLearnerMappings
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.OriginalAcademicYear,
 				PrevUKPRN = YLM.OriginalProviderNumber,
 				PrevLearnRefNumber = YLM.OriginalLearnRefNumber
 				INTO #YearlyLearnerMappings
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
 			WHERE
 				YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
 				OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
@@ -1175,11 +1245,12 @@ BEGIN
 
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.NextAcademicYear1,
 				PrevUKPRN = YLM.NextUKPRN1,
 				PrevLearnRefNumber = YLM.NextLearnRefNumber1
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
 			WHERE
 				YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
 				OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
@@ -1188,11 +1259,12 @@ BEGIN
 
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.NextAcademicYear2,
 				PrevUKPRN = YLM.NextUKPRN2,
 				PrevLearnRefNumber = YLM.NextLearnRefNumber2
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
 			WHERE
 				YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
 				OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
@@ -1201,11 +1273,12 @@ BEGIN
 
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.NextAcademicYear3,
 				PrevUKPRN = YLM.NextUKPRN3,
 				PrevLearnRefNumber = YLM.NextLearnRefNumber3
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
 			WHERE
 				YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
 				OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
@@ -1214,11 +1287,12 @@ BEGIN
 
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.NextAcademicYear4,
 				PrevUKPRN = YLM.NextUKPRN4,
 				PrevLearnRefNumber = YLM.NextLearnRefNumber4
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
 			WHERE
 				YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
 				OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
@@ -1227,11 +1301,103 @@ BEGIN
 
 			SELECT
 				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
 				LearnRefNumber = YLM.CurrentLearnRefNumber,
 				PrevAcademicYear = YLM.NextAcademicYear5,
 				PrevUKPRN = YLM.NextUKPRN5,
 				PrevLearnRefNumber = YLM.NextLearnRefNumber5
-			FROM #LearnerMappingData YLM
+			FROM #LearnerMappingDataOnULN YLM
+			WHERE
+				YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
+				OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber
+		';
+
+
+		--Take most recent values for learner ref and provider UKPRN and map to previous years where they differ 
+		--Using UNION in case of multiple mappings to same values for different previous years
+		--Mapping using prior student ref and prior or current UKPRN
+		SET @SQLString += 
+			N'
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.OriginalAcademicYear,
+				PrevUKPRN = YLM.OriginalProviderNumber,
+				PrevLearnRefNumber = YLM.OriginalLearnRefNumber
+			FROM #LearnerMappingDataOnRef YLM
+			WHERE
+				YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
+				OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
+
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.NextAcademicYear1,
+				PrevUKPRN = YLM.NextUKPRN1,
+				PrevLearnRefNumber = YLM.NextLearnRefNumber1
+			FROM #LearnerMappingDataOnRef YLM
+			WHERE
+				YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
+				OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
+
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.NextAcademicYear2,
+				PrevUKPRN = YLM.NextUKPRN2,
+				PrevLearnRefNumber = YLM.NextLearnRefNumber2
+			FROM #LearnerMappingDataOnRef YLM
+			WHERE
+				YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
+				OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
+
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.NextAcademicYear3,
+				PrevUKPRN = YLM.NextUKPRN3,
+				PrevLearnRefNumber = YLM.NextLearnRefNumber3
+			FROM #LearnerMappingDataOnRef YLM
+			WHERE
+				YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
+				OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
+
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.NextAcademicYear4,
+				PrevUKPRN = YLM.NextUKPRN4,
+				PrevLearnRefNumber = YLM.NextLearnRefNumber4
+			FROM #LearnerMappingDataOnRef YLM
+			WHERE
+				YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
+				OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
+
+			UNION
+
+			SELECT
+				ProviderNumber = YLM.CurrentProviderNumber,
+				ULN = YLM.ULN,
+				LearnRefNumber = YLM.CurrentLearnRefNumber,
+				PrevAcademicYear = YLM.NextAcademicYear5,
+				PrevUKPRN = YLM.NextUKPRN5,
+				PrevLearnRefNumber = YLM.NextLearnRefNumber5
+			FROM #LearnerMappingDataOnRef YLM
 			WHERE
 				YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
 				OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber';
