@@ -409,6 +409,7 @@ BEGIN
 							LatestImportedFileIsFinalReturn BIT NULL,
 
 							IncludeInQARMeasures INT NULL,
+							QARNumberOfMergedYearsOfData INT NULL,
 							IsFundedStart INT NULL,
 							IsPastPlannedEndDate INT NULL,
 							IsOverallLeaver INT NULL,
@@ -1067,6 +1068,7 @@ BEGIN
 			UPDATE FD
 			SET
 				FD.IncludeInQARMeasures = 0,
+				FD.QARNumberOfMergedYearsOfData = NULL,
 				FD.LatestImportedFileAcademicYear = NULL,
 				FD.LatestImportedFileILRReturnDate = NULL,
 				FD.LatestImportedFileILRReturn = NULL,
@@ -1514,6 +1516,7 @@ BEGIN
 			UPDATE FD
 			SET
 				FD.IncludeInQARMeasures = 1,
+				FD.QARNumberOfMergedYearsOfData = MD.NumMergedRecords,
 				FD.LatestImportedFileAcademicYear = @LatestImportedFileAcademicYear,
 				FD.LatestImportedFileILRReturnDate = @LatestImportedFileILRReturnDate,
 				FD.LatestImportedFileILRReturn = @LatestImportedFileILRReturn,
