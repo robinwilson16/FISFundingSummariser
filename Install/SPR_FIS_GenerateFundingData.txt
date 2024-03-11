@@ -1224,93 +1224,117 @@ BEGIN
 		--Take most recent values for learner ref and provider QKPRN and map to previous years where they differ 
 		--Using UNION in case of multiple mappings to same values for different previous years
 		--Mapping using ULN and prior or current UKPRN
+		--Later match on previous learner ref but prioritise ULN matches first (descending order for rownum)
 		SET @SQLString += 
 		N'
-			--Take most recent values and map to previous years where they differ
-			--Match on same ULN and previous or same UKPRN
 			DROP TABLE IF EXISTS #YearlyLearnerMappings
 			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.OriginalAcademicYear,
-				PrevUKPRN = YLM.OriginalProviderNumber,
-				PrevLearnRefNumber = YLM.OriginalLearnRefNumber
-				INTO #YearlyLearnerMappings
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
-				OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
+				YLM.ProviderNumber,
+				YLM.ULN,
+				YLM.LearnRefNumber,
+				YLM.PrevAcademicYear,
+				YLM.PrevUKPRN,
+				YLM.PrevLearnRefNumber,
+				YLM.MatchMode,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							YLM.ProviderNumber,
+							YLM.ULN,
+							YLM.LearnRefNumber,
+							YLM.PrevAcademicYear
+						ORDER BY
+							YLM.MatchMode DESC
+					)
+			INTO #YearlyLearnerMappings
+			FROM (
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.OriginalAcademicYear,
+					PrevUKPRN = YLM.OriginalProviderNumber,
+					PrevLearnRefNumber = YLM.OriginalLearnRefNumber,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
+					OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear1,
-				PrevUKPRN = YLM.NextUKPRN1,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber1
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear1,
+					PrevUKPRN = YLM.NextUKPRN1,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber1,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear2,
-				PrevUKPRN = YLM.NextUKPRN2,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber2
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear2,
+					PrevUKPRN = YLM.NextUKPRN2,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber2,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear3,
-				PrevUKPRN = YLM.NextUKPRN3,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber3
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear3,
+					PrevUKPRN = YLM.NextUKPRN3,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber3,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear4,
-				PrevUKPRN = YLM.NextUKPRN4,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber4
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear4,
+					PrevUKPRN = YLM.NextUKPRN4,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber4,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear5,
-				PrevUKPRN = YLM.NextUKPRN5,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber5
-			FROM #LearnerMappingDataOnULN YLM
-			WHERE
-				YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear5,
+					PrevUKPRN = YLM.NextUKPRN5,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber5,
+					MatchMode = ''ULN''
+				FROM #LearnerMappingDataOnULN YLM
+				WHERE
+					YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber
 		';
 
 
@@ -1319,89 +1343,96 @@ BEGIN
 		--Mapping using prior student ref and prior or current UKPRN
 		SET @SQLString += 
 			N'
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.OriginalAcademicYear,
-				PrevUKPRN = YLM.OriginalProviderNumber,
-				PrevLearnRefNumber = YLM.OriginalLearnRefNumber
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
-				OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.OriginalAcademicYear,
+					PrevUKPRN = YLM.OriginalProviderNumber,
+					PrevLearnRefNumber = YLM.OriginalLearnRefNumber,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.OriginalLearnRefNumber <> YLM.CurrentLearnRefNumber
+					OR YLM.OriginalProviderNumber <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear1,
-				PrevUKPRN = YLM.NextUKPRN1,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber1
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear1,
+					PrevUKPRN = YLM.NextUKPRN1,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber1,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.NextLearnRefNumber1 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN1 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear2,
-				PrevUKPRN = YLM.NextUKPRN2,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber2
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear2,
+					PrevUKPRN = YLM.NextUKPRN2,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber2,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.NextLearnRefNumber2 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN2 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear3,
-				PrevUKPRN = YLM.NextUKPRN3,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber3
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear3,
+					PrevUKPRN = YLM.NextUKPRN3,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber3,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.NextLearnRefNumber3 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN3 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear4,
-				PrevUKPRN = YLM.NextUKPRN4,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber4
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear4,
+					PrevUKPRN = YLM.NextUKPRN4,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber4,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.NextLearnRefNumber4 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN4 <> YLM.CurrentProviderNumber
 
-			UNION
+				UNION
 
-			SELECT
-				ProviderNumber = YLM.CurrentProviderNumber,
-				ULN = YLM.ULN,
-				LearnRefNumber = YLM.CurrentLearnRefNumber,
-				PrevAcademicYear = YLM.NextAcademicYear5,
-				PrevUKPRN = YLM.NextUKPRN5,
-				PrevLearnRefNumber = YLM.NextLearnRefNumber5
-			FROM #LearnerMappingDataOnRef YLM
-			WHERE
-				YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
-				OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber';
+				SELECT
+					ProviderNumber = YLM.CurrentProviderNumber,
+					ULN = YLM.ULN,
+					LearnRefNumber = YLM.CurrentLearnRefNumber,
+					PrevAcademicYear = YLM.NextAcademicYear5,
+					PrevUKPRN = YLM.NextUKPRN5,
+					PrevLearnRefNumber = YLM.NextLearnRefNumber5,
+					MatchMode = ''Ref''
+				FROM #LearnerMappingDataOnRef YLM
+				WHERE
+					YLM.NextLearnRefNumber5 <> YLM.CurrentLearnRefNumber
+					OR YLM.NextUKPRN5 <> YLM.CurrentProviderNumber
+			) YLM';
 
 
 		--Set records which should be includes in QAR measures
@@ -1431,6 +1462,7 @@ BEGIN
 				ON YLM.PrevAcademicYear = FD.AcademicYear
 				AND YLM.PrevUKPRN = FD.ProviderNumber
 				AND YLM.PrevLearnRefNumber = FD.LearnRefNumber
+				AND YLM.RowNum = 1
 			WHERE
 				FD.ProviderNumber = @ProviderNumber
 				--AND FD.HybridEndYear = @AcademicYear
