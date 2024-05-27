@@ -858,6 +858,10 @@ BEGIN
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
+	'
+
+	SET @SQLString += 
+        N'
 			LEFT JOIN #CourseHours CH
 				ON CH.AcademicYear = @AcademicYear
 				AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
@@ -6527,6 +6531,10 @@ BEGIN
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
+	'
+
+	SET @SQLString += 
+        N'
 			LEFT JOIN #CourseHours CH
 				ON CH.AcademicYear = @AcademicYear
 				AND CH.ProvSpecField COLLATE DATABASE_DEFAULT =
