@@ -5,10 +5,11 @@ DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 
 
 
 
-DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223_R14F_Wigan'
+DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223_R14F_Fareham'
 DECLARE @AcademicYear NVARCHAR(5) = '22/23'
 DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
+DECLARE @AppsMoveFundingToMainComponentAim BIT = 1 --Move Apps Funding from Main ZProg to Main Component Aim
 DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
 DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
@@ -41,6 +42,7 @@ SET @SQLString = N'
 		@IsFinalReturn,
 		@Split1619Funding,
 		@Reapportion1619FundingByAimWeighting,
+		@AppsMoveFundingToMainComponentAim,
 		@1619ALSFundingPercent,
 		@IncludeHEAdvLoanPossIncome,
 		@IncludeAdvLoanBursaryIncome,
@@ -69,6 +71,7 @@ SET @SQLParams =
 	@IsFinalReturn BIT,
 	@Split1619Funding BIT,
 	@Reapportion1619FundingByAimWeighting BIT,
+	@AppsMoveFundingToMainComponentAim BIT,
 	@1619ALSFundingPercent DECIMAL(5,2),
 	@IncludeHEAdvLoanPossIncome BIT,
 	@IncludeAdvLoanBursaryIncome BIT,
@@ -99,6 +102,7 @@ EXECUTE sp_executesql
 	@IsFinalReturn = @IsFinalReturn,
 	@Split1619Funding = @Split1619Funding,
 	@Reapportion1619FundingByAimWeighting = @Reapportion1619FundingByAimWeighting,
+	@AppsMoveFundingToMainComponentAim = @AppsMoveFundingToMainComponentAim,
 	@1619ALSFundingPercent = @1619ALSFundingPercent,
 	@IncludeHEAdvLoanPossIncome = @IncludeHEAdvLoanPossIncome,
 	@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,

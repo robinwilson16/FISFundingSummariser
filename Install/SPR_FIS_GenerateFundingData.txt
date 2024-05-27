@@ -5,6 +5,7 @@ CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@IsFinalReturn BIT,
 	@Split1619Funding BIT,
 	@Reapportion1619FundingByAimWeighting BIT,
+	@AppsMoveFundingToMainComponentAim BIT,
 	@1619ALSFundingPercent DECIMAL(5,2),
 	@IncludeHEAdvLoanPossIncome BIT,
 	@IncludeAdvLoanBursaryIncome BIT,
@@ -41,6 +42,7 @@ BEGIN
 	--DECLARE @AcademicYear NVARCHAR(5) = '23/24'
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
+	--DECLARE @AppsMoveFundingToMainComponentAim BIT = 1 --Move Apps Funding from Main ZProg to Main Component Aim
 	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
 	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
@@ -202,6 +204,7 @@ BEGIN
 							Is1619FundingSplit BIT NULL,
 							ALS1619FundingPercent DECIMAL(5, 2) NULL,
 							Is1619FundingReapportionedByAim BIT NULL,
+							AppsMoveFundingToMainComponentAim BIT NULL,
 							InvalidLearners INT NULL,
 
 							LearnRefNumber NVARCHAR(12) NULL,
@@ -278,12 +281,15 @@ BEGIN
 					SET @SQLString += 
 						N'
 							SoftwareSupplierAimID NVARCHAR(36) NULL,
-							FundLine NVARCHAR(100) NULL,
+							FundLineType NVARCHAR(100) NULL,
 							FundLineSummary NVARCHAR(100) NULL,
 							FundLineDetail NVARCHAR(100) NULL,
+							FundLine NVARCHAR(100) NULL,
+							FundLineSummaryOrder INT NULL,
+							FundLineDetailOrder INT NULL,
+							FundLineOrder INT NULL,
 							FundModel INT NULL,
 							HEFullPartTime NVARCHAR(50) NULL,
-							SortOrder INT NULL,
 
 							IsMainAim INT NULL,
 							IsMainAimInFundModel INT NULL,
@@ -394,6 +400,7 @@ BEGIN
 							ActualEndDate DATETIME NULL,
 							AchievementDate DATETIME NULL,
 							RestartIndicator BIT NULL,
+							Duration NVARCHAR(10) NULL,
 							WithdrawReason NVARCHAR(2) NULL,
 							Grade NVARCHAR(6) NULL,
 							AwardBody NVARCHAR(20) NULL,
@@ -411,7 +418,10 @@ BEGIN
 							IncludeInQARMeasures INT NULL,
 							QARNumberOfMergedYearsOfData INT NULL,
 							IsFundedStart INT NULL,
+
 							IsPastPlannedEndDate INT NULL,
+							IsOverallStart INT NULL,
+							IsTimelyStart INT NULL,
 							IsOverallLeaver INT NULL,
 							IsTimelyLeaver INT NULL,
 							IsOverallLeaverBestCase INT NULL,
@@ -442,18 +452,32 @@ BEGIN
 							IsTimelyWithdrawnNotFunded INT NULL,
 							IsOverallWithdrawnFunded INT NULL,
 							IsTimelyWithdrawnFunded INT NULL,
+							IsOverallWithdrawnPreEligibility INT NULL,
+							IsTimelyWithdrawnPreEligibility INT NULL,
+							IsOverallWithdrawnPreEligibilityNotFunded INT NULL,
+							IsTimelyWithdrawnPreEligibilityNotFunded INT NULL,
+							IsOverallWithdrawnPreEligibilityFunded INT NULL,
+							IsTimelyWithdrawnPreEligibilityFunded INT NULL,
+							IsOverallWithdrawnPostEligibility INT NULL,
+							IsTimelyWithdrawnPostEligibility INT NULL,
+							IsOverallWithdrawnPostEligibilityNotFunded INT NULL,
+							IsTimelyWithdrawnPostEligibilityNotFunded INT NULL,
+							IsOverallWithdrawnPostEligibilityFunded INT NULL,
+							IsTimelyWithdrawnPostEligibilityFunded INT NULL,
 							IsOverallTransfer INT NULL,
 							IsTimelyTransfer INT NULL,
 							IsOverallTransferNotFunded INT NULL,
 							IsTimelyTransferNotFunded INT NULL,
 							IsOverallTransferFunded INT NULL,
 							IsTimelyTransferFunded INT NULL,
+							IsTransferValid INT NULL,
 							IsOverallBreakInLearning INT NULL,
 							IsTimelyBreakInLearning INT NULL,
 							IsOverallBreakInLearningNotFunded INT NULL,
 							IsTimelyBreakInLearningNotFunded INT NULL,
 							IsOverallBreakInLearningFunded INT NULL,
 							IsTimelyBreakInLearningFunded INT NULL,
+							IsBreakInLearningValid INT NULL,
 							IsOverallAchiever INT NULL,
 							IsTimelyAchiever INT NULL,
 							IsOverallAchieverNotFunded INT NULL,
@@ -466,12 +490,13 @@ BEGIN
 							IsTimelyFailedNotFunded INT NULL,
 							IsOverallFailedFunded INT NULL,
 							IsTimelyFailedFunded INT NULL,
-							IsOverallResultUnknown INT NULL,
-							IsTimelyResultUnknown INT NULL,
-							IsOverallResultUnknownNotFunded INT NULL,
-							IsTimelyResultUnknownNotFunded INT NULL,
-							IsOverallResultUnknownFunded INT NULL,
-							IsTimelyResultUnknownFunded INT NULL,
+							IsOverallUnknownOutcome INT NULL,
+							IsTimelyUnknownOutcome INT NULL,
+							IsOverallUnknownOutcomeNotFunded INT NULL,
+							IsTimelyUnknownOutcomeNotFunded INT NULL,
+							IsOverallUnknownOutcomeFunded INT NULL,
+							IsTimelyUnknownOutcomeFunded INT NULL,
+							IsUnknownOutcomeValid INT NULL,
 							IsOverallHighGrade INT NULL,
 							IsTimelyHighGrade INT NULL,
 							IsOutOfFunding30Days INT NULL,
@@ -834,6 +859,7 @@ BEGIN
 					@IsFinalReturn,
 					@Split1619Funding,
 					@Reapportion1619FundingByAimWeighting,
+					@AppsMoveFundingToMainComponentAim,
 					@1619ALSFundingPercent,
 					@IncludeHEAdvLoanPossIncome,
 					@IncludeAdvLoanBursaryIncome,
@@ -860,6 +886,7 @@ BEGIN
     			@IsFinalReturn BIT,
     			@Split1619Funding BIT,
 				@Reapportion1619FundingByAimWeighting BIT,
+				@AppsMoveFundingToMainComponentAim BIT,
 				@1619ALSFundingPercent DECIMAL(5,2),
 				@IncludeHEAdvLoanPossIncome BIT,
 				@IncludeAdvLoanBursaryIncome BIT,
@@ -889,6 +916,7 @@ BEGIN
     			@IsFinalReturn = @IsFinalReturn,
     			@Split1619Funding = @Split1619Funding,
 				@Reapportion1619FundingByAimWeighting = @Reapportion1619FundingByAimWeighting,
+				@AppsMoveFundingToMainComponentAim = @AppsMoveFundingToMainComponentAim,
 				@1619ALSFundingPercent = @1619ALSFundingPercent,
 				@IncludeHEAdvLoanPossIncome = @IncludeHEAdvLoanPossIncome,
 				@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
@@ -1438,6 +1466,7 @@ BEGIN
 
 
 		--Set records which should be includes in QAR measures
+		--If rolled forward for achievement then last year will not be funded but prior year will
 		SET @SQLString += 
 		N'
 			DROP TABLE IF EXISTS #MergedData
@@ -1449,15 +1478,94 @@ BEGIN
 				FD.StandardCode,
 				FD.FrameworkCode,
 				FD.PathwayCode,
+				IsFundedStart = MAX ( FD.IsFundedStart ),
 				StartDate = COALESCE ( FD.OriginalStartDate, FD.StartDate ),
-				CompletionStatusCode = MAX ( FD.CompletionStatusCode ),
+				CompletionStatusCode = 
+					COALESCE (
+						MAX ( CASE WHEN FD.CompletionStatusCode <> ''6'' THEN FD.CompletionStatusCode ELSE NULL END ),
+						MAX ( FD.CompletionStatusCode )
+					),
 				FD.StartYear,
 				PlannedEndYear = MAX ( FD.PlannedEndYear ),
 				AchievementYear = MAX ( FD.AchievementYear ),
 				HybridEndYear = MAX ( FD.HybridEndYear ),
 				EarliestReportingYear = MIN ( FD.ReportingYear ),
 				LatestReportingYear = MAX ( FD.ReportingYear),
-				NumMergedRecords = COUNT ( FD.LearningAimCode )
+				NumMergedRecords = COUNT ( FD.LearningAimCode ),
+				IsOverallStart = MAX ( FD.IsOverallStart ),
+				IsTimelyStart = MAX ( FD.IsTimelyStart ),
+				IsOverallLeaver = MAX ( FD.IsOverallLeaver ),
+				IsTimelyLeaver = MAX ( FD.IsTimelyLeaver ),
+				IsOverallLeaverBestCase = MAX ( FD.IsOverallLeaverBestCase ),
+				IsTimelyLeaverBestCase = MAX ( FD.IsTimelyLeaverBestCase ),
+				IsOverallAchieverBestCase = MAX ( FD.IsOverallAchieverBestCase ),
+				IsTimelyAchieverBestCase = MAX ( FD.IsTimelyAchieverBestCase ),
+				IsOverallContinuer = MAX ( FD.IsOverallContinuer ),
+				IsTimelyContinuer = MAX ( FD.IsTimelyContinuer ),
+				IsOverallContinuerNotFunded = MIN ( FD.IsOverallContinuerNotFunded ),
+				IsTimelyContinuerNotFunded = MIN ( FD.IsTimelyContinuerNotFunded ),
+				IsOverallContinuerFunded = MAX ( FD.IsOverallContinuerFunded ),
+				IsTimelyContinuerFunded = MAX ( FD.IsTimelyContinuerFunded ),
+				IsOverallCompleted = MAX ( FD.IsOverallCompleted ),
+				IsTimelyCompleted = MAX ( FD.IsTimelyCompleted ),
+				IsOverallCompletedNotFunded = MIN ( FD.IsOverallCompletedNotFunded ),
+				IsTimelyCompletedNotFunded = MIN ( FD.IsTimelyCompletedNotFunded ),
+				IsOverallCompletedFunded = MAX ( FD.IsOverallCompletedFunded ),
+				IsTimelyCompletedFunded = MAX ( FD.IsTimelyCompletedFunded ),
+				IsOverallRetained = MAX ( FD.IsOverallRetained ),
+				IsTimelyRetained = MAX ( FD.IsTimelyRetained ),
+				IsOverallRetainedNotFunded = MIN ( FD.IsOverallRetainedNotFunded ),
+				IsTimelyRetainedNotFunded = MIN ( FD.IsTimelyRetainedNotFunded ),
+				IsOverallRetainedFunded = MAX ( FD.IsOverallRetainedFunded ),
+				IsTimelyRetainedFunded = MAX ( FD.IsTimelyRetainedFunded ),
+		'
+    
+		SET @SQLString += 
+			N'
+				IsOverallWithdrawn = MAX ( FD.IsOverallWithdrawn ),
+				IsTimelyWithdrawn = MAX ( FD.IsTimelyWithdrawn ),
+				IsOverallWithdrawnNotFunded = MIN ( FD.IsOverallWithdrawnNotFunded ),
+				IsTimelyWithdrawnNotFunded = MIN ( FD.IsTimelyWithdrawnNotFunded ),
+				IsOverallWithdrawnFunded = MAX ( FD.IsOverallWithdrawnFunded ),
+				IsTimelyWithdrawnFunded = MAX ( FD.IsTimelyWithdrawnFunded ),
+				IsOverallTransfer = MAX ( FD.IsOverallTransfer ),
+				IsTimelyTransfer = MAX ( FD.IsTimelyTransfer ),
+				IsOverallTransferNotFunded = MIN ( FD.IsOverallTransferNotFunded ),
+				IsTimelyTransferNotFunded = MIN ( FD.IsTimelyTransferNotFunded ),
+				IsOverallTransferFunded = MAX ( FD.IsOverallTransferFunded ),
+				IsTimelyTransferFunded = MAX ( FD.IsTimelyTransferFunded ),
+				IsTransferValid = MAX ( FD.IsTransferValid ),
+				IsOverallBreakInLearning = MAX ( FD.IsOverallBreakInLearning ),
+				IsTimelyBreakInLearning = MAX ( FD.IsTimelyBreakInLearning ),
+				IsOverallBreakInLearningNotFunded = MIN ( FD.IsOverallBreakInLearningNotFunded ),
+				IsTimelyBreakInLearningNotFunded = MIN ( FD.IsTimelyBreakInLearningNotFunded ),
+				IsOverallBreakInLearningFunded = MAX ( FD.IsOverallBreakInLearningFunded ),
+				IsTimelyBreakInLearningFunded = MAX ( FD.IsTimelyBreakInLearningFunded ),
+				IsBreakInLearningValid = MAX ( FD.IsBreakInLearningValid ),
+				IsOverallAchiever = MAX ( FD.IsOverallAchiever ),
+				IsTimelyAchiever = MAX ( FD.IsTimelyAchiever ),
+				IsOverallAchieverNotFunded = MIN ( FD.IsOverallAchieverNotFunded ),
+				IsTimelyAchieverNotFunded = MIN ( FD.IsTimelyAchieverNotFunded ),
+				IsOverallAchieverFunded = MAX ( FD.IsOverallAchieverFunded ),
+				IsTimelyAchieverFunded = MAX ( FD.IsTimelyAchieverFunded ),
+				IsOverallFailed = MAX ( FD.IsOverallFailed ),
+				IsTimelyFailed = MAX ( FD.IsTimelyFailed ),
+				IsOverallFailedNotFunded = MIN ( FD.IsOverallFailedNotFunded ),
+				IsTimelyFailedNotFunded = MIN ( FD.IsTimelyFailedNotFunded ),
+				IsOverallFailedFunded = MAX ( FD.IsOverallFailedFunded ),
+				IsTimelyFailedFunded = MAX ( FD.IsTimelyFailedFunded ),
+				IsOverallUnknownOutcome = MAX ( FD.IsOverallUnknownOutcome ),
+				IsTimelyUnknownOutcome = MAX ( FD.IsTimelyUnknownOutcome ),
+				IsOverallUnknownOutcomeNotFunded = MIN ( FD.IsOverallUnknownOutcomeNotFunded ),
+				IsTimelyUnknownOutcomeNotFunded = MIN ( FD.IsTimelyUnknownOutcomeNotFunded ),
+				IsOverallUnknownOutcomeFunded = MAX ( FD.IsOverallUnknownOutcomeFunded ),
+				IsTimelyUnknownOutcomeFunded = MAX ( FD.IsTimelyUnknownOutcomeFunded ),
+				IsUnknownOutcomeValid = MAX ( FD.IsUnknownOutcomeValid ),
+				IsOverallHighGrade = MAX ( FD.IsOverallHighGrade ),
+				IsTimelyHighGrade = MAX ( FD.IsTimelyHighGrade ),
+				IsOutOfFunding30Days = MAX ( FD.IsOutOfFunding30Days ),
+				IsOutOfFunding60Days = MAX ( FD.IsOutOfFunding60Days ),
+				IsOutOfFunding90Days = MAX ( FD.IsOutOfFunding90Days )
 				INTO #MergedData
 			FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 			LEFT JOIN #YearlyLearnerMappings YLM
@@ -1465,6 +1573,10 @@ BEGIN
 				AND YLM.PrevUKPRN = FD.ProviderNumber
 				AND YLM.PrevLearnRefNumber = FD.LearnRefNumber
 				AND YLM.RowNum = 1
+	'
+    
+	SET @SQLString += 
+		N'
 			WHERE
 				FD.ProviderNumber = @ProviderNumber
 				--AND FD.HybridEndYear = @AcademicYear
@@ -1496,7 +1608,7 @@ BEGIN
 								END
 						ELSE 1
 					END = 1
-				AND FD.CompletionStatusCode <> ''6''
+				--AND FD.CompletionStatusCode <> ''6''
 			GROUP BY
 				COALESCE ( YLM.ProviderNumber, FD.ProviderNumber ),
 				COALESCE ( YLM.LearnRefNumber, FD.LearnRefNumber ),
@@ -1511,6 +1623,7 @@ BEGIN
 
 
 		--Update records identified above so they are flagged as include in ILR
+		--If merged record was a funded start in previous year then treat as such this year
 		SET @SQLString += 
 		N'
 			UPDATE FD
@@ -1520,7 +1633,82 @@ BEGIN
 				FD.LatestImportedFileAcademicYear = @LatestImportedFileAcademicYear,
 				FD.LatestImportedFileILRReturnDate = @LatestImportedFileILRReturnDate,
 				FD.LatestImportedFileILRReturn = @LatestImportedFileILRReturn,
-				FD.LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn
+				FD.LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn,
+				
+				FD.IsOverallStart = MD.IsOverallStart,
+				FD.IsTimelyStart = MD.IsTimelyStart,
+				FD.IsOverallLeaver = MD.IsOverallLeaver,
+				FD.IsTimelyLeaver = MD.IsTimelyLeaver,
+				FD.IsOverallLeaverBestCase = MD.IsOverallLeaverBestCase,
+				FD.IsTimelyLeaverBestCase = MD.IsTimelyLeaverBestCase,
+				FD.IsOverallAchieverBestCase = MD.IsOverallAchieverBestCase,
+				FD.IsTimelyAchieverBestCase = MD.IsTimelyAchieverBestCase,
+				FD.IsOverallContinuer = MD.IsOverallContinuer,
+				FD.IsTimelyContinuer = MD.IsTimelyContinuer,
+				FD.IsOverallContinuerNotFunded = MD.IsOverallContinuerNotFunded,
+				FD.IsTimelyContinuerNotFunded = MD.IsTimelyContinuerNotFunded,
+				FD.IsOverallContinuerFunded = MD.IsOverallContinuerFunded,
+				FD.IsTimelyContinuerFunded = MD.IsTimelyContinuerFunded,
+				FD.IsOverallCompleted = MD.IsOverallCompleted,
+				FD.IsTimelyCompleted = MD.IsTimelyCompleted,
+				FD.IsOverallCompletedNotFunded = MD.IsOverallCompletedNotFunded,
+				FD.IsTimelyCompletedNotFunded = MD.IsTimelyCompletedNotFunded,
+				FD.IsOverallCompletedFunded = MD.IsOverallCompletedFunded,
+				FD.IsTimelyCompletedFunded = MD.IsTimelyCompletedFunded,
+				FD.IsOverallRetained = MD.IsOverallRetained,
+				FD.IsTimelyRetained = MD.IsTimelyRetained,
+				FD.IsOverallRetainedNotFunded = MD.IsOverallRetainedNotFunded,
+				FD.IsTimelyRetainedNotFunded = MD.IsTimelyRetainedNotFunded,
+				FD.IsOverallRetainedFunded = MD.IsOverallRetainedFunded,
+				FD.IsTimelyRetainedFunded = MD.IsTimelyRetainedFunded,
+		'
+    
+		SET @SQLString += 
+			N'
+				FD.IsOverallWithdrawn = MD.IsOverallWithdrawn,
+				FD.IsTimelyWithdrawn = MD.IsTimelyWithdrawn,
+				FD.IsOverallWithdrawnNotFunded = MD.IsOverallWithdrawnNotFunded,
+				FD.IsTimelyWithdrawnNotFunded = MD.IsTimelyWithdrawnNotFunded,
+				FD.IsOverallWithdrawnFunded = MD.IsOverallWithdrawnFunded,
+				FD.IsTimelyWithdrawnFunded = MD.IsTimelyWithdrawnFunded,
+				FD.IsOverallTransfer = MD.IsOverallTransfer,
+				FD.IsTimelyTransfer = MD.IsTimelyTransfer,
+				FD.IsOverallTransferNotFunded = MD.IsOverallTransferNotFunded,
+				FD.IsTimelyTransferNotFunded = MD.IsTimelyTransferNotFunded,
+				FD.IsOverallTransferFunded = MD.IsOverallTransferFunded,
+				FD.IsTimelyTransferFunded = MD.IsTimelyTransferFunded,
+				FD.IsTransferValid = MD.IsTransferValid,
+				FD.IsOverallBreakInLearning = MD.IsOverallBreakInLearning,
+				FD.IsTimelyBreakInLearning = MD.IsTimelyBreakInLearning,
+				FD.IsOverallBreakInLearningNotFunded = MD.IsOverallBreakInLearningNotFunded,
+				FD.IsTimelyBreakInLearningNotFunded = MD.IsTimelyBreakInLearningNotFunded,
+				FD.IsOverallBreakInLearningFunded = MD.IsOverallBreakInLearningFunded,
+				FD.IsTimelyBreakInLearningFunded = MD.IsTimelyBreakInLearningFunded,
+				FD.IsBreakInLearningValid = MD.IsBreakInLearningValid,
+				FD.IsOverallAchiever = MD.IsOverallAchiever,
+				FD.IsTimelyAchiever = MD.IsTimelyAchiever,
+				FD.IsOverallAchieverNotFunded = MD.IsOverallAchieverNotFunded,
+				FD.IsTimelyAchieverNotFunded = MD.IsTimelyAchieverNotFunded,
+				FD.IsOverallAchieverFunded = MD.IsOverallAchieverFunded,
+				FD.IsTimelyAchieverFunded = MD.IsTimelyAchieverFunded,
+				FD.IsOverallFailed = MD.IsOverallFailed,
+				FD.IsTimelyFailed = MD.IsTimelyFailed,
+				FD.IsOverallFailedNotFunded = MD.IsOverallFailedNotFunded,
+				FD.IsTimelyFailedNotFunded = MD.IsTimelyFailedNotFunded,
+				FD.IsOverallFailedFunded = MD.IsOverallFailedFunded,
+				FD.IsTimelyFailedFunded = MD.IsTimelyFailedFunded,
+				FD.IsOverallUnknownOutcome = MD.IsOverallUnknownOutcome,
+				FD.IsTimelyUnknownOutcome = MD.IsTimelyUnknownOutcome,
+				FD.IsOverallUnknownOutcomeNotFunded = MD.IsOverallUnknownOutcomeNotFunded,
+				FD.IsTimelyUnknownOutcomeNotFunded = MD.IsTimelyUnknownOutcomeNotFunded,
+				FD.IsOverallUnknownOutcomeFunded = MD.IsOverallUnknownOutcomeFunded,
+				FD.IsTimelyUnknownOutcomeFunded = MD.IsTimelyUnknownOutcomeFunded,
+				FD.IsUnknownOutcomeValid = MD.IsUnknownOutcomeValid,
+				FD.IsOverallHighGrade = MD.IsOverallHighGrade,
+				FD.IsTimelyHighGrade = MD.IsTimelyHighGrade,
+				FD.IsOutOfFunding30Days = MD.IsOutOfFunding30Days,
+				FD.IsOutOfFunding60Days = MD.IsOutOfFunding60Days,
+				FD.IsOutOfFunding90Days = MD.IsOutOfFunding90Days
 			FROM #MergedData MD
 			INNER JOIN ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] FD
 				ON FD.ProviderNumber = MD.ProviderNumber

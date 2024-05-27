@@ -1,12 +1,10 @@
 /*
-Changes since 18/19
-Tables now generated directly to SQL Server. Schema was always dbo. but now first part of table name is the schema
-e.g. dbo.Valid_Learner in 18/19 to Valid.Learner in 19/20
-DV_Learner and DV_LearningDelivery tables no longer populated so must calculate age and would need to use LARS for First Full L2/L3 Status
-Apprenticeships now also split into additional Employer on App Service so amended FundLineSummary field to split these out
+Changes since 22/23
+HE Percent Taught First, Second and Third LDCS Deprecated and Removed
+
 */
 
-CREATE PROCEDURE SPR_FIS_FundingData_1920
+CREATE PROCEDURE SPR_FIS_FundingData_2324
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -35,12 +33,11 @@ AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
 
-	--DECLARE @ILRReturn NVARCHAR(3) = 'R14' -- CHANGE THIS TO CORRECT RETURN
+	--DECLARE @ILRReturn NVARCHAR(3) = 'R07' -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR1920'
-	--DECLARE @AcademicYear NVARCHAR(5) = '19/20'
-
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324_R07F_Fareham'
+	--DECLARE @AcademicYear NVARCHAR(5) = '23/24'
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
 	--DECLARE @AppsMoveFundingToMainComponentAim BIT = 1 --Move Apps Funding from Main ZProg to Main Component Aim
@@ -48,9 +45,9 @@ BEGIN
 	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
 	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
 	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table, D=Delete import
-	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'IEG.dbo.'
-	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
+	--DECLARE @Mode NCHAR(1) = 'R' --I=Insert new ILR return data leaving existing data, R=Replace table, D=Delete import
+	--DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.'
+	--DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingDataNew'
 	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
 	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
 	--DECLARE @OverrideEngFac NVARCHAR(50) = NULL
@@ -313,13 +310,13 @@ BEGIN
 					ORDER BY
 						CASE
 							WHEN
-								( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-								OR LD.CompStatus = 4 THEN
+								( LD.CompStatus = ''3'' AND LD.WithdrawReason = ''40'' )
+								OR LD.CompStatus = ''4'' THEN
 								CASE
 									WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
 									ELSE 0
 								END
-							WHEN LD.CompStatus = 6 THEN
+							WHEN LD.CompStatus = ''6'' THEN
 								CASE
 									WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
 									WHEN LD.LearnPlanEndDate <= GETDATE() THEN 1
@@ -341,8 +338,8 @@ BEGIN
 		WHERE
 			LD.AimType = 5
 			AND (
-				( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-				OR LD.CompStatus = 4
+				( LD.CompStatus = ''3'' AND LD.WithdrawReason = ''40'' )
+				OR LD.CompStatus = ''4''
 			)
 	'
 
@@ -448,8 +445,8 @@ BEGIN
 			)
 		WHERE
 			(
-				( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-				OR LD.CompStatus = 4
+				( LD.CompStatus = ''3'' AND LD.WithdrawReason = ''40'' )
+				OR LD.CompStatus = ''4''
 			)
 			--AND L.LearnRefNumber = ''F246776''
 	'
@@ -574,7 +571,7 @@ BEGIN
 			AND LDR.AimSeqNumber > LD.AimSeqNumber
 		WHERE
 			LD.LearnAimRef <> ''ZPROG001''
-			AND LD.CompStatus = 6
+			AND LD.CompStatus = ''6''
 			--AND L.LearnRefNumber = ''F246776''
 	'
 
@@ -1173,7 +1170,7 @@ BEGIN
 			Leaver = 
 				CASE
 					WHEN FM.IsWithdrawnPreEligibility = 1 THEN 0
-					WHEN FM.CompStatus NOT IN ( 2, 3 ) THEN 0
+					WHEN FM.CompStatus NOT IN ( ''2'', ''3'' ) THEN 0
 					WHEN FM.Transfer = 1 AND FM.TransferValid = 1 THEN 0
 					WHEN FM.BreakInLearning = 1 AND FM.BreakInLearningValid = 1 THEN 0
 					WHEN FM.UnknownOutcome = 1 AND FM.UnknownOutcomeValid = 0 THEN 0
@@ -1236,7 +1233,7 @@ BEGIN
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
 								ELSE 1
 							END,
-							COALESCE ( LD.ProgType, 99 ),
+							COALESCE ( LD.ProgType, ''99'' ),
 							CASE
 								WHEN LD.AimType = 1 THEN 1 --Programme Aim
 								WHEN LD.AimType = 2 THEN 2 --Core Aim
@@ -1269,7 +1266,7 @@ BEGIN
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
 								ELSE 1
 							END,
-							COALESCE ( LD.ProgType, 99 ),
+							COALESCE ( LD.ProgType, ''99'' ),
 							CASE
 								WHEN LD.AimType = 1 THEN 1 --Programme Aim
 								WHEN LD.AimType = 2 THEN 2 --Core Aim
@@ -1296,7 +1293,7 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
                             FM.FundLineOrder,
-							COALESCE ( LD.ProgType, 99 ),
+							COALESCE ( LD.ProgType, ''99'' ),
 							CASE
 								WHEN LD.AimType = 1 THEN 1 --Programme Aim
 								WHEN LD.AimType = 2 THEN 2 --Core Aim
@@ -1610,9 +1607,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Price Episode
-		DROP TABLE IF EXISTS #FM36PriceEpisode
-		SELECT
+			--Fund Model 36 Price Episode
+			DROP TABLE IF EXISTS #FM36PriceEpisode
+			SELECT
 				FM36PE.UKPRN,
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
@@ -1689,9 +1686,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Period Funding
-		DROP TABLE IF EXISTS #FM36PeriodFunding
-		SELECT
+			--Fund Model 36 Period Funding
+			DROP TABLE IF EXISTS #FM36PeriodFunding
+			SELECT
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
 				LearnAimRef = LD.LearnAimRef,
@@ -2914,6 +2911,7 @@ BEGIN
 			L.LearnRefNumber
 	'
 
+
 	SET @SQLString += 
         N'
 		DROP TABLE IF EXISTS #FAMLearner
@@ -3326,9 +3324,9 @@ BEGIN
 			EmployIntensityInd = ESM.EII,
 			IsFirstFullLevel2 = NULL,
 			IsFirstFullLevel3 = NULL,
-			PriorLevelCode = NULL,
-			PriorLevelName = NULL,
-			PriorLevelDate = NULL,
+			PriorLevelCode = ATN.PriorLevel,
+			PriorLevelName = PLEV.Description,
+			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
 			LLDDHealthProb = L.LLDDHealthProb,
@@ -3529,7 +3527,7 @@ BEGIN
 						COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate )
 					ORDER BY
 						LD.CompStatus,
-						COALESCE ( LD.ProgType, 99 ),
+						COALESCE ( LD.ProgType, ''99'' ),
 						CASE
 							WHEN LD.AimType = 1 THEN 1 --Programme Aim
 							WHEN LD.AimType = 5 THEN 2 --Core Aim
@@ -3560,20 +3558,20 @@ BEGIN
 			CompletionStatusCode = LD.CompStatus,
 			CompletionStatusName = 
 				CASE
-					WHEN LD.CompStatus = 1 THEN ''Continuing''
-					WHEN LD.CompStatus = 2 THEN ''Completed''
-					WHEN LD.CompStatus = 3 THEN ''Withdrawn''
-					WHEN LD.CompStatus = 6 THEN ''Break in Learning''
+					WHEN LD.CompStatus = ''1'' THEN ''Continuing''
+					WHEN LD.CompStatus = ''2'' THEN ''Completed''
+					WHEN LD.CompStatus = ''3'' THEN ''Withdrawn''
+					WHEN LD.CompStatus = ''6'' THEN ''Break in Learning''
 					ELSE ''Unknown''
 				END,
 			OutcomeCode = LD.Outcome,
 			OutcomeName = 
 				CASE
 					WHEN LD.Outcome IS NULL THEN NULL
-					WHEN LD.Outcome = 1 THEN ''Achieved''
-					WHEN LD.Outcome = 2 THEN ''Partialy Achieved''
-					WHEN LD.Outcome = 3 THEN ''Fail''
-					WHEN LD.Outcome = 8 THEN ''Unknown''
+					WHEN LD.Outcome = ''1'' THEN ''Achieved''
+					WHEN LD.Outcome = ''2'' THEN ''Partialy Achieved''
+					WHEN LD.Outcome = ''3'' THEN ''Fail''
+					WHEN LD.Outcome = ''8'' THEN ''Unknown''
 					ELSE ''Unknown''
 				END,
 			StartDate = LD.LearnStartDate,
@@ -3601,6 +3599,7 @@ BEGIN
 	SET @SQLString += 
         N'
 			IncludeInQARMeasures = NULL,
+			QARIsBreakInLearningNotReturned = NULL,
 			QARNumberOfMergedYearsOfData = NULL,
 			IsFundedStart = FM.FundStart,
 			IsPastPlannedEndDate =
@@ -3652,7 +3651,7 @@ BEGIN
 				CASE
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2, 3 )
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
 						THEN 1
 					ELSE 0
 				END,
@@ -3666,7 +3665,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2, 3 )
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
 						THEN 1
 					ELSE 0
 				END,
@@ -3674,7 +3673,7 @@ BEGIN
 				CASE
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						AND NOT LD.Outcome = 3
 						THEN 1
 					ELSE 0
@@ -3689,7 +3688,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						AND NOT LD.Outcome = 3
 						THEN 1
 					ELSE 0
@@ -3701,7 +3700,7 @@ BEGIN
 			IsOverallContinuer = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 1
+						LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3714,7 +3713,7 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3722,7 +3721,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3736,7 +3735,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3744,7 +3743,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3758,7 +3757,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3769,7 +3768,7 @@ BEGIN
 			IsOverallCompleted = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 2
+						LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3782,7 +3781,7 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3790,7 +3789,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3804,7 +3803,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3812,7 +3811,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3826,7 +3825,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3837,7 +3836,7 @@ BEGIN
 			IsOverallRetained = 
 				CASE 
 					WHEN 
-						LD.CompStatus IN ( 1, 2 )
+						LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3850,7 +3849,7 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3858,7 +3857,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1
 					ELSE 0 
 				END,
@@ -3872,7 +3871,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1
 					ELSE 0 
 				END,
@@ -3880,7 +3879,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3894,7 +3893,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3905,7 +3904,7 @@ BEGIN
 			IsOverallWithdrawn = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 3
+						LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1 
 					ELSE 0 
@@ -3919,7 +3918,7 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 3
+						AND LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1 
 					ELSE 0 
@@ -3928,7 +3927,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 3
+						AND LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1
 					ELSE 0 
@@ -3943,7 +3942,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 3
+						AND LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1
 					ELSE 0 
@@ -3952,7 +3951,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 3
+						AND LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1 
 					ELSE 0 
@@ -3967,7 +3966,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 3
+						AND LD.CompStatus = ''3''
 						AND FM.Transfer = 0
 						THEN 1 
 					ELSE 0 
@@ -4188,7 +4187,6 @@ BEGIN
 						THEN 1 
 					ELSE 0 
 				END,
-			IsTransferValid = FM.TransferValid,
 	'
 
     SET @SQLString += 
@@ -4258,7 +4256,6 @@ BEGIN
 						THEN 1 
 					ELSE 0 
 				END,
-			IsBreakInLearningValid = FM.BreakInLearningValid,
 	'
 
     SET @SQLString += 
@@ -4267,7 +4264,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4282,7 +4279,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4291,7 +4288,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1
 					ELSE 0 
@@ -4306,7 +4303,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1
 					ELSE 0 
@@ -4315,7 +4312,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4330,7 +4327,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4343,7 +4340,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4358,7 +4355,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4367,7 +4364,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1
 					ELSE 0 
@@ -4382,7 +4379,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1
 					ELSE 0 
@@ -4391,7 +4388,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4406,7 +4403,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4415,16 +4412,16 @@ BEGIN
 
     SET @SQLString += 
         N'
-			IsOverallUnknownOutcome = 
+			IsOverallResultUnknown = 
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcome = 
+			IsTimelyResultUnknown = 
 				CASE 
 					WHEN 
 						CASE
@@ -4434,21 +4431,21 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsOverallUnknownOutcomeNotFunded = 
+			IsOverallResultUnknownNotFunded = 
 				CASE 
 					WHEN 
 						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcomeNotFunded = 
+			IsTimelyResultUnknownNotFunded = 
 				CASE 
 					WHEN 
 						CASE
@@ -4458,21 +4455,21 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1
 					ELSE 0 
 				END,
-			IsOverallUnknownOutcomeFunded = 
+			IsOverallResultUnknownFunded = 
 				CASE 
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcomeFunded = 
+			IsTimelyResultUnknownFunded = 
 				CASE 
 					WHEN 
 						CASE
@@ -4482,12 +4479,11 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsUnknownOutcomeValid = FM.UnknownOutcomeValid,
 	'
 
     SET @SQLString += 
@@ -4496,14 +4492,14 @@ BEGIN
 				CASE
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
 							THEN 1
 					WHEN 
 						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
@@ -4523,7 +4519,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
@@ -4536,7 +4532,7 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
@@ -4605,7 +4601,7 @@ BEGIN
 			FrameworkName = COALESCE ( FW.FrameworkName, CASE WHEN LD.FworkCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
 			PathwayCode = LD.PwayCode,
 			PathwayName = COALESCE ( PWAY.PathwayName, CASE WHEN LD.PwayCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
-			OffTheJobActualHours = NULL,
+			OffTheJobActualHours = LD.OTJActHours,
 			EmployerID = EMP.EmployerID,
 			EmployerName = EMPN.EmployerName,
 			PartnerCode = 
@@ -4619,6 +4615,7 @@ BEGIN
 			ProgWeightFactor = FM35.ApplicProgWeightFact,
 			UnweightFundRate = FM35.ApplicUnweightFundRate,
 			WeightFundRate = FM35.ApplicWeightFundRate,
+
 			CoFundingIndicator = 
 				CASE
 					WHEN FFI.LearnDelFAMCode IS NULL THEN NULL
@@ -4643,9 +4640,9 @@ BEGIN
 			HEYearStu = HE.YEARSTU,
 			HEMajorSourceStuFee = HE.MSTUFEE,
 			HEPercentageNotTaught = HE.PCOLAB,
-			HEPercentTaughtFirstLDCS = HE.PCFLDCS,
-			HEPercentTaughtSecondLDCS = HE.PCSLDCS,
-			HEPercentTaughtThirdLDCS = HE.PCTLDCS,
+			HEPercentTaughtFirstLDCS = NULL,
+			HEPercentTaughtSecondLDCS = NULL,
+			HEPercentTaughtThirdLDCS = NULL,
 			HESpecialFeeIndicator = HE.SPECFEE,
 			HENetTuitionFee = HE.NETFEE,
 			HEGrossTuitionFee = HE.GROSSFEE,
@@ -4666,7 +4663,7 @@ BEGIN
 			ProvSpecDelMonB = PSDMB.ProvSpecDelMon,
 			ProvSpecDelMonC = PSDMC.ProvSpecDelMon,
 			ProvSpecDelMonD = PSDMD.ProvSpecDelMon,
-
+			
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
 			AchieveElement = FM35.AchieveElement,
@@ -4744,7 +4741,7 @@ BEGIN
 						ELSE
 							0
 					END
-				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.OnProgPaymentToPeriod, FM36PM.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
+				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossIncome = 1 THEN ALBP.TotFundToPeriod END, FM35P.OnProgPaymentToPeriod, COALESCE ( FM36PM.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod ), ( CASE WHEN @IncludeHEAdvLoanPossIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
 			LearnSuppPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -5784,7 +5781,7 @@ BEGIN
 			AchCompPaymentP09 = COALESCE ( FM35P.AchCompPaymentP09, FM36PM.AchCompPaymentP09, FM36P.AchCompPaymentP09, 0 ),
 			BalancePaymentP09 = COALESCE ( FM35P.BalancePaymentP09, FM36PM.BalancePaymentP09, FM36P.BalancePaymentP09, 0 ),
 			EmpOutcomePayP09 = COALESCE ( FM35P.EmpOutcomePayYrEnd, 0 ),
-			OtherPaymentP09 = COALESCE ( FM36PM.OtherPaymentP09, FM36P.OtherPaymentP09, 0 ),
+			OtherPaymentP09 = COALESCE ( FM36P.OtherPaymentP09, FM36PM.OtherPaymentP09, 0 ),
 			TotFundP09 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6094,10 +6091,10 @@ BEGIN
 				EmpStatusCode = EMP.EmpStat,
 				EmpStatusName = 
 					CASE
-						WHEN EMP.EmpStat = 10 THEN ''InEmp''
-						WHEN EMP.EmpStat = 11 THEN ''NoEmpLooking''
-						WHEN EMP.EmpStat = 12 THEN ''NoEmpNotLooking''
-						WHEN EMP.EmpStat = 98 THEN ''Unknown''
+						WHEN EMP.EmpStat = ''10'' THEN ''InEmp''
+						WHEN EMP.EmpStat = ''11'' THEN ''NoEmpLooking''
+						WHEN EMP.EmpStat = ''12'' THEN ''NoEmpNotLooking''
+						WHEN EMP.EmpStat = ''98'' THEN ''Unknown''
 						ELSE ''Unknown''
 					END,
 				EmpStatusAppliesDate = EMP.DateEmpStatApp,
@@ -6113,6 +6110,25 @@ BEGIN
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
+		LEFT JOIN (
+			SELECT
+				ATN.UKPRN,
+				ATN.LearnRefNumber,
+				ATN.PriorLevel,
+				ATN.DateLevelApp,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							ATN.UKPRN,
+							ATN.LearnRefNumber
+						ORDER BY
+							ATN.DateLevelApp DESC
+					)
+			FROM ' + @FISDatabase + '.Valid.LearnerPriorAttain ATN
+		) ATN
+			ON ATN.LearnRefNumber = L.LearnRefNumber
+			AND ATN.UKPRN = L.UKPRN
+			AND ATN.RowNum = 1
 		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
@@ -6203,7 +6219,7 @@ BEGIN
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMD
 			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMD.ProvSpecLearnMonOccur = ''D''
-		
+
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -6309,7 +6325,7 @@ BEGIN
 			ON ALBP.LearnRefNumber = LD.LearnRefNumber
 			AND ALBP.AimSeqNumber = LD.AimSeqNumber
 	'
-    
+
     SET @SQLString += 
         N'
 		--Invalid Learners
@@ -6683,9 +6699,11 @@ BEGIN
 				CASE
 					WHEN LD.LearnAimRef = ''ZPROG001'' THEN PTR.PartnerUKPRN
 					ELSE LD.PartnerUKPRN
-				END 
+				END
 		LEFT JOIN #Ethnicities ETH
 			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
+		LEFT JOIN #PriorLevels PLEV
+			ON PLEV.Code = ATN.PriorLevel
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN #DestinationProgressionOutcomes DES

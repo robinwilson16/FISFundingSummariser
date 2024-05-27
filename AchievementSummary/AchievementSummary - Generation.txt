@@ -1,8 +1,8 @@
-DECLARE @ProviderNumber INT = 10002599
+DECLARE @ProviderNumber INT = 10007928
 DECLARE @AcademicYear NVARCHAR(5) = '23/24'
-DECLARE @ILRReturn  NVARCHAR(3) = 'R04'
+DECLARE @ILRReturn  NVARCHAR(3) = 'R09'
 DECLARE @IsFinalReturn BIT = 1
-DECLARE @IsFunded BIT = 1
+DECLARE @IsFundedStart BIT = 1
 
 
 DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) ) + '/' + CAST ( CAST ( RIGHT( @AcademicYear, 2 ) AS INT ) - 6 AS NVARCHAR(2) )
@@ -10,7 +10,7 @@ DECLARE @SixYearsAgo NVARCHAR(5) = CAST ( CAST ( LEFT( @AcademicYear, 2 ) AS INT
 DROP TABLE IF EXISTS #MergedData
 SELECT
 	FD.ProviderNumber,
-	FD.LearnerRef,
+	FD.LearnRefNumber,
 	FD.LearningAimCode,
 	FD.LearnerAndAimRowNum,
 	FD.StandardCode,
@@ -27,7 +27,7 @@ SELECT
 	LatestReportingYear = MAX ( FD.ReportingYear),
 	NumMergedRecords = COUNT ( FD.LearningAimCode )
 	INTO #MergedData
-FROM FIS_FundingDataNew FD
+FROM FIS_FundingData FD
 WHERE
 	FD.ProviderNumber = @ProviderNumber
 	AND FD.HybridEndYear = @AcademicYear
@@ -38,12 +38,12 @@ WHERE
 			ELSE 'R14'
 		END
 	AND FD.IsFinalReturn = @IsFinalReturn
-	--AND FD.IsFunded = @IsFunded
+	--AND FD.IsFundedStart = @IsFundedStart
 	--AND FD.LearningAimTitle LIKE '%Extended Diploma%'
-	--AND FD.LearnerRef = '40023505'
+	--AND FD.LearnRefNumber = '40023505'
 GROUP BY
 	FD.ProviderNumber,
-	FD.LearnerRef,
+	FD.LearnRefNumber,
 	FD.LearningAimCode,
 	FD.LearnerAndAimRowNum,
 	FD.StandardCode,
@@ -62,7 +62,7 @@ ORDER BY
 
 SELECT
 	MD.ProviderNumber,
-	MD.LearnerRef,
+	MD.LearnRefNumber,
 	MD.LearningAimCode,
 	MD.LearnerAndAimRowNum,
 	MD.StandardCode,
@@ -80,19 +80,18 @@ SELECT
 	MD.EarliestReportingYear,
 	MD.LatestReportingYear,
 	MD.NumMergedRecords,
-	FD.IsFunded,
-	FD.IsPre42DayWdrAllYr,
-	FD.IsXfrAllYr,
-	FD.IsStartAllYr,
-	FD.IsPost42DayWdrAllYr,
-	FD.IsCompAllYr,
-	FD.IsAchAllYr,
-	FD.IsHighGrade
+	FD.IsFundedStart,
+	FD.IsOverallWithdrawnNotFunded,
+	FD.IsOverallTransferFunded,
+	FD.IsOverallWithdrawnFunded,
+	FD.IsOverallCompletedFunded,
+	FD.IsOverallAchieverFunded,
+	FD.IsOverallHighGrade
 FROM #MergedData MD
-INNER JOIN FIS_FundingDataNew FD
+INNER JOIN FIS_FundingData FD
 	ON FD.ProviderNumber = MD.ProviderNumber
 	AND FD.ReportingYear = MD.LatestReportingYear
-	AND FD.LearnerRef = MD.LearnerRef
+	AND FD.LearnRefNumber = MD.LearnRefNumber
 	AND FD.LearningAimCode = MD.LearningAimCode
 	AND COALESCE ( FD.StandardCode, 0 ) = COALESCE ( MD.StandardCode, 0 )
 	AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
@@ -101,6 +100,7 @@ INNER JOIN FIS_FundingDataNew FD
 	AND FD.PlannedEndDate = MD.PlannedEndDate
 	AND FD.LearnerAndAimRowNum = MD.LearnerAndAimRowNum
 WHERE
-	MD.LearningAimCode = '60141700'
+	MD.LearningAimCode = '60103103'
 ORDER BY
-	MD.LearningAimCode
+	MD.LearningAimCode,
+	MD.LearnRefNumber

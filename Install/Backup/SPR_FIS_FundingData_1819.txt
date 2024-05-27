@@ -1,12 +1,11 @@
 /*
-Changes since 18/19
-Tables now generated directly to SQL Server. Schema was always dbo. but now first part of table name is the schema
-e.g. dbo.Valid_Learner in 18/19 to Valid.Learner in 19/20
-DV_Learner and DV_LearningDelivery tables no longer populated so must calculate age and would need to use LARS for First Full L2/L3 Status
-Apprenticeships now also split into additional Employer on App Service so amended FundLineSummary field to split these out
+Changes since 17/18
+EFA_ and SFA_ tables renamed to FM25_ and FM_35
+LearnDelLearnAddPayment added in FM36 table (Rulebase_AEC_LearningDelivery_Period)
+Campus ID added
 */
 
-CREATE PROCEDURE SPR_FIS_FundingData_1920
+CREATE PROCEDURE SPR_FIS_FundingData_1819
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -38,8 +37,8 @@ BEGIN
 	--DECLARE @ILRReturn NVARCHAR(3) = 'R14' -- CHANGE THIS TO CORRECT RETURN
 	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
 
-	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR1920'
-	--DECLARE @AcademicYear NVARCHAR(5) = '19/20'
+	--DECLARE @FISDatabase NVARCHAR(100) = 'ILR1819'
+	--DECLARE @AcademicYear NVARCHAR(5) = '18/19'
 
 	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
 	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
@@ -229,353 +228,13 @@ BEGIN
 						FM36P.Period DESC
 				)
 			INTO #FM36Periods
-		FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-		INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+		FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 			ON FM36.LearnRefNumber = LD.LearnRefNumber
 			AND FM36.AimSeqNumber = LD.AimSeqNumber
-		INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery_Period FM36P
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery_Period FM36P
 			ON FM36P.LearnRefNumber = FM36.LearnRefNumber
 			AND FM36P.AimSeqNumber = FM36.AimSeqNumber
-	'
-
-	SET @SQLString += 
-        N'
-		--Funding Model 25 Learner Starts
-		DROP TABLE IF EXISTS #FM25LearnerStarts
-		SELECT
-			L.LearnRefNumber,
-			CountAsStart = 
-				CASE
-					WHEN DUR.ActiveAims > 0 THEN 1
-					WHEN 
-						-- Very Short
-						DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnPlanEndDate ) + 1 < 14 -- Course duration less than 2 weeks
-						AND (
-							DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnActEndDate ) + 1 > 0 -- Studied at all
-						)
-						THEN 0 -- No longer counted as per QAR rules
-					WHEN 
-						-- Short
-						DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnPlanEndDate ) + 1 < 168 -- Course duration less than 24 weeks
-						AND (
-							DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnActEndDate ) + 1 >= 14 -- Studied at least 2 weeks
-						)
-						THEN 1
-					WHEN 
-						-- Long
-						DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnPlanEndDate ) + 1 >= 168 -- Course duration 24 weeks +
-						AND (
-							DATEDIFF ( d, DUR.LearnStartDate, DUR.LearnActEndDate ) + 1 >= 42 -- Studied at least 6 weeks
-						)
-						THEN 1
-					ELSE 0
-				END
-			INTO #FM25LearnerStarts
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN (
-			SELECT
-				L.LearnRefNumber,
-				ActiveAims = SUM ( CASE WHEN LD.CompStatus IN ( 1, 2 ) THEN 1 ELSE 0 END ),
-				NonActiveAims = SUM ( CASE WHEN LD.CompStatus IN ( 3, 4, 6 ) THEN 1 ELSE 0 END ),
-				LearnStartDate = MIN ( LD.LearnStartDate ),
-				LearnPlanEndDate = MAX ( LD.LearnPlanEndDate ),
-				LearnActEndDate = MAX ( LD.LearnActEndDate )
-			FROM ' + @FISDatabase + '.Valid.Learner L
-			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-				ON LD.LearnRefNumber = L.LearnRefNumber
-			WHERE
-				LD.FundModel = 25
-			GROUP BY
-				L.LearnRefNumber
-		) DUR
-			ON DUR.LearnRefNumber = L.LearnRefNumber
-	'
-
-	SET @SQLString += 
-        N'
-		--Check If Core Aim Learners Who Transferred moved to Something Else
-		DROP TABLE IF EXISTS #ExclusionsCoreAims
-		SELECT
-			L.LearnRefNumber,
-			LD.LearnAimRef,
-			LD.AimSeqNumber,
-			LD.CompStatus,
-			ShouldBeExcluded = 
-				CASE
-					WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
-					ELSE 0
-				END,
-			RowNum = 
-				ROW_NUMBER () OVER (
-					PARTITION BY
-						L.LearnRefNumber,
-						LD.AimSeqNumber
-					ORDER BY
-						CASE
-							WHEN
-								( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-								OR LD.CompStatus = 4 THEN
-								CASE
-									WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
-									ELSE 0
-								END
-							WHEN LD.CompStatus = 6 THEN
-								CASE
-									WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
-									WHEN LD.LearnPlanEndDate <= GETDATE() THEN 1
-									ELSE 0
-								END
-							ELSE 0
-						END DESC,
-						LDR.AimSeqNumber
-				)
-			INTO #ExclusionsCoreAims
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-			ON LD.LearnRefNumber = L.LearnRefNumber
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDelivery LDR
-			ON LDR.LearnRefNumber = LD.LearnRefNumber
-			AND LDR.AimType = LD.AimType
-			AND LDR.AimSeqNumber > LD.AimSeqNumber
-			--AND DATEDIFF ( DAY, LD.LearnActEndDate, LDR.LearnStartDate ) <= 42
-		WHERE
-			LD.AimType = 5
-			AND (
-				( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-				OR LD.CompStatus = 4
-			)
-	'
-
-	SET @SQLString += 
-        N'
-		--Check If Aims That Are Transferred Have a Restart Aim Of Same Learning Aim Type
-		DROP TABLE IF EXISTS #ExclusionsNonReturnersTfer
-		SELECT
-			LearnRefNumber = L.LearnRefNumber,
-			AimSeqNumber = LD.AimSeqNumber,
-			CompStatus = LD.CompStatus,
-			ShouldBeExcluded = 
-				CASE
-					WHEN RET.LearnRefNumber IS NOT NULL THEN 1
-					WHEN FM35.FundStart = 0 THEN 1
-					WHEN
-						AIM.LearningAimTypeCode IN (
-							''0003'' --GCSE and FS Treated as The Same
-						) THEN
-							CASE
-								WHEN 
-									-- Very Short
-									DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 14 -- Course duration less than 2 weeks
-									AND (
-										DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 > 0 -- Studied at all
-									)
-									THEN 1 -- No longer counted as per QAR rules
-								WHEN 
-									-- Short
-									DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 168 -- Course duration less than 24 weeks
-									AND (
-										DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 >= 14 -- Studied at least 2 weeks
-									)
-									THEN 0
-								WHEN 
-									-- Long
-									DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 >= 168 -- Course duration 24 weeks +
-									AND (
-										DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 >= 42 -- Studied at least 6 weeks
-									)
-									THEN 0
-								ELSE 1
-							END
-					WHEN
-						AIM.LearningAimTypeCode NOT IN (
-							''0003'' --GCSE and FS Treated as The Same
-						) THEN
-						CASE
-							WHEN DUR.CountAsStart = 0 THEN 1
-							ELSE 0
-						END
-					ELSE 0
-				END,
-			RowNum = 
-				ROW_NUMBER () OVER (
-					PARTITION BY
-						L.LearnRefNumber,
-						LD.AimSeqNumber
-					ORDER BY
-						CASE
-							WHEN RET.LearnRefNumber IS NOT NULL THEN 1
-							ELSE 0
-						END DESC,
-						RET.AimSeqNumber
-				)
-			INTO #ExclusionsNonReturnersTfer
-	'
-
-	SET @SQLString += 
-        N'
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-			ON LD.LearnRefNumber = L.LearnRefNumber
-		INNER JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-		LEFT JOIN #FM25LearnerStarts DUR
-			ON DUR.LearnRefNumber = L.LearnRefNumber
-		--ASB and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
-			ON FM35.LearnRefNumber = LD.LearnRefNumber
-			AND FM35.AimSeqNumber = LD.AimSeqNumber
-		LEFT JOIN (
-			SELECT
-				LearnRefNumber = L.LearnRefNumber,
-				LearnAimRef = LD.LearnAimRef,
-				AimSeqNumber = LD.AimSeqNumber,
-				StartDate = LD.LearnStartDate,
-				CompStatus = LD.CompStatus
-			FROM ' + @FISDatabase + '.Valid.Learner L
-			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-				ON LD.LearnRefNumber = L.LearnRefNumber
-			LEFT JOIN #LearningAims AIM
-				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-		) RET
-			ON RET.LearnRefNumber = LD.LearnRefNumber
-			AND RET.AimSeqNumber > LD.AimSeqNumber
-			AND ( --Transfer Within 120 Days Or Any Date To Same Aim
-				(
-					DATEDIFF ( DAY, CAST ( LD.LearnActEndDate AS DATE ), CAST ( RET.StartDate AS DATE ) ) >= 0
-					AND DATEDIFF ( DAY, CAST ( LD.LearnActEndDate AS DATE ), CAST ( RET.StartDate AS DATE ) ) <= 120
-				)
-				OR RET.LearnAimRef = LD.LearnAimRef
-			)
-		WHERE
-			(
-				( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-				OR LD.CompStatus = 4
-			)
-			--AND L.LearnRefNumber = ''F246776''
-	'
-
-	SET @SQLString += 
-        N'
-		--Apps Must Transfer to Another App Otherwise Are Not Excluded As Per QAR Rules
-		DROP TABLE IF EXISTS #ExclusionsNonReturnersTferApp
-		SELECT
-			LearnRefNumber = L.LearnRefNumber,
-			AimSeqNumber = LD.AimSeqNumber,
-			CompStatus = LD.CompStatus,
-			ShouldBeExcluded = 
-				CASE
-					WHEN RET.LearnRefNumber IS NOT NULL THEN 1
-					WHEN DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 14 --Very Short
-						THEN 1
-					WHEN 
-						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 168 --Short
-						AND DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 < 14
-						THEN 1
-					WHEN 
-						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 >= 168 --Long
-						AND DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 < 42
-						THEN 1
-					ELSE 0
-				END,
-			RowNum = 
-				ROW_NUMBER () OVER (
-					PARTITION BY
-						L.LearnRefNumber,
-						LD.AimSeqNumber
-					ORDER BY
-						CASE
-							WHEN RET.LearnRefNumber IS NOT NULL THEN 1
-							ELSE 0
-						END DESC,
-						RET.AimSeqNumber
-				)
-			INTO #ExclusionsNonReturnersTferApp
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-			ON LD.LearnRefNumber = L.LearnRefNumber
-		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-		LEFT JOIN (
-			SELECT
-				LearnRefNumber = L.LearnRefNumber,
-				LearnAimRef = LD.LearnAimRef,
-				AimSeqNumber = LD.AimSeqNumber,
-				StartDate = LD.LearnStartDate,
-				CompStatus = LD.CompStatus
-			FROM ' + @FISDatabase + '.Valid.Learner L
-			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-				ON LD.LearnRefNumber = L.LearnRefNumber
-			LEFT JOIN #LearningAims AIM
-				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-			WHERE
-				(
-					LD.FundModel = 36
-					OR ( LD.FundModel = 35 AND LD.ProgType IS NOT NULL )
-				)
-		) RET
-			ON RET.LearnRefNumber = LD.LearnRefNumber
-			AND RET.AimSeqNumber > LD.AimSeqNumber
-			AND DATEDIFF ( DAY, CAST ( LD.LearnActEndDate AS DATE ), CAST ( RET.StartDate AS DATE ) ) <= 120
-		WHERE
-			(
-				( LD.CompStatus = 3 AND LD.WithdrawReason = 40 )
-				OR LD.CompStatus = 4
-			)
-			AND (
-				LD.FundModel = 36
-				OR ( LD.FundModel = 35 AND LD.ProgType IS NOT NULL )
-			)
-	'
-
-	SET @SQLString += 
-        N'
-		--Check If Aims That Are Breaks in Learning Without a Restart Aim
-		DROP TABLE IF EXISTS #ExclusionsNonReturnersBreaks
-		SELECT
-			LearnRefNumber = L.LearnRefNumber,
-			AimSeqNumber = LD.AimSeqNumber,
-			CompStatus = LD.CompStatus,
-			ShouldBeExcluded = 
-				CASE
-					WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
-					WHEN LD.LearnPlanEndDate <= GETDATE() THEN 1
-					WHEN DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 14 --Very Short
-						THEN 1
-					WHEN 
-						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 168 --Short
-						AND DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 < 14
-						THEN 1
-					WHEN 
-						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 >= 168 --Long
-						AND DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 < 42
-						THEN 1
-					ELSE 0
-				END,
-			RowNum = 
-				ROW_NUMBER () OVER (
-					PARTITION BY
-						L.LearnRefNumber,
-						LD.AimSeqNumber
-					ORDER BY
-						CASE
-							WHEN LDR.LearnRefNumber IS NOT NULL THEN 1
-							WHEN LD.LearnPlanEndDate <= GETDATE() THEN 1
-							ELSE 0
-						END DESC,
-						LDR.AimSeqNumber
-				)
-			INTO #ExclusionsNonReturnersBreaks
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
-			ON LD.LearnRefNumber = L.LearnRefNumber
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDelivery LDR
-			ON LDR.LearnRefNumber = LD.LearnRefNumber
-			AND LDR.LearnAimRef = LD.LearnAimRef
-			AND LDR.AimSeqNumber > LD.AimSeqNumber
-		WHERE
-			LD.LearnAimRef <> ''ZPROG001''
-			AND LD.CompStatus = 6
-			--AND L.LearnRefNumber = ''F246776''
 	'
 
 	SET @SQLString += 
@@ -585,10 +244,9 @@ BEGIN
 		SELECT
 			L.LearnRefNumber,
 			LD.AimSeqNumber,
-			AIM.NVQLevelCode,
 			FundLine = 
 				COALESCE (
-					CASE WHEN LD.ProgType IS NULL THEN FM25.FundLine END,
+					FM25.FundLine,
 					CASE WHEN LD.FundModel = 25 AND LD.ProgType IS NULL THEN ''16-19 Students (excluding High Needs Students)'' END,
 					CASE WHEN FMALB.AdvLoan = 1 AND FMALB.FundLine <> ''None'' THEN FMALB.FundLine END,
 					CASE WHEN FM36PMO.FundLine = ''None'' THEN FM36PMO.InitialFundLine ELSE FM36PMO.FundLine END,
@@ -605,79 +263,6 @@ BEGIN
 				),
 			FundStart = COALESCE ( CASE WHEN LD.FundModel = 25 THEN HRS.IsFunded END, FM25.StartFund, FMALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
 			CompStatus = LD.CompStatus,
-			WithdrawReason = LD.WithdrawReason,
-			Transfer = 
-				CASE
-					WHEN LD.CompStatus = 4 THEN 1
-					WHEN 
-						LD.CompStatus IN ( 3, 4 ) 
-						AND COALESCE ( LD.WithdrawReason, 0 ) IN ( 40, 41 ) THEN 1
-					ELSE 0
-				END,
-			TransferValid =
-				CASE
-					WHEN 
-						LD.CompStatus = 4 THEN 
-							CASE
-								WHEN 
-									EXCA.ShouldBeExcluded = 0
-									OR EXNRT.ShouldBeExcluded = 0 
-									OR EXNRTA.ShouldBeExcluded = 0 
-									THEN 0
-								ELSE 1
-							END
-					WHEN 
-						LD.CompStatus IN ( 3, 4 ) 
-						AND COALESCE ( LD.WithdrawReason, 0 ) IN ( 40, 41 ) THEN
-							CASE
-								WHEN 
-									EXCA.ShouldBeExcluded = 0
-									OR EXNRT.ShouldBeExcluded = 0 
-									OR EXNRTA.ShouldBeExcluded = 0 
-									THEN 0
-								ELSE 1
-							END
-					ELSE 0
-				END,
-			BreakInLearning = 
-				CASE
-					WHEN LD.CompStatus = 6 THEN 1
-					ELSE 0
-				END,
-			BreakInLearningValid = 
-				CASE
-					WHEN LD.CompStatus = 6 THEN
-						CASE
-							WHEN 
-								EXCA.ShouldBeExcluded = 0
-								OR EXNRB.ShouldBeExcluded = 0 
-								THEN 0
-							ELSE 1
-						END
-					ELSE 0
-				END,
-			UnknownOutcome = 
-				CASE
-					WHEN 
-						LD.CompStatus = 2
-						AND LD.Outcome = 8
-						THEN 1
-					ELSE 0
-				END,
-			UnknownOutcomeValid = 
-				CASE
-					WHEN 
-						LD.CompStatus = 2
-						AND LD.Outcome = 8 
-						THEN
-							CASE
-								WHEN 
-									DATEDIFF ( d, LD.LearnStartDate, LD.LearnActEndDate ) + 1 >= 42
-									THEN 1
-								ELSE 0
-							END
-					ELSE 0
-				END,
 			Duration = 
 				CASE
 					WHEN 
@@ -701,7 +286,6 @@ BEGIN
 			IsWithdrawnPreEligibility = 
 				CASE
 					WHEN LD.CompStatus <> 3 THEN 0
-					WHEN COALESCE ( LD.WithdrawReason, 0 ) IN ( 40, 41 ) THEN 0
 					WHEN 
 						-- Very Short
 						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 14 -- Course duration less than 2 weeks
@@ -728,7 +312,6 @@ BEGIN
 			IsWithdrawnPostEligibility = 
 				CASE
 					WHEN LD.CompStatus <> 3 THEN 0
-					WHEN COALESCE ( LD.WithdrawReason, 0 ) IN ( 40, 41 ) THEN 0
 					WHEN 
 						-- Very Short
 						DATEDIFF ( d, LD.LearnStartDate, LD.LearnPlanEndDate ) + 1 < 14 -- Course duration less than 2 weeks
@@ -753,23 +336,19 @@ BEGIN
 					ELSE 0
 				END
 			INTO #FundModelType
-	'
-
-	SET @SQLString += 
-        N'
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
+		FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 		--ASB and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 		--Apps
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 			ON FM36.LearnRefNumber = LD.LearnRefNumber
 			AND FM36.AimSeqNumber = LD.AimSeqNumber
 		LEFT JOIN #FM36Periods FM36PM
@@ -786,31 +365,13 @@ BEGIN
 			AND FM36PMO.PwayCode = COALESCE ( LD.PwayCode, 0 )
 			AND FM36PMO.RowNum = 1
 		--Loans
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.ALB_LearningDelivery FMALB
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery FMALB
 			ON FMALB.LearnRefNumber = LD.LearnRefNumber
 			AND FMALB.AimSeqNumber = LD.AimSeqNumber
 		--HE
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDeliveryHE FMHE
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryHE FMHE
 			ON FMHE.LearnRefNumber = LD.LearnRefNumber
 			AND FMHE.AimSeqNumber = LD.AimSeqNumber
-		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-		LEFT JOIN #ExclusionsCoreAims EXCA
-			ON EXCA.LearnRefNumber = LD.LearnRefNumber
-			AND EXCA.AimSeqNumber = LD.AimSeqNumber
-			AND EXCA.RowNum = 1
-		LEFT JOIN #ExclusionsNonReturnersTfer EXNRT
-			ON EXNRT.LearnRefNumber = LD.LearnRefNumber
-			AND EXNRT.AimSeqNumber = LD.AimSeqNumber
-			AND EXNRT.RowNum = 1
-		LEFT JOIN #ExclusionsNonReturnersTfer EXNRTA
-			ON EXNRTA.LearnRefNumber = LD.LearnRefNumber
-			AND EXNRTA.AimSeqNumber = LD.AimSeqNumber
-			AND EXNRTA.RowNum = 1
-		LEFT JOIN #ExclusionsNonReturnersBreaks EXNRB
-			ON EXNRB.LearnRefNumber = LD.LearnRefNumber
-			AND EXNRB.AimSeqNumber = LD.AimSeqNumber
-			AND EXNRB.RowNum = 1
 	'
 
 	SET @SQLString += 
@@ -881,7 +442,6 @@ BEGIN
 				WHERE
 					LD.FundModel = 25
 					AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) --Exclude transfers
-					AND LD.CompStatus <> 4
 					--AND LD.LearnRefNumber = ''17002435''
 				GROUP BY
 					LD.LearnRefNumber
@@ -917,11 +477,7 @@ BEGIN
 					CASE --If lrn has no active aims then count tfer instead
 						WHEN ACT.LearnRefNumber IS NOT NULL THEN
 							CASE
-								WHEN NOT (
-									COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) 
-									OR LD.CompStatus <> 4
-								)
-								THEN 1
+								WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) THEN 1
 								ELSE 0
 							END
 						ELSE
@@ -953,28 +509,16 @@ BEGIN
 							''19-24 Students with an EHCP'',
 							''19+ Continuing Students (excluding EHCP)''
 						)
-						THEN 
-							CASE
-								WHEN FM.NVQLevelCode = ''X'' THEN ''ESFA Other''
-								ELSE ''ESFA''
-							END
+						THEN ''ESFA''
 					WHEN 
 						FM.FundLine LIKE ''T Level%''
 						THEN ''Other''
 					WHEN 
 						FM.FundLine LIKE ''%AEB%''
-						THEN 
-							CASE
-								WHEN FM.NVQLevelCode = ''X'' THEN ''ESFA Other''
-								ELSE ''ESFA''
-							END
+						THEN ''ESFA''
 					WHEN 
 						FM.FundLine LIKE ''%Eligible for MCA/GLA funding%''
-						THEN 
-							CASE
-								WHEN FM.NVQLevelCode = ''X'' THEN ''ESFA Other''
-								ELSE ''ESFA''
-							END
+						THEN ''ESFA''
 					WHEN 
 						FM.FundLine = ''ESFA NSF Free Courses for Jobs (non-procured)''
 						THEN ''ESFA''
@@ -1162,32 +706,31 @@ BEGIN
 					ELSE 99
 				END,
 			FundStart = FM.FundStart,
-			AimStart = 
-				CASE
-					WHEN FM.IsWithdrawnPreEligibility = 1 THEN 0
-					WHEN FM.Transfer = 1 AND FM.TransferValid = 1 THEN 0
-					WHEN FM.BreakInLearning = 1 AND FM.BreakInLearningValid = 1 THEN 0
-					WHEN FM.UnknownOutcome = 1 AND FM.UnknownOutcomeValid = 0 THEN 0
-					ELSE 1
-				END,
 			Leaver = 
 				CASE
-					WHEN FM.IsWithdrawnPreEligibility = 1 THEN 0
-					WHEN FM.CompStatus NOT IN ( 2, 3 ) THEN 0
-					WHEN FM.Transfer = 1 AND FM.TransferValid = 1 THEN 0
-					WHEN FM.BreakInLearning = 1 AND FM.BreakInLearningValid = 1 THEN 0
-					WHEN FM.UnknownOutcome = 1 AND FM.UnknownOutcomeValid = 0 THEN 0
-					ELSE 1
+					WHEN FM.FundStart = 0 THEN 0
+					WHEN FM.CompStatus NOT IN ( ''2'', ''3'' ) THEN 0
+					WHEN 
+						FM.CompStatus = ''4'' THEN 0
+					WHEN 
+						FM.CompStatus IN ( ''3'', ''4'' ) 
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' ) THEN 0
+					WHEN 
+						FM.FundLine = ''Advanced Learner Loans Bursary''
+						AND FM.IsWithdrawnPreEligibility = 1 THEN 0
+					ELSE FM.FundStart
 				END,
-			Transfer = FM.Transfer,
-			TransferValid = FM.TransferValid,
-			BreakInLearning = FM.BreakInLearning,
-			BreakInLearningValid = FM.BreakInLearningValid,
-			UnknownOutcome = FM.UnknownOutcome,
-			UnknownOutcomeValid = FM.UnknownOutcomeValid,
+			Transfer = 
+				CASE
+					WHEN FM.CompStatus= ''4'' THEN 1
+					WHEN 
+						FM.CompStatus IN ( ''3'', ''4'' ) 
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' ) THEN 1
+					ELSE 0
+				END,
 			Duration = FM.Duration,
 			IsWithdrawnPreEligibility = FM.IsWithdrawnPreEligibility,
-			IsWithdrawnPostEligibility = FM.IsWithdrawnPostEligibility
+			IsWithdrawnPostEligibility = IsWithdrawnPostEligibility
 			INTO #FundModelAim
 		FROM #FundModelType FM
 	'
@@ -1250,7 +793,7 @@ BEGIN
 								ELSE 1
 							END,
 							AIM.NVQLevelOrder DESC,
-							COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+							COALESCE ( LD.AddHours, 0 ) DESC,
 							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
@@ -1283,7 +826,7 @@ BEGIN
 								ELSE 1
 							END,
 							AIM.NVQLevelOrder DESC,
-							COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+							COALESCE ( LD.AddHours, 0 ) DESC,
 							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
@@ -1311,7 +854,7 @@ BEGIN
 								ELSE 1
 							END,
 							AIM.NVQLevelOrder DESC,
-							COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+							COALESCE ( LD.AddHours, 0 ) DESC,
 							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
@@ -1321,24 +864,24 @@ BEGIN
     
     SET @SQLString += 
         N'
-			FROM ' + @FISDatabase + '.Valid.Learner L
-			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
+			FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+			INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
 			LEFT JOIN #LearningAims AIM
 				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMA.ProvSpecDelMonOccur = ''A''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMB
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMB
 				ON PSDMB.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMB.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMB.ProvSpecDelMonOccur = ''B''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMC
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMC
 				ON PSDMC.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMC.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMC.ProvSpecDelMonOccur = ''C''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMD
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMD
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
@@ -1589,11 +1132,11 @@ BEGIN
 					+ FM35P.EmpOutcomePay
 				ELSE 0 END )
 				INTO #FM35PeriodFunding
-			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
 				ON FM35.LearnRefNumber = LD.LearnRefNumber
 				AND FM35.AimSeqNumber = LD.AimSeqNumber
-			INNER JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery_Period FM35P
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery_Period FM35P
 				ON FM35P.LearnRefNumber = FM35.LearnRefNumber
 				AND FM35P.AimSeqNumber = FM35.AimSeqNumber
 			GROUP BY
@@ -1613,7 +1156,6 @@ BEGIN
 		--Fund Model 36 Price Episode
 		DROP TABLE IF EXISTS #FM36PriceEpisode
 		SELECT
-				FM36PE.UKPRN,
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
 				LearnAimRef = LD.LearnAimRef,
@@ -1630,15 +1172,9 @@ BEGIN
 				FM36PE.TNP3,
 				FM36PE.TNP4,
 				FM36PE.EpisodeStartDate,
-				FM36PE.PriceEpisode1618FrameworkUpliftRemainingAmount,
-				FM36PE.PriceEpisode1618FrameworkUpliftTotPrevEarnings,
-				FM36PE.PriceEpisode1618FUBalValue,
-				FM36PE.PriceEpisode1618FUMonthInstValue,
-				FM36PE.PriceEpisode1618FUTotEarnings,
 				FM36PE.PriceEpisodeUpperBandLimit,
 				FM36PE.PriceEpisodePlannedEndDate,
 				FM36PE.PriceEpisodeActualEndDate,
-				FM36PE.PriceEpisodeActualEndDateIncEPA,
 				FM36PE.PriceEpisodeTotalTNPPrice,
 				FM36PE.PriceEpisodeUpperLimitAdjustment,
 				FM36PE.PriceEpisodePlannedInstalments,
@@ -1653,7 +1189,6 @@ BEGIN
 				FM36PE.PriceEpisodeCappedRemainingTNPAmount,
 				FM36PE.PriceEpisodeExpectedTotalMonthlyValue,
 				FM36PE.PriceEpisodeAimSeqNumber,
-				FM36PE.PriceEpisodeApplic1618FrameworkUpliftCompElement,
 				FM36PE.PriceEpisodeFundLineType,
 				FM36PE.EpisodeEffectiveTNPStartDate,
 				FM36PE.PriceEpisodeFirstAdditionalPaymentThresholdDate,
@@ -1669,18 +1204,17 @@ BEGIN
 				RowNum =
 					ROW_NUMBER () OVER (
 						PARTITION BY
-							FM36PE.UKPRN,
 							FM36PE.LearnRefNumber,
 							FM36PE.PriceEpisodeAimSeqNumber
 						ORDER BY
 							FM36PE.EpisodeStartDate DESC
 					)
 				INTO #FM36PriceEpisode
-			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 				ON FM36.LearnRefNumber = LD.LearnRefNumber
 				AND FM36.AimSeqNumber = LD.AimSeqNumber
-			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_ApprenticeshipPriceEpisode FM36PE
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_ApprenticeshipPriceEpisode FM36PE
 				ON FM36PE.LearnRefNumber = FM36.LearnRefNumber
 				AND FM36PE.PriceEpisodeAimSeqNumber = FM36.AimSeqNumber
 			WHERE
@@ -1705,7 +1239,7 @@ BEGIN
 
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1725,7 +1259,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -1745,7 +1279,7 @@ BEGIN
 					),
 				TotFundToPeriod = 
 					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1757,7 +1291,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -1773,7 +1307,7 @@ BEGIN
 		N'
 				OnProgPayment6Mon = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1793,7 +1327,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -1813,7 +1347,7 @@ BEGIN
 					),
 				TotFund6Mon = 
 					SUM (  CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1825,7 +1359,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -1838,7 +1372,7 @@ BEGIN
 
 				OnProgPaymentYrEnd = 
 					SUM ( 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1856,7 +1390,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 					),
@@ -1873,7 +1407,7 @@ BEGIN
 					),
 				TotFundYrEnd = 
 					SUM (  
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1885,7 +1419,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -1900,7 +1434,7 @@ BEGIN
 		N'
 				OnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1920,7 +1454,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -1940,7 +1474,7 @@ BEGIN
 					),
 				TotFundP01 = 
 					SUM (  CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1952,7 +1486,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -1965,7 +1499,7 @@ BEGIN
 
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1985,7 +1519,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2005,7 +1539,7 @@ BEGIN
 					),
 				TotFundP02 = 
 					SUM (  CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2017,7 +1551,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2033,7 +1567,7 @@ BEGIN
 		N'
 				OnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2053,7 +1587,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2073,7 +1607,7 @@ BEGIN
 					),
 				TotFundP03 = 
 					SUM (  CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2085,7 +1619,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2098,7 +1632,7 @@ BEGIN
 
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2118,7 +1652,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2138,7 +1672,7 @@ BEGIN
 					),
 				TotFundP04 = 
 					SUM (  CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2150,7 +1684,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2166,7 +1700,7 @@ BEGIN
 		N'
 				OnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2186,7 +1720,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2206,7 +1740,7 @@ BEGIN
 					),
 				TotFundP05 = 
 					SUM (  CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2218,7 +1752,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2231,7 +1765,7 @@ BEGIN
 
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2251,7 +1785,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2271,7 +1805,7 @@ BEGIN
 					),
 				TotFundP06 = 
 					SUM (  CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2283,7 +1817,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2299,7 +1833,7 @@ BEGIN
 		N'
 				OnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2319,7 +1853,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2339,7 +1873,7 @@ BEGIN
 					),
 				TotFundP07 = 
 					SUM (  CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2351,7 +1885,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2364,7 +1898,7 @@ BEGIN
 
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2384,7 +1918,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2404,7 +1938,7 @@ BEGIN
 					),
 				TotFundP08 = 
 					SUM (  CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2416,7 +1950,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2432,7 +1966,7 @@ BEGIN
 		N'
 				OnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2452,7 +1986,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2472,7 +2006,7 @@ BEGIN
 					),
 				TotFundP09 = 
 					SUM (  CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2484,7 +2018,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2497,7 +2031,7 @@ BEGIN
 
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2517,7 +2051,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2537,7 +2071,7 @@ BEGIN
 					),
 				TotFundP10 = 
 					SUM (  CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2549,7 +2083,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2565,7 +2099,7 @@ BEGIN
 		N'
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2585,7 +2119,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2605,7 +2139,7 @@ BEGIN
 					),
 				TotFundP11 = 
 					SUM (  CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2617,7 +2151,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2630,7 +2164,7 @@ BEGIN
 
 				OnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2650,7 +2184,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END 
 						ELSE 0 END
@@ -2670,7 +2204,7 @@ BEGIN
 					),
 				TotFundP12 = 
 					SUM (  CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2682,7 +2216,7 @@ BEGIN
 						+ CASE 
 							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
 							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
+							WHEN FM36P.LearnDelContType = ''Levy Contract'' THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
 							ELSE 0 
 						END
 						+ FM36P.MathEngBalPayment 
@@ -2693,11 +2227,11 @@ BEGIN
 						ELSE 0 END
 					)
 				INTO #FM36PeriodFunding
-			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 				ON FM36.LearnRefNumber = LD.LearnRefNumber
 				AND FM36.AimSeqNumber = LD.AimSeqNumber
-			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery_Period FM36P
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery_Period FM36P
 				ON FM36P.LearnRefNumber = FM36.LearnRefNumber
 				AND FM36P.AimSeqNumber = FM36.AimSeqNumber
 			WHERE
@@ -2706,8 +2240,8 @@ BEGIN
 				LD.LearnRefNumber,
 				LD.AimSeqNumber,
 				LD.LearnAimRef,
-				LD.CompStatus,
 				LD.FundModel,
+				LD.CompStatus,
 				COALESCE ( LD.StdCode, 0 ),
 				COALESCE ( LD.FworkCode, 0 ),
 				LD.ProgType,
@@ -2833,7 +2367,7 @@ BEGIN
 				),
 			ReportingYear = @AcademicYear
 			INTO #EnrolDates
-		FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
+		FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 	'
 
 	SET @SQLString += 
@@ -2878,31 +2412,31 @@ BEGIN
 			EarliestStartDate = MIN ( LD.LearnStartDate ),
 			LatestEndDate = MAX ( COALESCE ( LD.AchDate, LD.LearnActEndDate, LD.LearnPlanEndDate ) )
 			INTO #LearnerOverallDates
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
+		FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 
 		--AEB and Apps (Legacy)
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 
 		--Apps (Reformed)
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 			ON FM36.LearnRefNumber = LD.LearnRefNumber
 			AND FM36.AimSeqNumber = LD.AimSeqNumber
 
 		--Loans and Bursaries
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.ALB_LearningDelivery ALB
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery ALB
 			ON ALB.LearnRefNumber = LD.LearnRefNumber
 			AND ALB.AimSeqNumber = LD.AimSeqNumber
 
 		--Higher Education
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDeliveryHE HE
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryHE HE
 			ON HE.LearnRefNumber = LD.LearnRefNumber
 			AND HE.AimSeqNumber = LD.AimSeqNumber
 		WHERE
@@ -2935,7 +2469,7 @@ BEGIN
 				FAML.LearnRefNumber,
 				FAML.LearnFAMType,
 				FAML.LearnFAMCode
-			FROM ' + @FISDatabase + '.Valid.LearnerFAM FAML
+			FROM ' + @FISDatabase + '.dbo.Valid_LearnerFAM FAML
 		) FAML
 		PIVOT (
 			MAX ( FAML.LearnFAMCode )
@@ -3005,7 +2539,7 @@ BEGIN
 								END,
 								FAMA.LearnDelFAMDateTo DESC
 						)
-				FROM ' + @FISDatabase + '.Valid.LearningDeliveryFAM FAMA
+				FROM ' + @FISDatabase + '.dbo.Valid_LearningDeliveryFAM FAMA
 			) FAMA
 			WHERE
 				FAMA.RowNum = 1
@@ -3186,8 +2720,8 @@ BEGIN
 								/ 
 								FM35.PlannedNumOnProgInstalm
 						END
-				FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-				INNER JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
+				FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+				INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
 					ON FM35.LearnRefNumber = LD.LearnRefNumber
 					AND FM35.AimSeqNumber = LD.AimSeqNumber
 				WHERE
@@ -3303,7 +2837,7 @@ BEGIN
 			Address4 = L.AddLine4,
 			PostCodeCurrent = L.Postcode,
 			PostCodePriorToEnrol = L.PostcodePrior,
-			PostCodeLearningStartDate = LD.LSDPostcode,
+			PostCodeLearningStartDate = NULL,
 			Tel = L.TelNo,
 			Email = L.Email,
 			PostCodeWardCode = PC.WardCode,
@@ -3324,8 +2858,8 @@ BEGIN
 			SmallEmployer = ESM.SEM,
 			SelfEmployInd = ESM.SEI,
 			EmployIntensityInd = ESM.EII,
-			IsFirstFullLevel2 = NULL,
-			IsFirstFullLevel3 = NULL,
+			IsFirstFullLevel2 = DV.Learn_FirstFullLevel2,
+			IsFirstFullLevel3 = DV.Learn_FirstFullLevel3,
 			PriorLevelCode = NULL,
 			PriorLevelName = NULL,
 			PriorLevelDate = NULL,
@@ -3372,6 +2906,10 @@ BEGIN
 					WHEN HE.MODESTUD = 2 THEN ''Year Out''
 					ELSE NULL
 				END,
+	'
+
+    SET @SQLString += 
+        N'
 			IsMainAim = 
 				CASE
 					WHEN LD.AimSeqNumber = MA.AimSeqNumber THEN 1
@@ -3514,8 +3052,19 @@ BEGIN
 			SSA1Title = AIM.SSA1Name,
 			SSA2Code = AIM.SSA2Code,
 			SSA2Title = AIM.SSA2Name,
-			CourseCode = COALESCE ( CS.CourseCode, ''-''),
-			CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
+			CourseCode = 
+				CASE
+					WHEN @ProviderFieldCourseLocation = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProviderFieldCourseLocation = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProviderFieldCourseLocation = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProviderFieldCourseLocation = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+					ELSE ''-'' 
+				END,
+			CourseTitle = CS.CourseTitle,
 
 			AimSeqNumber = LD.AimSeqNumber,
 			LearnerAndAimRowNum = 
@@ -3535,7 +3084,7 @@ BEGIN
 							WHEN LD.AimType = 5 THEN 2 --Core Aim
 							ELSE 3
 						END,
-						COALESCE ( LD.PHours, 0 ) + COALESCE ( LD.AddHours, 0 ) DESC,
+						COALESCE ( LD.AddHours, 0 ) DESC,
 						DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 						LD.LearnStartDate,
 						LD.AimSeqNumber
@@ -3596,11 +3145,12 @@ BEGIN
 			LatestImportedFileILRReturnDate = NULL,
 			LatestImportedFileILRReturn = NULL,
 			LatestImportedFileIsFinalReturn = NULL,
-    '
+	'
 
 	SET @SQLString += 
         N'
 			IncludeInQARMeasures = NULL,
+			QARIsBreakInLearningNotReturned = NULL,
 			QARNumberOfMergedYearsOfData = NULL,
 			IsFundedStart = FM.FundStart,
 			IsPastPlannedEndDate =
@@ -3612,7 +3162,10 @@ BEGIN
 				END,
 			IsOverallStart = 
 				CASE
-					WHEN FM.AimStart = 1 THEN 1
+					WHEN 
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						THEN 1
 					ELSE 0
 				END,
 			IsTimelyStart = 
@@ -3624,7 +3177,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
+						AND FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0
 				END,
@@ -3651,8 +3205,9 @@ BEGIN
 			IsOverallLeaverBestCase = 
 				CASE
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2, 3 )
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
 						THEN 1
 					ELSE 0
 				END,
@@ -3665,16 +3220,17 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2, 3 )
+						AND FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus IN ( ''1'', ''2'', ''3'' )
 						THEN 1
 					ELSE 0
 				END,
 			IsOverallAchieverBestCase = 
 				CASE
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						FM.FundStart = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						AND NOT LD.Outcome = 3
 						THEN 1
 					ELSE 0
@@ -3688,8 +3244,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND FM.FundStart = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						AND NOT LD.Outcome = 3
 						THEN 1
 					ELSE 0
@@ -3701,7 +3257,7 @@ BEGIN
 			IsOverallContinuer = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 1
+						LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3714,15 +3270,15 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallContinuerNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 1
+						FM.FundStart = 0
+						AND LD.CompStatus = ''1''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3735,16 +3291,16 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 1
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''1''
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallContinuerFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 1
+						FM.FundStart = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3757,8 +3313,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 1
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''1''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3769,7 +3325,7 @@ BEGIN
 			IsOverallCompleted = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 2
+						LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3782,15 +3338,15 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 2
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallCompletedNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						THEN 1
 					ELSE 0 
 				END,
@@ -3803,16 +3359,16 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallCompletedFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3825,8 +3381,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3837,7 +3393,7 @@ BEGIN
 			IsOverallRetained = 
 				CASE 
 					WHEN 
-						LD.CompStatus IN ( 1, 2 )
+						LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3850,15 +3406,15 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallRetainedNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						FM.FundStart = 0
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1
 					ELSE 0 
 				END,
@@ -3871,16 +3427,16 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus IN ( 1, 2 )
+						AND FM.FundStart = 0
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallRetainedFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						FM.FundStart = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3893,8 +3449,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus IN ( 1, 2 )
+						AND FM.FundStart = 1
+						AND LD.CompStatus IN ( ''1'', ''2'' )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3905,8 +3461,8 @@ BEGIN
 			IsOverallWithdrawn = 
 				CASE 
 					WHEN 
-						LD.CompStatus = 3
-						AND FM.Transfer = 0
+						LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3919,17 +3475,17 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND LD.CompStatus = 3
-						AND FM.Transfer = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallWithdrawnNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 3
-						AND FM.Transfer = 0
+						FM.FundStart = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
@@ -3942,18 +3498,18 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 3
-						AND FM.Transfer = 0
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallWithdrawnFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 3
-						AND FM.Transfer = 0
+						FM.FundStart = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3966,9 +3522,9 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 3
-						AND FM.Transfer = 0
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3980,7 +3536,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -3994,16 +3550,16 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallWithdrawnPreEligibilityNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
+						FM.FundStart = 0
 						AND FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
@@ -4016,18 +3572,18 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
+						AND FM.FundStart = 0
 						AND FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallWithdrawnPreEligibilityFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
+						FM.FundStart = 1
 						AND FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4040,9 +3596,9 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
+						AND FM.FundStart = 1
 						AND FM.IsWithdrawnPreEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4054,7 +3610,7 @@ BEGIN
 				CASE 
 					WHEN 
 						FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4068,16 +3624,16 @@ BEGIN
 							ELSE 0
 						END = 0
 						AND FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallWithdrawnPostEligibilityNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
+						FM.FundStart = 0
 						AND FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
@@ -4090,18 +3646,18 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
+						AND FM.FundStart = 0
 						AND FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallWithdrawnPostEligibilityFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
+						FM.FundStart = 1
 						AND FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4114,9 +3670,9 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
+						AND FM.FundStart = 1
 						AND FM.IsWithdrawnPostEligibility = 1
-						AND FM.Transfer = 0
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4127,8 +3683,12 @@ BEGIN
 			IsOverallTransfer = 
 				CASE 
 					WHEN 
-						FM.Transfer = 1
+						LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
 			IsTimelyTransfer = 
@@ -4140,16 +3700,25 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.Transfer = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
 			IsOverallTransferNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND FM.Transfer = 1
+						FM.FundStart = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						FM.FundStart = 0
+						AND LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
 			IsTimelyTransferNotFunded = 
@@ -4161,17 +3730,33 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND FM.Transfer = 1
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
 			IsOverallTransferFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND FM.Transfer = 1
+						FM.FundStart = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						FM.FundStart = 1
+						AND LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
 			IsTimelyTransferFunded = 
@@ -4183,12 +3768,23 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND FM.Transfer = 1
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''3''
+						AND COALESCE ( LD.WithdrawReason, ''0'' ) IN ( ''40'', ''41'' )
 						THEN 1 
+					WHEN 
+						CASE
+							WHEN 
+								COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) > LD.LearnPlanEndDate
+								THEN 1
+							ELSE 0
+						END = 0
+						AND FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus = ''4''
+						THEN 1
 					ELSE 0 
 				END,
-			IsTransferValid = FM.TransferValid,
 	'
 
     SET @SQLString += 
@@ -4196,7 +3792,9 @@ BEGIN
 			IsOverallBreakInLearning = 
 				CASE 
 					WHEN 
-						FM.BreakInLearning = 1
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus = ''6''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4209,16 +3807,17 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND FM.BreakInLearning = 1
+						AND FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus = ''6''
 						THEN 1 
 					ELSE 0 
 				END,
 			IsOverallBreakInLearningNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND FM.BreakInLearning = 1
+						FM.FundStart = 0
+						AND LD.CompStatus = ''6''
 						THEN 1
 					ELSE 0 
 				END,
@@ -4231,16 +3830,17 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND FM.BreakInLearning = 1
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''6''
 						THEN 1
 					ELSE 0 
 				END,
 			IsOverallBreakInLearningFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND FM.BreakInLearning = 1
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus = ''6''
 						THEN 1 
 					ELSE 0 
 				END,
@@ -4253,12 +3853,12 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND FM.BreakInLearning = 1
+						AND FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
+						AND LD.CompStatus = ''6''
 						THEN 1 
 					ELSE 0 
 				END,
-			IsBreakInLearningValid = FM.BreakInLearningValid,
 	'
 
     SET @SQLString += 
@@ -4266,8 +3866,8 @@ BEGIN
 			IsOverallAchiever = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4281,8 +3881,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4290,8 +3890,8 @@ BEGIN
 			IsOverallAchieverNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1
 					ELSE 0 
@@ -4305,8 +3905,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1
 					ELSE 0 
@@ -4314,8 +3914,8 @@ BEGIN
 			IsOverallAchieverFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4329,8 +3929,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						THEN 1 
 					ELSE 0 
@@ -4342,8 +3942,8 @@ BEGIN
 			IsOverallFailed = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4357,8 +3957,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4366,8 +3966,8 @@ BEGIN
 			IsOverallFailedNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1
 					ELSE 0 
@@ -4381,8 +3981,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1
 					ELSE 0 
@@ -4390,8 +3990,8 @@ BEGIN
 			IsOverallFailedFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4405,8 +4005,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 3
 						THEN 1 
 					ELSE 0 
@@ -4415,16 +4015,16 @@ BEGIN
 
     SET @SQLString += 
         N'
-			IsOverallUnknownOutcome = 
+			IsOverallResultUnknown = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcome = 
+			IsTimelyResultUnknown = 
 				CASE 
 					WHEN 
 						CASE
@@ -4433,22 +4033,22 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsOverallUnknownOutcomeNotFunded = 
+			IsOverallResultUnknownNotFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 0
-						AND LD.CompStatus = 2
+						FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcomeNotFunded = 
+			IsTimelyResultUnknownNotFunded = 
 				CASE 
 					WHEN 
 						CASE
@@ -4457,22 +4057,22 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 0
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 0
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1
 					ELSE 0 
 				END,
-			IsOverallUnknownOutcomeFunded = 
+			IsOverallResultUnknownFunded = 
 				CASE 
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsTimelyUnknownOutcomeFunded = 
+			IsTimelyResultUnknownFunded = 
 				CASE 
 					WHEN 
 						CASE
@@ -4481,13 +4081,12 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 8
 						THEN 1 
 					ELSE 0 
 				END,
-			IsUnknownOutcomeValid = FM.UnknownOutcomeValid,
 	'
 
     SET @SQLString += 
@@ -4495,15 +4094,15 @@ BEGIN
 			IsOverallHighGrade = 
 				CASE
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
 							THEN 1
 					WHEN 
-						FM.AimStart = 1
-						AND LD.CompStatus = 2
+						FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
@@ -4522,8 +4121,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0001'', ''0002'' ) 
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'' ) 
@@ -4535,8 +4134,8 @@ BEGIN
 								THEN 1
 							ELSE 0
 						END = 0
-						AND FM.AimStart = 1
-						AND LD.CompStatus = 2
+						AND FM.FundStart = 1
+						AND LD.CompStatus = ''2''
 						AND LD.Outcome = 1
 						AND AIM.LearningAimTypeCode IN ( ''0003'', ''1422'', ''2999'' )
 						AND LD.OutGrade IN ( ''A*'', ''A'', ''B'', ''C'', ''9'', ''8'', ''7'', ''6'', ''5'', ''4'' ) 
@@ -4553,7 +4152,8 @@ BEGIN
 			IsOutOfFunding30Days = 
 				CASE
 					WHEN
-						FM.AimStart = 1
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						AND FM.FundLine LIKE ''%Apprenticeship%''
 						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 30
 							THEN 1
@@ -4562,7 +4162,8 @@ BEGIN
 			IsOutOfFunding60Days = 
 				CASE
 					WHEN
-						FM.AimStart = 1
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						AND FM.FundLine LIKE ''%Apprenticeship%''
 						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 60
 							THEN 1
@@ -4571,7 +4172,8 @@ BEGIN
 			IsOutOfFunding90Days = 
 				CASE
 					WHEN
-						FM.AimStart = 1
+						FM.FundStart = 1
+						AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 )
 						AND FM.FundLine LIKE ''%Apprenticeship%''
 						AND DATEDIFF ( DAY, LD.LearnPlanEndDate, COALESCE ( LD.LearnActEndDate, CAST ( GETDATE() AS DATE ) ) ) >= 90
 							THEN 1
@@ -4584,8 +4186,8 @@ BEGIN
         N'
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
-			FM25PLHAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( FM.Transfer = 0 OR HRS.TFerOnly = 1 ) THEN CH.PLH END, 0 ),
-			FM25EEPAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( FM.Transfer = 0 OR HRS.TFerOnly = 1 ) THEN CH.EEP END, 0 ),
+			FM25PLHAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 ) THEN CH.PLH END, 0 ),
+			FM25EEPAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 ) THEN CH.EEP END, 0 ),
 			FM25PLHAllAims = COALESCE ( HRS.PLH, 0 ),
 			FM25EEPAllAims = COALESCE ( HRS.EEP, 0 ),
 			IsPartTime = 
@@ -4602,11 +4204,15 @@ BEGIN
 			StandardCode = LD.StdCode,
 			StandardName = COALESCE ( STD.StandardName, CASE WHEN LD.StdCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
 			FrameworkCode = LD.FworkCode,
-			FrameworkName = COALESCE ( FW.FrameworkName, CASE WHEN LD.FworkCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
+			FrameworkName = COALESCE ( FW.FrameworkName, ''-- Unknown --'' ),
 			PathwayCode = LD.PwayCode,
 			PathwayName = COALESCE ( PWAY.PathwayName, CASE WHEN LD.PwayCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
 			OffTheJobActualHours = NULL,
-			EmployerID = EMP.EmployerID,
+			EmployerID = 
+				CASE
+					WHEN LDR.LearnDel_EmpID = -1 THEN NULL
+					ELSE LDR.LearnDel_EmpID
+				END,
 			EmployerName = EMPN.EmployerName,
 			PartnerCode = 
 				CASE
@@ -4628,7 +4234,7 @@ BEGIN
 				END,
 			IsCarryIn = 
 				CASE
-					WHEN CAST ( LD.LearnStartDate AS DATE ) <= ''20'' + LEFT ( @AcademicYear, 2) + ''-08-01'' THEN 1
+					WHEN CAST ( LD.LearnStartDate AS DATE ) <= ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' THEN 1
 					ELSE 0
 				END,
 			HEQualEnt3 = HE.QUALENT3,
@@ -4654,7 +4260,7 @@ BEGIN
 			HEPostCode = HE.HEPostCode,
 			EnrolmentID = PSDMC.ProvSpecDelMon,
 			FM25TotFund = COALESCE ( HRS.OnProgPayment, 0 ),
-	'
+'
 
     SET @SQLString += 
         N'
@@ -4716,7 +4322,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -4750,7 +4356,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -4779,7 +4385,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -4801,7 +4407,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -4835,7 +4441,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -4864,7 +4470,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -4886,7 +4492,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -4920,7 +4526,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -4949,7 +4555,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5002,15 +4608,15 @@ BEGIN
 			AppStandardTNP3 = FM36PE.TNP3,
 			AppStandardTNP4 = FM36PE.TNP4,
 			AppStandardEpisodeStartDate = FM36PE.EpisodeStartDate,
-			AppStandardPriceEpisode1618FrameworkUpliftRemainingAmount = FM36PE.PriceEpisode1618FrameworkUpliftRemainingAmount,
-			AppStandardPriceEpisode1618FrameworkUpliftTotPrevEarnings = FM36PE.PriceEpisode1618FrameworkUpliftTotPrevEarnings,
-			AppStandardPriceEpisode1618FUBalValue = FM36PE.PriceEpisode1618FUBalValue,
-			AppStandardPriceEpisode1618FUMonthInstValue = FM36PE.PriceEpisode1618FUMonthInstValue,
-			AppStandardPriceEpisode1618FUTotEarnings = FM36PE.PriceEpisode1618FUTotEarnings,
+			AppStandardPriceEpisode1618FrameworkUpliftRemainingAmount = NULL,
+			AppStandardPriceEpisode1618FrameworkUpliftTotPrevEarnings = NULL,
+			AppStandardPriceEpisode1618FUBalValue = NULL,
+			AppStandardPriceEpisode1618FUMonthInstValue = NULL,
+			AppStandardPriceEpisode1618FUTotEarnings = NULL,
 			AppStandardPriceEpisodeUpperBandLimit = FM36PE.PriceEpisodeUpperBandLimit,
 			AppStandardPriceEpisodePlannedEndDate = FM36PE.PriceEpisodePlannedEndDate,
 			AppStandardPriceEpisodeActualEndDate = FM36PE.PriceEpisodeActualEndDate,
-			AppStandardPriceEpisodeActualEndDateIncEPA = FM36PE.PriceEpisodeActualEndDateIncEPA,
+			AppStandardPriceEpisodeActualEndDateIncEPA = NULL,
 			AppStandardPriceEpisodeTotalTNPPrice = FM36PE.PriceEpisodeTotalTNPPrice,
 			AppStandardPriceEpisodeUpperLimitAdjustment = FM36PE.PriceEpisodeUpperLimitAdjustment,
 			AppStandardPriceEpisodePlannedInstalments = FM36PE.PriceEpisodePlannedInstalments,
@@ -5025,7 +4631,7 @@ BEGIN
 			AppStandardPriceEpisodeCappedRemainingTNPAmount = FM36PE.PriceEpisodeCappedRemainingTNPAmount,
 			AppStandardPriceEpisodeExpectedTotalMonthlyValue = FM36PE.PriceEpisodeExpectedTotalMonthlyValue,
 			AppStandardPriceEpisodeAimSeqNumber = FM36PE.PriceEpisodeAimSeqNumber,
-			AppStandardPriceEpisodeApplic1618FrameworkUpliftCompElement = FM36PE.PriceEpisodeApplic1618FrameworkUpliftCompElement,
+			AppStandardPriceEpisodeApplic1618FrameworkUpliftCompElement = NULL,
 			AppStandardPriceEpisodeFundLineType = FM36PE.PriceEpisodeFundLineType,
 			AppStandardEpisodeEffectiveTNPStartDate = FM36PE.EpisodeEffectiveTNPStartDate,
 			AppStandardPriceEpisodeFirstAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeFirstAdditionalPaymentThresholdDate,
@@ -5047,7 +4653,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5081,7 +4687,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5110,7 +4716,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5132,7 +4738,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5166,7 +4772,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5195,7 +4801,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5217,7 +4823,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5251,7 +4857,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5280,7 +4886,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5302,7 +4908,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5336,7 +4942,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5365,7 +4971,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5387,7 +4993,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5421,7 +5027,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5450,7 +5056,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5472,7 +5078,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5506,7 +5112,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5535,7 +5141,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5557,7 +5163,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5591,7 +5197,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5620,7 +5226,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5642,7 +5248,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5676,7 +5282,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5705,7 +5311,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5727,7 +5333,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5761,7 +5367,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5790,7 +5396,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5812,7 +5418,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE
 					CASE
@@ -5846,7 +5452,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5875,7 +5481,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5897,7 +5503,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE
 					CASE
@@ -5931,7 +5537,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -5960,7 +5566,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -5982,7 +5588,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -6016,7 +5622,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.LearnSuppPayment, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.LearnSuppPayment, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE 
@@ -6045,7 +5651,7 @@ BEGIN
 					CASE
 						WHEN COALESCE ( HRS.PLH, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.TotFund, 0 ) ELSE 0 END
 						ELSE
-							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
+							( COALESCE ( HRS.TotFund, 0 ) / COALESCE ( HRS.PLH, 0 ) ) * COALESCE ( CASE WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) OR HRS.TFerOnly = 1 THEN CH.PLH END, 0 )
 					END
 				ELSE 
 					CASE
@@ -6064,10 +5670,15 @@ BEGIN
     
     SET @SQLString += 
         N'
-		FROM ' + @FISDatabase + '.Valid.Learner L
-		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
+		FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_DV_Learner DV
+			ON DV.LearnRefNumber = L.LearnRefNumber
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
-		INNER JOIN ' + @FISDatabase + '.Valid.Source SRC
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_DV_LearningDelivery LDR
+			ON LDR.LearnRefNumber = LD.LearnRefNumber
+			AND LDR.AimSeqNumber = LD.AimSeqNumber
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_Source SRC
 			ON 1 = 1
 		INNER JOIN #HybridEndYears EY
 			ON EY.LearnRefNumber = LD.LearnRefNumber
@@ -6083,7 +5694,7 @@ BEGIN
 
     SET @SQLString += 
         N'
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDeliveryFAM FFI
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryFAM FFI
 			ON FFI.LearnRefNumber = LD.LearnRefNumber
 			AND FFI.AimSeqNumber = LD.AimSeqNumber
 			AND FFI.LearnDelFAMType = ''FFI''
@@ -6094,10 +5705,10 @@ BEGIN
 				EmpStatusCode = EMP.EmpStat,
 				EmpStatusName = 
 					CASE
-						WHEN EMP.EmpStat = 10 THEN ''InEmp''
-						WHEN EMP.EmpStat = 11 THEN ''NoEmpLooking''
-						WHEN EMP.EmpStat = 12 THEN ''NoEmpNotLooking''
-						WHEN EMP.EmpStat = 98 THEN ''Unknown''
+						WHEN EMP.EmpStat = ''10'' THEN ''InEmp''
+						WHEN EMP.EmpStat = ''11'' THEN ''NoEmpLooking''
+						WHEN EMP.EmpStat = ''12'' THEN ''NoEmpNotLooking''
+						WHEN EMP.EmpStat = ''98'' THEN ''Unknown''
 						ELSE ''Unknown''
 					END,
 				EmpStatusAppliesDate = EMP.DateEmpStatApp,
@@ -6109,11 +5720,11 @@ BEGIN
 						ORDER BY
 							EMP.DateEmpStatApp DESC
 					)
-			FROM ' + @FISDatabase + '.Valid.LearnerEmploymentStatus EMP
+			FROM ' + @FISDatabase + '.dbo.Valid_LearnerEmploymentStatus EMP
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
-		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
 		LEFT JOIN (
@@ -6139,7 +5750,7 @@ BEGIN
 					ESM.DateEmpStatApp,
 					ESM.ESMType,
 					ESM.ESMCode
-				FROM ' + @FISDatabase + '.Valid.EmploymentStatusMonitoring ESM
+				FROM ' + @FISDatabase + '.dbo.Valid_EmploymentStatusMonitoring ESM
 			) ESM
 			PIVOT (
 				MAX ( ESMCode )
@@ -6168,7 +5779,7 @@ BEGIN
 							OC.OutCollDate DESC,
 							OC.OutStartDate DESC
 					)
-			FROM ' + @FISDatabase + '.Valid.DPOutcome OC
+			FROM ' + @FISDatabase + '.dbo.Valid_DPOutcome OC
 		) OC
 			ON OC.LearnRefNumber = L.LearnRefNumber
 			AND OC.RowNum = 1
@@ -6184,39 +5795,39 @@ BEGIN
 						DATEDIFF ( DAY, LD.LearnStartDate, LD.LearnPlanEndDate ) DESC,
 						LD.PartnerUKPRN
 				)
-			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			WHERE
 				LD.PartnerUKPRN IS NOT NULL
 		) PTR
 			ON PTR.LearnRefNumber = L.LearnRefNumber
 			AND PTR.RowNum = 1
 
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMA
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMA
 			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMA.ProvSpecLearnMonOccur = ''A''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMB
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMB
 			ON PSLMB.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMB.ProvSpecLearnMonOccur = ''B''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMC
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMC
 			ON PSLMC.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMC.ProvSpecLearnMonOccur = ''C''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMD
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMD
 			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMD.ProvSpecLearnMonOccur = ''D''
 		
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
 			AND PSDMA.ProvSpecDelMonOccur = ''A''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMB
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMB
 			ON PSDMB.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMB.AimSeqNumber = LD.AimSeqNumber
 			AND PSDMB.ProvSpecDelMonOccur = ''B''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMC
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMC
 			ON PSDMC.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMC.AimSeqNumber = LD.AimSeqNumber
 			AND PSDMC.ProvSpecDelMonOccur = ''C''
-		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMD
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMD
 			ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 			AND PSDMD.ProvSpecDelMonOccur = ''D''
@@ -6225,33 +5836,32 @@ BEGIN
     SET @SQLString += 
         N'
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 			--AND FM25.StartFund = 1
 
 		--AEB and Apps (Legacy)
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 			--AND FM35.FundStart = 1
 
 		--Apps (Reformed)
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
 			ON FM36.LearnRefNumber = LD.LearnRefNumber
 			AND FM36.AimSeqNumber = LD.AimSeqNumber
 		
 		--Loans and Bursaries
-		LEFT JOIN ' + @FISDatabase + '.Rulebase.ALB_LearningDelivery ALB
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery ALB
 			ON ALB.LearnRefNumber = LD.LearnRefNumber
 			AND ALB.AimSeqNumber = LD.AimSeqNumber
 
 		--Higher Education
-		LEFT JOIN ' + @FISDatabase + '.Valid.LearningDeliveryHE HE
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryHE HE
 			ON HE.LearnRefNumber = LD.LearnRefNumber
 			AND HE.AimSeqNumber = LD.AimSeqNumber
 	'
-
 
 
     SET @SQLString += 
@@ -6302,7 +5912,7 @@ BEGIN
 				TotFundP10 = ALBV.Period_10,
 				TotFundP11 = ALBV.Period_11,
 				TotFundP12 = ALBV.Period_12
-			FROM ' + @FISDatabase + '.Rulebase.ALB_LearningDelivery_PeriodisedValues ALBV
+			FROM ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery_PeriodisedValues ALBV
 			WHERE
 				ALBV.AttributeName = ''ALBSupportPayment''
 		) ALBP
@@ -6316,7 +5926,7 @@ BEGIN
 		LEFT JOIN (
 			SELECT
 				InvalidLearners = COUNT ( L.Learner_Id )
-			FROM ' + @FISDatabase + '.Invalid.Learner L
+			FROM ' + @FISDatabase + '.dbo.Invalid_Learner L
 		) INV
 			ON 1 = 1
 		LEFT JOIN #LearnerOverallDates LOD
@@ -6339,23 +5949,7 @@ BEGIN
 			AND PWAY.PathwayCode = LD.PwayCode
 		LEFT JOIN #PostCodes PC
 			ON PC.PostCode COLLATE DATABASE_DEFAULT = L.Postcode COLLATE DATABASE_DEFAULT
-			AND COALESCE (
-				PC.SourceOfFunding COLLATE DATABASE_DEFAULT,
-				CASE
-					WHEN FM35.LearnDelFundOrgCode = ''ESFA'' THEN ''105/107''
-					WHEN FM35.LearnDelFundOrgCode = ''WECA'' THEN ''113''
-					WHEN FM35.LearnDelFundOrgCode = ''CPCA'' THEN ''115''
-					WHEN FM35.LearnDelFundOrgCode = ''London'' THEN ''116''
-					ELSE ''105/107''
-				END COLLATE DATABASE_DEFAULT
-			) = 
-				CASE
-					WHEN FM35.LearnDelFundOrgCode = ''ESFA'' THEN ''105/107''
-					WHEN FM35.LearnDelFundOrgCode = ''WECA'' THEN ''113''
-					WHEN FM35.LearnDelFundOrgCode = ''CPCA'' THEN ''115''
-					WHEN FM35.LearnDelFundOrgCode = ''London'' THEN ''116''
-					ELSE ''105/107''
-				END COLLATE DATABASE_DEFAULT
+			AND PC.SourceOfFunding COLLATE DATABASE_DEFAULT = ''105/107'' COLLATE DATABASE_DEFAULT
 	'
     
     SET @SQLString += 
@@ -6489,25 +6083,22 @@ BEGIN
 					END,
 				TotFund = MAX ( FM25.OnProgPayment ),
 				IsFunded = MAX ( CAST ( FM25.StartFund AS INT ) )
-			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 				ON FM25.LearnRefNumber = LD.LearnRefNumber
-			LEFT JOIN #FundModelAim FM
-				ON FM.LearnRefNumber = LD.LearnRefNumber
-				AND FM.AimSeqNumber = LD.AimSeqNumber
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMA.ProvSpecDelMonOccur = ''A''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMB
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMB
 				ON PSDMB.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMB.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMB.ProvSpecDelMonOccur = ''B''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMC
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMC
 				ON PSDMC.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMC.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMC.ProvSpecDelMonOccur = ''C''
-			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMD
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMD
 				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
 				AND PSDMD.ProvSpecDelMonOccur = ''D''
@@ -6527,13 +6118,10 @@ BEGIN
 			LEFT JOIN (
 				SELECT DISTINCT
 					LD.LearnRefNumber
-				FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
-				LEFT JOIN #FundModelAim FM
-					ON FM.LearnRefNumber = LD.LearnRefNumber
-					AND FM.AimSeqNumber = LD.AimSeqNumber
+				FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 				WHERE
 					LD.FundModel = 25
-					AND FM.Transfer = 0 --Exclude transfers
+					AND COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) --Exclude transfers
 					--AND LD.LearnRefNumber = ''17002435''
 				GROUP BY
 					LD.LearnRefNumber
@@ -6558,7 +6146,7 @@ BEGIN
 				FROM (
 					SELECT DISTINCT
 						FM25.RateBand
-					FROM ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
+					FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 				) FM25
 			) ORD
 				ON ORD.RateBand = FM25.RateBand
@@ -6569,7 +6157,7 @@ BEGIN
 					CASE --If lrn has no active aims then count tfer instead
 						WHEN ACT.LearnRefNumber IS NOT NULL THEN
 							CASE
-								WHEN FM.Transfer = 0 THEN 1
+								WHEN COALESCE ( LD.WithdrawReason, 0 ) NOT IN ( 40, 41 ) THEN 1
 								ELSE 0
 							END
 						ELSE
@@ -6630,7 +6218,6 @@ BEGIN
         N'
 		LEFT JOIN #FM36PriceEpisode FM36PE
 			ON FM36PE.LearnRefNumber = FM36.LearnRefNumber
-			AND FM36PE.UKPRN = FM36.UKPRN
 			AND FM36PE.AimSeqNumber = FM36.AimSeqNumber
 			AND FM36PE.RowNum = 1
 	'
@@ -6677,7 +6264,7 @@ BEGIN
     SET @SQLString += 
         N'
 		LEFT JOIN #Employers EMPN
-			ON EMPN.EmployerEDRS = EMP.EmployerID
+			ON EMPN.EmployerEDRS = LDR.LearnDel_EmpID
 		LEFT JOIN #Partners PAR
 			ON PAR.PartnerUKPRN = 
 				CASE
