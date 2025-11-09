@@ -1,0 +1,12 @@
+CREATE VIEW [dbo].[VW_FIS_CourseHours]
+AS
+    SELECT DISTINCT
+        AcademicYear = CRS.AcademicYearID,
+        ProvSpecValue = CRS.Code,
+        CourseCode = CRS.Code,
+        PlannedHours = COALESCE ( CRS.PlannedLearningHours1618, 0 ),
+        EEPHours = COALESCE ( CRS.PlannedEEPHours1618, 0 ),
+        TLevelHours = 0 --Fix this
+    FROM ProSolution.dbo.Offering CRS
+    LEFT JOIN ProSolution.dbo.OfferingGroup GRP
+        ON GRP.OfferingID = CRS.OfferingID

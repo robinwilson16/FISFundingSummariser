@@ -1,0 +1,17 @@
+CREATE VIEW [dbo].[VW_FIS_Providers]
+AS
+	SELECT
+		ProviderUKPRN = 10007928,
+		ProviderName = 'Fareham College'
+
+	UNION ALL
+
+	SELECT
+		ProviderUKPRN = 10006020,
+		ProviderName = 'City College'
+
+	UNION ALL
+
+	SELECT
+		ProviderUKPRN = 10002143,
+		ProviderName = 'Eastleigh College'

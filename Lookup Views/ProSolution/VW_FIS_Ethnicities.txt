@@ -1,0 +1,6 @@
+CREATE VIEW VW_FIS_Ethnicities
+AS
+	SELECT
+		Code = ETH.EthnicGroupID,
+		Description = ETH.Description
+	FROM ProSolution.dbo.EthnicGroup ETH

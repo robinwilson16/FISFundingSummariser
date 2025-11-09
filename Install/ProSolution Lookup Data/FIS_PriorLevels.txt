@@ -1,6 +1,0 @@
-CREATE VIEW FIS_PriorLevels
-AS
-	SELECT
-		Code = LEV.PriorLevelID,
-		Description = LEV.Description
-	FROM ProSolution.dbo.PriorLevel LEV

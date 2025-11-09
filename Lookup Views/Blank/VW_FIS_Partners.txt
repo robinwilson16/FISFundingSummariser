@@ -1,0 +1,5 @@
+CREATE VIEW [dbo].[VW_FIS_Partners]
+AS
+	SELECT
+		PartnerUKPRN = CAST ( NULL AS VARCHAR(50) ),
+		PartnerName = CAST ( NULL AS VARCHAR(50) )

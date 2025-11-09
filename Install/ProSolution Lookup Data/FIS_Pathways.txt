@@ -1,8 +1,0 @@
-CREATE VIEW FIS_Pathways
-AS
-	SELECT
-		FrameworkCode = PWAY.Framework_Code,
-		ProgType = PWAY.Framework_Type_Code,
-		PathwayCode = PWAY.FRAMEWORK_PATHWAY_CODE,
-		PathwayName = PWAY.FRAMEWORK_PATHWAY_DESC
-	FROM ProSolution.dbo.Frameworks PWAY

@@ -59,20 +59,34 @@ To confirm data is correct you may wish to validate totals against the funding r
 An example query to check data could be as follows
 
 ~~~~sql
+DECLARE @AcademicYear NVARCHAR(5) = '25/26'
+DECLARE @ILRReturn NVARCHAR(3) = 'R03'
+DECLARE @IsFinalReturn BIT = 1
+
+
 SELECT
-	FD.FundLineSummary,
-	FD.FundLineDetail,
-	TotFundYrEnd = SUM ( FD.TotFundYrEnd )
+	FD.FundLineCategoryOrder,
+	FD.FundLineCategory,
+	FD.FundLineSubCategoryOrder,
+	FundLineSubCategory,
+	FD.FundLine,
+	Learners = COUNT ( DISTINCT FD.LearnRefNumber ),
+	Enrolments = COUNT ( FD.LearnRefNumber ),
+	TotalFunding = SUM ( FD.TotFundYrEnd )
 FROM FIS_FundingData FD
 WHERE
-	FD.AcademicYear = '20/21'
-	AND FD.ILRReturn = 'R04'
-	AND FD.IsFinalReturn = 1
-	AND FD.IsFunded = 1
+	FD.AcademicYear = @AcademicYear
+	AND FD.ILRReturn = @ILRReturn
+	AND FD.IsFinalReturn = @IsFinalReturn
+	--AND FD.IsFundedStart = 1
 GROUP BY
-	FD.FundLineSummary,
-	FD.FundLineDetail
+	FD.FundLineCategoryOrder,
+	FD.FundLineCategory,
+	FD.FundLineSubCategoryOrder,
+	FD.FundLineSubCategory,
+	FD.FundLine
 ORDER BY
-	FD.FundLineSummary,
-	FD.FundLineDetail
+	FD.FundLineCategoryOrder,
+	FD.FundLineSubCategoryOrder,
+	FD.FundLine
 ~~~~

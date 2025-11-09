@@ -1,8 +1,0 @@
-CREATE VIEW FIS_Partners
-AS
-	SELECT
-		PartnerUKPRN = PRV.UKPRN,
-		PartnerName = PRV.EstablishmentName
-	FROM Providers PRV
-	WHERE
-		LEN ( PRV.UKPRN ) >= 1

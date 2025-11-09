@@ -1,6 +1,0 @@
-CREATE VIEW FIS_Disabilities
-AS
-	SELECT
-		Code = DISC.DisabilityCategoryID,
-		Description = DISC.Description
-	FROM ProSolution.dbo.DisabilityCategory DISC
