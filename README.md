@@ -68,7 +68,7 @@ ORDER BY
 ~~~~
 
 This should give you output similar to the this:
-| Category | Sub Category | FundLine | Learners | Enrolments | Total Earned Cash
+| Category | Sub Category | Fund Line | Learners | Enrolments | Total Earned Cash
 |--|--|--|--|--|--|
 16-19 Funding | Study Programmes | 16-19 Students (excluding High Needs Students) | 500 | 500 | £30,000
 16-19 Funding | Study Programmes | 19+ Continuing Students (excluding EHCP) | 5 | 5 | £60,000

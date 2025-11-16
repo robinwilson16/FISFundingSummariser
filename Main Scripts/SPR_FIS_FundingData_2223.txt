@@ -166,6 +166,7 @@ BEGIN
 			CS.AcademicYear,
 			CS.ProvSpecValue,
 			CS.CourseCode,
+			CS.CourseInstance,
 			CS.CourseTitle,
 			CS.CollegeLevel1Code,
 			CS.CollegeLevel1Name,
@@ -185,6 +186,7 @@ BEGIN
 			HRS.AcademicYear,
 			HRS.ProvSpecValue,
 			HRS.CourseCode,
+			HRS.CourseInstance,
 			HRS.PlannedHours,
 			HRS.EEPHours,
 			HRS.TLevelHours
@@ -1221,6 +1223,7 @@ BEGIN
 				CollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
 				CollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
 				CourseCode = COALESCE ( CS.CourseCode, ''-''),
+				CourseInstance = COALESCE ( CS.CourseInstance, ''-''),
 				CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 				SSA1Code = AIM.SSA1Code,
 				SSA1Name = AIM.SSA1Name,
@@ -4598,6 +4601,7 @@ BEGIN
 			SSA2Code = AIM.SSA2Code,
 			SSA2Title = AIM.SSA2Name,
 			CourseCode = COALESCE ( CS.CourseCode, ''-''),
+			CourseInstance = COALESCE ( CS.CourseInstance, ''-''),
 			CourseTitle = COALESCE ( CS.CourseTitle, ''-- Unknown --''),
 
 			AimSeqNumber = LD.AimSeqNumber,

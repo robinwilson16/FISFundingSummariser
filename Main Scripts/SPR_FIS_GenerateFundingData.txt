@@ -439,7 +439,8 @@ BEGIN
 							SSA1Title VARCHAR(255) NULL,
 							SSA2Code VARCHAR(5) NULL,
 							SSA2Title VARCHAR(255) NULL,
-							CourseCode VARCHAR(20) NULL,
+							CourseCode VARCHAR(50) NULL,
+							CourseInstance VARCHAR(50) NULL,
 							CourseTitle VARCHAR(255) NULL,
 
 							AimSeqNumber INT NULL,
