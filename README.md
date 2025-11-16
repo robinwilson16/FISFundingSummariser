@@ -68,25 +68,25 @@ ORDER BY
 ~~~~
 
 This should give you output similar to the this:
-| FundLineCategoryOrder | FundLineCategory | FundLineSubCategoryOrder | FundLineSubCategory | FundLine | Learners | Enrolments | TotalEarnedCash
-|--|--|--|--|--|--|--|--|
-1 | 16-19 Funding | 1 | Study Programmes | 16-19 Students (excluding High Needs Students) | 500 | 500 | £30,000
-1 | 16-19 Funding | 1 | Study Programmes | 19+ Continuing Students (excluding EHCP) | 5 | 5 | £60,000
-1 | 16-19 Funding | 1 | Study Programmes | 19-24 Students with an EHCP | 6 | 6 | £40,000
-1 | 16-19 Funding | 2 | T Levels | 16-19 Students (excluding High Needs Students) | 50 | 50 | £50,000
-1 | 16-19 Funding | 2 | T Levels | 19+ Continuing Students (excluding EHCP) | 5 | 5 | £60,000
-1 | 16-19 Funding | 2 | T Levels | 19-24 Students with an EHCP | 1 | 1 | £10,000
-1 | 16-19 Funding | 2 | T Levels | T Level programme | 55 | 200 | £0
-2 | Adult Skills Fund | 1 | DFE - ESFA | ESFA Adult Skills Fund core (non-procured) | 3 | 3 | £0
-2 | Adult Skills Fund | 2 | Devolved - NEMCA | DA/GLA Adult Skills Fund core (non-procured) | 300 | 500 | £40,000
-2 | Adult Skills Fund | 2 | Devolved - NEMCA | DA/GLA Adult Skills Fund free courses for jobs (non-procured) | 10 | 10 | £40,000
-2 | Adult Skills Fund | 2 | Devolved - TVCA | DA/GLA Adult Skills Fund core (non-procured) | 34 | 53 | £50,000
-4 | Advanced Learner Loan | 1 | Advanced Learner Loan | Advanced Learner Loan | 22 | 22 | £0
-5 | Apprenticeships | 1 | 16-18 Apprenticeships | 16-18 Apprenticeship (Employer on App Service) | 400 | 1,000 | £1,500,000
-5 | Apprenticeships | 2 | 19+ Apprenticeships | 19+ Apprenticeship (Employer on App Service) | 1,300 | 4,200 | £2,500,000
-6 | Higher Education | 1 | Higher Education | Higher Education | 500 | 500 | £0
-7 | Full Cost | 1 | Full Cost | Full Cost - Level 3 and Below | 400 | 600 | £0
-7 | Full Cost | 1 | Full Cost | Full Cost - Level 4 and Above | 30 | 30 | £0
+| Category | Sub Category | FundLine | Learners | Enrolments | Total Earned Cash
+|--|--|--|--|--|--|
+16-19 Funding | Study Programmes | 16-19 Students (excluding High Needs Students) | 500 | 500 | £30,000
+16-19 Funding | Study Programmes | 19+ Continuing Students (excluding EHCP) | 5 | 5 | £60,000
+16-19 Funding | Study Programmes | 19-24 Students with an EHCP | 6 | 6 | £40,000
+16-19 Funding | T Levels | 16-19 Students (excluding High Needs Students) | 50 | 50 | £50,000
+16-19 Funding | T Levels | 19+ Continuing Students (excluding EHCP) | 5 | 5 | £60,000
+16-19 Funding | T Levels | 19-24 Students with an EHCP | 1 | 1 | £10,000
+16-19 Funding | T Levels | T Level programme | 55 | 200 | £0
+Adult Skills Fund | DFE - ESFA | ESFA Adult Skills Fund core (non-procured) | 3 | 3 | £0
+Adult Skills Fund | Devolved - NEMCA | DA/GLA Adult Skills Fund core (non-procured) | 300 | 500 | £40,000
+Adult Skills Fund | Devolved - NEMCA | DA/GLA Adult Skills Fund free courses for jobs (non-procured) | 10 | 10 | £40,000
+Adult Skills Fund | Devolved - TVCA | DA/GLA Adult Skills Fund core (non-procured) | 34 | 53 | £50,000
+Advanced Learner Loan | Advanced Learner Loan | Advanced Learner Loan | 22 | 22 | £0
+Apprenticeships | 16-18 Apprenticeships | 16-18 Apprenticeship (Employer on App Service) | 400 | 1,000 | £1,500,000
+Apprenticeships | 19+ Apprenticeships | 19+ Apprenticeship (Employer on App Service) | 1,300 | 4,200 | £2,500,000
+Higher Education | Higher Education | Higher Education | 500 | 500 | £0
+Full Cost | Full Cost | Full Cost - Level 3 and Below | 400 | 600 | £0
+Full Cost | Full Cost | Full Cost - Level 4 and Above | 30 | 30 | £0
 
 
 ## Best Practices
