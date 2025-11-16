@@ -1,68 +1,139 @@
 CREATE PROCEDURE SPR_FIS_GenerateFundingData
 	@FISDatabase VARCHAR(50),
-	@AcademicYear VARCHAR(5),
-	@ILRReturn VARCHAR(3),
+	@AcademicYear NVARCHAR(5),
+	@ILRReturn NVARCHAR(3),
 	@IsFinalReturn BIT,
 	@Split1619Funding BIT,
 	@Reapportion1619FundingByAimWeighting BIT,
 	@AppsMoveFundingToMainComponentAim BIT,
 	@1619ALSFundingPercent DECIMAL(5,2),
-	@IncludeHEAdvLoanPossIncome BIT,
+	@IncludeHEAdvLoanPossibleIncome BIT,
 	@IncludeAdvLoanBursaryIncome BIT,
-	@FutureAchieveWeighting DECIMAL(5,2),
+	@FutureAchievementWeighting DECIMAL(3,2),
 	@Mode NCHAR(1),
-	@FISOutputTableLocation VARCHAR(200),
-	@FISOutputTableName VARCHAR(200),
-	@ProviderFieldCourseLocation NCHAR(1),
-	@ProviderFieldParentCourseLocation NCHAR(1),
-	@OverrideEngFac VARCHAR(50),
-	@OverrideMatFac VARCHAR(50),
-	@OverrideEngTeam VARCHAR(50),
-	@OverrideMatTeam VARCHAR(50),
-	@OverrideEngCostCentre VARCHAR(50),
-	@OverrideMatCostCentre VARCHAR(50),
-	@OverridePartnerFac VARCHAR(50),
-	@OverridePartnerTeam VARCHAR(50),
-	@OverridePartnerCostCentre VARCHAR(50),
+	@FISOutputTableLocation NVARCHAR(200),
+	@FISOutputTableName NVARCHAR(200),
+	@ProvSpecDelMonCourseLocation1 NCHAR(1),
+	@ProvSpecDelMonCourseLocation2 NCHAR(1),
+	@ProvSpecDelMonCourseSeperator NVARCHAR(50),
+	@ProvSpecDelMonParentCourseLocation1 NCHAR(1),
+	@ProvSpecDelMonParentCourseLocation2 NCHAR(1),
+	@ProvSpecDelMonParentCourseSeperator NVARCHAR(50),
+	@EnglishCollegeLevel1Code NVARCHAR(50),
+	@EnglishCollegeLevel2Code NVARCHAR(50),
+	@EnglishCollegeLevel3Code NVARCHAR(50),
+	@EnglishCollegeLevel4Code NVARCHAR(50),
+	@MathsCollegeLevel1Code NVARCHAR(50),
+	@MathsCollegeLevel2Code NVARCHAR(50),
+	@MathsCollegeLevel3Code NVARCHAR(50),
+	@MathsCollegeLevel4Code NVARCHAR(50),
+	@PartnerCollegeLevel1Code NVARCHAR(50),
+	@PartnerCollegeLevel2Code NVARCHAR(50),
+	@PartnerCollegeLevel3Code NVARCHAR(50),
+	@PartnerCollegeLevel4Code NVARCHAR(50),
 	@RunQARCalculation BIT,
 	@AnonymiseData BIT
 AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
 	
-	--DECLARE @ILRReturn VARCHAR(3) = 'R04' -- CHANGE THIS TO CORRECT RETURN
-	--DECLARE @IsFinalReturn BIT = 1 -- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
+	/*
+	/**************************************************
+	 * Change/check values each time an import is run *
+	 **************************************************/
+
+	-- CHANGE THIS TO CORRECT RETURN
+	DECLARE @ILRReturn NVARCHAR(3) = 'R03' 
+
+	-- IF FINAL RETURN SET THIS TO 1 - ensure only 1 return for each month is set to 1 for accurate year on year reporting
+	DECLARE @IsFinalReturn BIT = 1
 
 
 
+	/***********************************************************************************
+	 * Change values each year/month such as if ILR database is created as ILR2526_RXX *
+	 ***********************************************************************************/
+
+	--Name of the database created by the FIS software (default is ILRXXYY where XXYY is the return year)
+	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2526' 
+
+	--Academic year used for reporting outputs (e.g. XX/YY)
+	DECLARE @AcademicYear NVARCHAR(5) = '25/26' 
 
 
 
-	--DECLARE @FISDatabase VARCHAR(100) = 'ILR2324_R04F_Furness'
-	--DECLARE @AcademicYear VARCHAR(5) = '23/24'
-	--DECLARE @Split1619Funding BIT = 0 --Split the funding into the 12 periods
-	--DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 --Reapportion the 16-19 funding by the aim prog weighting factor
-	--DECLARE @AppsMoveFundingToMainComponentAim BIT = 1 --Move Apps Funding from Main ZProg to Main Component Aim
-	--DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 --Deduct this percent from Tot Funding for FM25 and assign to ALS column
-	--DECLARE @IncludeHEAdvLoanPossIncome BIT = 0 --HE gross fee is only achieved if at all 3 SLC census points learners remain current
-	--DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 --Adv loan bursary income is not income as goes to learners so may want to exclude
-	--DECLARE @FutureAchieveWeighting DECIMAL(5,2) = 1 --Future ach weighting factor. If 1 then is 100% of all remaining ach monies
-	--DECLARE @Mode NCHAR(1) = 'I' --I=Insert new ILR return data leaving existing data, R=Replace table
-	--DECLARE @FISOutputTableLocation VARCHAR(200) = 'FISFundingSummariser.dbo.'
-	--DECLARE @FISOutputTableName VARCHAR(200) = 'FIS_FundingData'
-	--DECLARE @ProviderFieldCourseLocation NCHAR(1) = 'A'
-	--DECLARE @ProviderFieldParentCourseLocation NCHAR(1) = 'B'
-	--DECLARE @OverrideEngFac VARCHAR(50) = NULL
-	--DECLARE @OverrideMatFac VARCHAR(50) = NULL
-	--DECLARE @OverrideEngTeam VARCHAR(50) = NULL
-	--DECLARE @OverrideMatTeam VARCHAR(50) = NULL
-	--DECLARE @OverrideEngCostCentre VARCHAR(50) = NULL
-	--DECLARE @OverrideMatCostCentre VARCHAR(50) = NULL
-	--DECLARE @OverridePartnerFac VARCHAR(50) = NULL
-	--DECLARE @OverridePartnerTeam VARCHAR(50) = NULL
-	--DECLARE @OverridePartnerCostCentre VARCHAR(50) = NULL
-	--DECLARE @RunQARCalculation BIT = 1 --Calculate which records should be included in QAR measures for each year
-	--DECLARE @AnonymiseData BIT = 0 --Anonymise ILR data
+	/************************************************************
+	 * Once set up values below should generally not be changed *
+	 ************************************************************/
+
+	--Split the funding into the 12 periods (default is 0 - 1 or 0)
+	DECLARE @Split1619Funding BIT = 0 
+
+	--Reapportion the 16-19 funding by the aim prog weighting factor (default is 0 - 1 or 0)
+	DECLARE @Reapportion1619FundingByAimWeighting BIT = 0 
+
+	--Move Apps Funding from Main ZProg to Main Component Aim so aim level fields can be used such as SSA (default is 1 - 1 or 0)
+	DECLARE @AppsMoveFundingToMainComponentAim BIT = 1 
+
+	--Deduct this percent from Total Cash Earned for FM25 and assign to ALS column (default is 0 - 1 or 0)
+	DECLARE @1619ALSFundingPercent DECIMAL(5,2) = 0 
+
+	--HE Gross Fee is only achieved if at all 3 SLC census points learners remain current (default is 0 - 1 or 0)
+	DECLARE @IncludeHEAdvLoanPossibleIncome BIT = 0 
+
+	--Adv Loan bursary income is not income as goes to learners so may want to exclude (default is 0 - 1 or 0)
+	DECLARE @IncludeAdvLoanBursaryIncome BIT = 0 
+
+	--Future achievement weighting factor. If 1 then is 100% of all remaining ach monies (default is 0 - decimal value)
+	DECLARE @FutureAchievementWeighting DECIMAL(5,2) = 1
+
+	--Insert new ILR return data leaving existing data from other imported returns or clear out table and replace (default is I for Insert, R = Replace)
+	DECLARE @Mode NCHAR(1) = 'I' 
+
+	--Database to store the summarised table generated by this script (for a linked server use SERVER.DATABASE.SCHEMA (e.g. missrv.misdb.dbo.)
+	DECLARE @FISOutputTableLocation NVARCHAR(200) = 'FISFundingSummariser.dbo.' 
+
+	--Table to create/insert data into
+	DECLARE @FISOutputTableName NVARCHAR(200) = 'FIS_FundingData'
+
+	--Provider field/s where the course code is stored in your ILR data (if spread across 2 fields enter values for first and second, if stored in 1 leave second NULL)
+	DECLARE @ProvSpecDelMonCourseLocation1 NCHAR(1) = 'A'
+	DECLARE @ProvSpecDelMonCourseLocation2 NCHAR(1) = 'B'
+
+	--Seperator used between two fields listed above to form the full unique course code (default is blank, only relevant if 2 locations specified for course code)
+	DECLARE @ProvSpecDelMonCourseSeperator NVARCHAR(50) = '-'
+
+	--Provider field/s where the parent/programme course is stored to facilitate grouping aims by the programme
+	DECLARE @ProvSpecDelMonParentCourseLocation1 NCHAR(1) = NULL
+	DECLARE @ProvSpecDelMonParentCourseLocation2 NCHAR(1) = NULL
+
+	--Seperator used between two fields listed above to form the full unique parent/programme course code (default is blank, only relevant if 2 locations specified for parent/programme course code)
+	DECLARE @ProvSpecDelMonParentCourseSeperator NVARCHAR(50) = NULL
+
+	--Custom codes for overriding the different levels of structure to move English under that area and out of other curriculum areas
+	DECLARE @EnglishCollegeLevel1Code NVARCHAR(50) = NULL
+	DECLARE @EnglishCollegeLevel2Code NVARCHAR(50) = NULL
+	DECLARE @EnglishCollegeLevel3Code NVARCHAR(50) = NULL
+	DECLARE @EnglishCollegeLevel4Code NVARCHAR(50) = NULL
+
+	--Custom codes for overriding the different levels of structure to move Maths under that area and out of other curriculum areas
+	DECLARE @MathsCollegeLevel1Code NVARCHAR(50) = NULL
+	DECLARE @MathsCollegeLevel2Code NVARCHAR(50) = NULL
+	DECLARE @MathsCollegeLevel3Code NVARCHAR(50) = NULL
+	DECLARE @MathsCollegeLevel4Code NVARCHAR(50) = NULL
+
+	--Custom codes for overriding the different levels of structure to move franchised out delivery under that area and out of other curriculum areas
+	DECLARE @PartnerCollegeLevel1Code NVARCHAR(50) = NULL
+	DECLARE @PartnerCollegeLevel2Code NVARCHAR(50) = NULL
+	DECLARE @PartnerCollegeLevel3Code NVARCHAR(50) = NULL
+	DECLARE @PartnerCollegeLevel4Code NVARCHAR(50) = NULL
+
+	--Calculate which records should be included in QAR measures for each year (replicates what Strata or ProAchieve would do)
+	DECLARE @RunQARCalculation BIT = 1 
+
+	--Anonymise ILR data
+	DECLARE @AnonymiseData BIT = 0 
+	*/
 
 
 	DECLARE @TableExists BIT = 1;
@@ -287,6 +358,7 @@ BEGIN
 							FundLineSubCategoryOrder INT NULL,
 							FundLine VARCHAR(100) NULL,
 							FundModel INT NULL,
+							LearnDelFundOrgCode VARCHAR(50) NULL,
 							HEFullPartTime VARCHAR(50) NULL,
 
 							IsMainAim INT NULL,
@@ -552,7 +624,7 @@ BEGIN
 							HEELQ INT NULL,
 							HEPostCode VARCHAR(8) NULL,
 							EnrolmentID VARCHAR(20) NULL,
-							FM25TotFund DECIMAL(10, 5) NULL,
+							FM25TotalEarnedCash DECIMAL(10, 5) NULL,
 					'
     
 					SET @SQLString += 
@@ -608,24 +680,24 @@ BEGIN
 							BalancePaymentToPeriod DECIMAL(10, 5) NULL,
 							EmpOutcomePayToPeriod DECIMAL(10, 5) NULL,
 							OtherPaymentToPeriod DECIMAL(10, 5) NULL,
-							TotFundToPeriod DECIMAL(10, 5) NULL,
+							TotalEarnedCashToPeriod DECIMAL(10, 5) NULL,
 
-							OnProgPayment6Mon DECIMAL(10, 5) NULL,
-							LearnSuppPayment6Mon DECIMAL(10, 5) NULL,
-							AchCompPayment6Mon DECIMAL(10, 5) NULL,
-							BalancePayment6Mon DECIMAL(10, 5) NULL,
-							EmpOutcomePay6Mon DECIMAL(10, 5) NULL,
-							OtherPayment6Mon DECIMAL(10, 5) NULL,
-							TotFund6Mon DECIMAL(10, 5) NULL,
+							OnProgPaymentMidYear DECIMAL(10, 5) NULL,
+							LearnSuppPaymentMidYear DECIMAL(10, 5) NULL,
+							AchCompPaymentMidYear DECIMAL(10, 5) NULL,
+							BalancePaymentMidYear DECIMAL(10, 5) NULL,
+							EmpOutcomePayMidYear DECIMAL(10, 5) NULL,
+							OtherPaymentMidYear DECIMAL(10, 5) NULL,
+							TotalEarnedCashMidYear DECIMAL(10, 5) NULL,
 
-							OnProgPaymentYrEnd DECIMAL(10, 5) NULL,
-							LearnSuppPaymentYrEnd DECIMAL(10, 5) NULL,
-							AchCompPaymentYrEnd DECIMAL(10, 5) NULL,
-							BalancePaymentYrEnd DECIMAL(10, 5) NULL,
-							EmpOutcomePayYrEnd DECIMAL(10, 5) NULL,
-							OtherPaymentYrEnd DECIMAL(10, 5) NULL,
-							TotFundYrEnd DECIMAL(10, 5) NULL,
-							TotFundYrEndNotApportioned DECIMAL(10, 5) NULL,
+							OnProgPaymentYearEnd DECIMAL(10, 5) NULL,
+							LearnSuppPaymentYearEnd DECIMAL(10, 5) NULL,
+							AchCompPaymentYearEnd DECIMAL(10, 5) NULL,
+							BalancePaymentYearEnd DECIMAL(10, 5) NULL,
+							EmpOutcomePayYearEnd DECIMAL(10, 5) NULL,
+							OtherPaymentYearEnd DECIMAL(10, 5) NULL,
+							TotalEarnedCashYearEnd DECIMAL(10, 5) NULL,
+							TotalEarnedCashYearEndNotApportioned DECIMAL(10, 5) NULL,
 
 							FutureAchievePayment DECIMAL(10, 5) NULL,
 							FutureAchieveWeighting DECIMAL(5, 2) NULL,
@@ -683,7 +755,7 @@ BEGIN
 							BalancePaymentP01 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP01 DECIMAL(10, 5) NULL,
 							OtherPaymentP01 DECIMAL(10, 5) NULL,
-							TotFundP01 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP01 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP02 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP02 DECIMAL(10, 5) NULL,
@@ -691,7 +763,7 @@ BEGIN
 							BalancePaymentP02 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP02 DECIMAL(10, 5) NULL,
 							OtherPaymentP02 DECIMAL(10, 5) NULL,
-							TotFundP02 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP02 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP03 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP03 DECIMAL(10, 5) NULL,
@@ -699,7 +771,7 @@ BEGIN
 							BalancePaymentP03 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP03 DECIMAL(10, 5) NULL,
 							OtherPaymentP03 DECIMAL(10, 5) NULL,
-							TotFundP03 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP03 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP04 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP04 DECIMAL(10, 5) NULL,
@@ -707,7 +779,7 @@ BEGIN
 							BalancePaymentP04 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP04 DECIMAL(10, 5) NULL,
 							OtherPaymentP04 DECIMAL(10, 5) NULL,
-							TotFundP04 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP04 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP05 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP05 DECIMAL(10, 5) NULL,
@@ -715,7 +787,7 @@ BEGIN
 							BalancePaymentP05 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP05 DECIMAL(10, 5) NULL,
 							OtherPaymentP05 DECIMAL(10, 5) NULL,
-							TotFundP05 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP05 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP06 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP06 DECIMAL(10, 5) NULL,
@@ -723,7 +795,7 @@ BEGIN
 							BalancePaymentP06 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP06 DECIMAL(10, 5) NULL,
 							OtherPaymentP06 DECIMAL(10, 5) NULL,
-							TotFundP06 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP06 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP07 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP07 DECIMAL(10, 5) NULL,
@@ -731,7 +803,7 @@ BEGIN
 							BalancePaymentP07 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP07 DECIMAL(10, 5) NULL,
 							OtherPaymentP07 DECIMAL(10, 5) NULL,
-							TotFundP07 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP07 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP08 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP08 DECIMAL(10, 5) NULL,
@@ -739,7 +811,7 @@ BEGIN
 							BalancePaymentP08 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP08 DECIMAL(10, 5) NULL,
 							OtherPaymentP08 DECIMAL(10, 5) NULL,
-							TotFundP08 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP08 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP09 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP09 DECIMAL(10, 5) NULL,
@@ -747,7 +819,7 @@ BEGIN
 							BalancePaymentP09 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP09 DECIMAL(10, 5) NULL,
 							OtherPaymentP09 DECIMAL(10, 5) NULL,
-							TotFundP09 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP09 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP10 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP10 DECIMAL(10, 5) NULL,
@@ -755,7 +827,7 @@ BEGIN
 							BalancePaymentP10 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP10 DECIMAL(10, 5) NULL,
 							OtherPaymentP10 DECIMAL(10, 5) NULL,
-							TotFundP10 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP10 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP11 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP11 DECIMAL(10, 5) NULL,
@@ -763,7 +835,7 @@ BEGIN
 							BalancePaymentP11 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP11 DECIMAL(10, 5) NULL,
 							OtherPaymentP11 DECIMAL(10, 5) NULL,
-							TotFundP11 DECIMAL(10, 5) NULL,
+							TotalEarnedCashP11 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP12 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP12 DECIMAL(10, 5) NULL,
@@ -771,7 +843,7 @@ BEGIN
 							BalancePaymentP12 DECIMAL(10, 5) NULL,
 							EmpOutcomePayP12 DECIMAL(10, 5) NULL,
 							OtherPaymentP12 DECIMAL(10, 5) NULL,
-							TotFundP12 DECIMAL(10, 5) NULL
+							TotalEarnedCashP12 DECIMAL(10, 5) NULL
 						)';
 
 					SET @SQLParams = 
@@ -862,49 +934,65 @@ BEGIN
 					@Reapportion1619FundingByAimWeighting,
 					@AppsMoveFundingToMainComponentAim,
 					@1619ALSFundingPercent,
-					@IncludeHEAdvLoanPossIncome,
+					@IncludeHEAdvLoanPossibleIncome,
 					@IncludeAdvLoanBursaryIncome,
-					@FutureAchieveWeighting,
+					@FutureAchievementWeighting,
+					@Mode,
 					@FISOutputTableLocation,
 					@FISOutputTableName,
-					@ProviderFieldCourseLocation,
-					@ProviderFieldParentCourseLocation,
-					@OverrideEngFac,
-					@OverrideMatFac,
-					@OverrideEngTeam,
-					@OverrideMatTeam,
-					@OverrideEngCostCentre,
-					@OverrideMatCostCentre,
-					@OverridePartnerFac,
-					@OverridePartnerTeam,
-					@OverridePartnerCostCentre';
+					@ProvSpecDelMonCourseLocation1,
+					@ProvSpecDelMonCourseLocation2,
+					@ProvSpecDelMonCourseSeperator,
+					@ProvSpecDelMonParentCourseLocation1,
+					@ProvSpecDelMonParentCourseLocation2,
+					@ProvSpecDelMonParentCourseSeperator,
+					@EnglishCollegeLevel1Code,
+					@EnglishCollegeLevel2Code,
+					@EnglishCollegeLevel3Code,
+					@EnglishCollegeLevel4Code,
+					@MathsCollegeLevel1Code,
+					@MathsCollegeLevel2Code,
+					@MathsCollegeLevel3Code,
+					@MathsCollegeLevel4Code,
+					@PartnerCollegeLevel1Code,
+					@PartnerCollegeLevel2Code,
+					@PartnerCollegeLevel3Code,
+					@PartnerCollegeLevel4Code';
 
 			SET @SQLParams = 
 			N'
 				@FISDatabase VARCHAR(50),
-				@AcademicYear VARCHAR(5),
-    			@ILRReturn VARCHAR(3),
-    			@IsFinalReturn BIT,
-    			@Split1619Funding BIT,
+				@AcademicYear NVARCHAR(5),
+				@ILRReturn NVARCHAR(3),
+				@IsFinalReturn BIT,
+				@Split1619Funding BIT,
 				@Reapportion1619FundingByAimWeighting BIT,
 				@AppsMoveFundingToMainComponentAim BIT,
 				@1619ALSFundingPercent DECIMAL(5,2),
-				@IncludeHEAdvLoanPossIncome BIT,
+				@IncludeHEAdvLoanPossibleIncome BIT,
 				@IncludeAdvLoanBursaryIncome BIT,
-    			@FutureAchieveWeighting DECIMAL(5,2),
-				@FISOutputTableLocation VARCHAR(200),
-				@FISOutputTableName VARCHAR(200),
-				@ProviderFieldCourseLocation CHAR(1),
-				@ProviderFieldParentCourseLocation CHAR(1),
-    			@OverrideEngFac VARCHAR(50),
-    			@OverrideMatFac VARCHAR(50),
-    			@OverrideEngTeam VARCHAR(50),
-    			@OverrideMatTeam VARCHAR(50),
-    			@OverrideEngCostCentre VARCHAR(50),
-    			@OverrideMatCostCentre VARCHAR(50),
-    			@OverridePartnerFac VARCHAR(50),
-    			@OverridePartnerTeam VARCHAR(50),
-    			@OverridePartnerCostCentre VARCHAR(50)';
+				@FutureAchievementWeighting DECIMAL(3,2),
+				@Mode NCHAR(1),
+				@FISOutputTableLocation NVARCHAR(200),
+				@FISOutputTableName NVARCHAR(200),
+				@ProvSpecDelMonCourseLocation1 NCHAR(1),
+				@ProvSpecDelMonCourseLocation2 NCHAR(1),
+				@ProvSpecDelMonCourseSeperator NVARCHAR(50),
+				@ProvSpecDelMonParentCourseLocation1 NCHAR(1),
+				@ProvSpecDelMonParentCourseLocation2 NCHAR(1),
+				@ProvSpecDelMonParentCourseSeperator NVARCHAR(50),
+				@EnglishCollegeLevel1Code NVARCHAR(50),
+				@EnglishCollegeLevel2Code NVARCHAR(50),
+				@EnglishCollegeLevel3Code NVARCHAR(50),
+				@EnglishCollegeLevel4Code NVARCHAR(50),
+				@MathsCollegeLevel1Code NVARCHAR(50),
+				@MathsCollegeLevel2Code NVARCHAR(50),
+				@MathsCollegeLevel3Code NVARCHAR(50),
+				@MathsCollegeLevel4Code NVARCHAR(50),
+				@PartnerCollegeLevel1Code NVARCHAR(50),
+				@PartnerCollegeLevel2Code NVARCHAR(50),
+				@PartnerCollegeLevel3Code NVARCHAR(50),
+				@PartnerCollegeLevel4Code NVARCHAR(50)';
     
 			--SELECT @SQLString AS [processing-instruction(x)] FOR XML PATH('')
 
@@ -913,28 +1001,37 @@ BEGIN
 				@SQLParams, 
 				@FISDatabase = @FISDatabase,
 				@AcademicYear = @AcademicYear,
-    			@ILRReturn = @ILRReturn,
-    			@IsFinalReturn = @IsFinalReturn,
-    			@Split1619Funding = @Split1619Funding,
+				@ILRReturn = @ILRReturn,
+				@IsFinalReturn = @IsFinalReturn,
+				@Split1619Funding = @Split1619Funding,
 				@Reapportion1619FundingByAimWeighting = @Reapportion1619FundingByAimWeighting,
 				@AppsMoveFundingToMainComponentAim = @AppsMoveFundingToMainComponentAim,
 				@1619ALSFundingPercent = @1619ALSFundingPercent,
-				@IncludeHEAdvLoanPossIncome = @IncludeHEAdvLoanPossIncome,
+				@IncludeHEAdvLoanPossibleIncome = @IncludeHEAdvLoanPossibleIncome,
 				@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
-    			@FutureAchieveWeighting = @FutureAchieveWeighting,
+				@FutureAchievementWeighting = @FutureAchievementWeighting,
+				@Mode = @Mode,
 				@FISOutputTableLocation = @FISOutputTableLocation,
 				@FISOutputTableName = @FISOutputTableName,
-				@ProviderFieldCourseLocation = @ProviderFieldCourseLocation,
-				@ProviderFieldParentCourseLocation = @ProviderFieldParentCourseLocation,
-    			@OverrideEngFac = @OverrideEngFac,
-    			@OverrideMatFac = @OverrideMatFac,
-    			@OverrideEngTeam = @OverrideEngTeam,
-    			@OverrideMatTeam = @OverrideMatTeam,
-    			@OverrideEngCostCentre = @OverrideEngCostCentre,
-    			@OverrideMatCostCentre = @OverrideMatCostCentre,
-    			@OverridePartnerFac = @OverridePartnerFac,
-    			@OverridePartnerTeam = @OverridePartnerTeam,
-    			@OverridePartnerCostCentre = @OverridePartnerCostCentre;
+				@ProvSpecDelMonCourseLocation1 = @ProvSpecDelMonCourseLocation1,
+				@ProvSpecDelMonCourseLocation2 = @ProvSpecDelMonCourseLocation2,
+				@ProvSpecDelMonCourseSeperator = @ProvSpecDelMonCourseSeperator,
+				@ProvSpecDelMonParentCourseLocation1 = @ProvSpecDelMonParentCourseLocation1,
+				@ProvSpecDelMonParentCourseLocation2 = @ProvSpecDelMonParentCourseLocation2,
+				@ProvSpecDelMonParentCourseSeperator = @ProvSpecDelMonParentCourseSeperator,
+				@EnglishCollegeLevel1Code = @EnglishCollegeLevel1Code,
+				@EnglishCollegeLevel2Code = @EnglishCollegeLevel2Code,
+				@EnglishCollegeLevel3Code = @EnglishCollegeLevel3Code,
+				@EnglishCollegeLevel4Code = @EnglishCollegeLevel4Code,
+				@MathsCollegeLevel1Code = @MathsCollegeLevel1Code,
+				@MathsCollegeLevel2Code = @MathsCollegeLevel2Code,
+				@MathsCollegeLevel3Code = @MathsCollegeLevel3Code,
+				@MathsCollegeLevel4Code = @MathsCollegeLevel4Code,
+				@PartnerCollegeLevel1Code = @PartnerCollegeLevel1Code,
+				@PartnerCollegeLevel2Code = @PartnerCollegeLevel2Code,
+				@PartnerCollegeLevel3Code = @PartnerCollegeLevel3Code,
+				@PartnerCollegeLevel4Code = @PartnerCollegeLevel4Code;
+
 
 			SET @Message = @AcademicYear + N' ILR Imported'
 			RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;

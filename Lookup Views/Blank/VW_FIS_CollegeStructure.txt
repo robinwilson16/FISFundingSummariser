@@ -4,6 +4,7 @@ AS
 		AcademicYear = CAST ( NULL AS VARCHAR(50) ),
 		ProvSpecValue = CAST ( NULL AS VARCHAR(50) ),
 		CourseCode = CAST ( NULL AS VARCHAR(50) ),
+		CourseInstance = CAST ( NULL AS VARCHAR(50) ),
 		CourseTitle = CAST ( NULL AS VARCHAR(50) ),
 		CollegeLevel1Code = '-',
 		CollegeLevel1Name = '-- Unknown --',

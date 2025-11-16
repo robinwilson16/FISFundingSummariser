@@ -4,6 +4,7 @@ AS
 		AcademicYear = CRS.AcademicYearID,
 		ProvSpecValue = CRS.Code,
 		CourseCode = CRS.Code,
+		CourseInstance = NULL,
 		CourseTitle = CRS.Name,
 		CollegeLevel1Code = COALESCE ( RTRIM ( COL.Code ), '-' ),
 		CollegeLevel1Name = COALESCE ( COL.Name, '-- Unknown --' ),
