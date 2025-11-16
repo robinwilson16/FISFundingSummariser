@@ -149,7 +149,7 @@ BEGIN
 	DECLARE @ILRReturnSummary VARCHAR(200) = NULL;
 
 	SET @Message = N'Starting Operation at ' + FORMAT ( SYSDATETIME(), 'dd/MM/yyyy HH:mm:ss' );
-	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 	SET @ILRReturnSummary = 
 		N'Importing ' + @AcademicYear + ' ' + @ILRReturn
@@ -160,13 +160,13 @@ BEGIN
 		+ N' ILR Return';
 
 	SET @Message = @ILRReturnSummary;
-	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 	SET @Message = N'Using FIS Database ' + @FISDatabase;
-	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 	SET @Message = N'Importing into ' + @FISOutputTableLocation + @FISOutputTableName;
-	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 	--Get Provider ID and date of new ILR Return to be imported
 	IF @AcademicYear >= '19/20'
@@ -231,13 +231,13 @@ BEGIN
 				@FileDate = @FileDate;
 
 			SET @Message = N'Number Of Records Removed for Provider ' + CAST ( @ProviderNumber AS VARCHAR(50) ) + ': ' + CAST ( @@ROWCOUNT AS VARCHAR(50) );
-			RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+			RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 		END
 	ELSE
 		BEGIN
 			SET @Message = N'Date of ILR Return to be Imported for Provider ' + CAST ( @ProviderNumber AS VARCHAR(50) ) + ': ' + FORMAT ( @FileDate, 'dd/MM/yyyy' );
-			RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+			RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 			IF @Mode = N'R'
 				--If mode is to replace then drop the table
@@ -866,13 +866,13 @@ BEGIN
 						@SQLParams;
 
 					SET @Message = N'Created ' + @FISOutputTableName + N' Table';
-					RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 				END
 			ELSE
 				--If mode is to insert instead of replace then see if this ILR has already been imported
 				BEGIN
 					SET @Message = N'Inserting into Existing ' + @FISOutputTableName + N' Table';
-					RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 					SET @SQLString = 
 					N'
@@ -919,7 +919,7 @@ BEGIN
 								@FileDate = @FileDate;
 
 							SET @Message = N'Return Already Imported So Deleting Existing ' + CAST ( @NumExistingRecords AS VARCHAR(10) ) + ' Records From ' + @FISOutputTableName + ' Table';
-							RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+							RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 						END
 				END
 
@@ -1035,7 +1035,7 @@ BEGIN
 
 
 			SET @Message = @AcademicYear + N' ILR Imported'
-			RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+			RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
 			--Anonymise the ILR data if required
 			IF @AnonymiseData = 1
@@ -1088,7 +1088,7 @@ BEGIN
 					@AnonEmail = @AnonEmail;
 
 				SET @Message = @AcademicYear + N' ILR Anonymised'
-				RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+				RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 			END
 		END
 
@@ -1844,9 +1844,9 @@ BEGIN
 			@LatestImportedFileIsFinalReturn = @LatestImportedFileIsFinalReturn;
 
 		SET @Message = N'Number Of Records Included In QAR Measures Across All Years for ' + @ProviderName + ': ' + CAST ( @@ROWCOUNT AS VARCHAR(50) );
-		RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+		RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 	END
 
 	SET @Message = N'Finishing Operation at ' + FORMAT ( SYSDATETIME(), 'dd/MM/yyyy HH:mm:ss' );
-	RAISERROR ( @Message, 0, 1 ) WITH NOWAIT;
+	RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 END
