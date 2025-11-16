@@ -2,7 +2,8 @@
 
 ## Summary
 
-The FIS Funding Summariser summarises FIS databases, supporting the format used from 17/18 up to 25/26.
+The FIS Funding Summariser pulls together information across the FIS database tables and summarises this by enrolment, supporting FIS database formats from 17/18 up to 25/26.
+
 This script transforms a FIS database into one large database table with one row per enrolment, making it easy for reporting teams to produce reports displaying this data.
 
 The database table supports saving many ILR returns into the same table where you would then reference a particular one by the **Academic Year** and **ILR** return enabling the same suite of reports to be run for any year and not need re-designing each time the format of the FIS database changes or having to have a seperate set of reports for each year
