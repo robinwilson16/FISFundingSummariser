@@ -16,7 +16,7 @@ Once you have everything set up you can execute the following command to import 
 
 Broken down this is:
 
-| Table | Purpose |
+| Command | Purpose |
 |--|--|
 | EXEC SPR_Run_FIS_FundingData | Run the stored procedure |
 | 'ILR2526' | Name of the ILR database created by FIS |

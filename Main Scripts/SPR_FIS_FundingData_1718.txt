@@ -4446,7 +4446,7 @@ BEGIN
 					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN CL1ENG.CollegeLevelName END,
 					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN CL1MAT.CollegeLevelName END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN CL1PAR.CollegeLevelName END,
-					CS.CollegeLevel3Name,
+					CS.CollegeLevel1Name,
 					''-- Unknown --''
 				),
 			CollegeLevel2Code = 
