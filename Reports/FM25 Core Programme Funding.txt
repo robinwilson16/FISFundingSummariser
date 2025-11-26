@@ -1,0 +1,37 @@
+SELECT
+	FD.NatRate,
+	FD.PrvRetentFactHist,
+	FD.ProgWeightHist,
+	FD.ProgWeightNew,
+	FD.LearnerEnglishMathsFundingRate,
+	FD.LearnerEnglishMathsInstances,
+	LearnerEnglishMathsFundingTotal = 
+		FD.LearnerEnglishMathsFundingRate
+		*
+		FD.LearnerEnglishMathsInstances,
+	FD.LearnerCoreMathsPremiumFundingRate,
+	FD.Block1DisadvUplift,
+	FD.Block2DisadvFundingRate,
+	FD.Block2DisadvElementsNew,
+	FD.HighValueCoursesPremiumFundingRate,
+	FD.AreaCostFact1618Hist,
+	FundingRate = 
+		( FD.NatRate * FD.PrvRetentFactHist * FD.ProgWeightNew ) 
+		* FD.AreaCostFact1618Hist,
+	CoreProgrammeFunding = 
+		(
+			( FD.NatRate * FD.PrvRetentFactHist * FD.ProgWeightNew ) 
+			+ (
+				FD.LearnerEnglishMathsFundingRate
+				*
+				FD.LearnerEnglishMathsInstances
+			)
+			+ FD.LearnerCoreMathsPremiumFundingRate
+			+ FD.Block2DisadvFundingRate
+			+ FD.HighValueCoursesPremiumFundingRate
+		)
+		* FD.AreaCostFact1618Hist
+FROM FIS_FundingData FD
+WHERE
+	FD.FundLineCategory = '16-19 Funding'
+	AND FD.IsFundedStart = 1

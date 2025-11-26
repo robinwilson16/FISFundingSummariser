@@ -57,6 +57,23 @@ BEGIN
 	--Future achievement weighting factor. If 1 then is 100% of all remaining ach monies (default is 0 - decimal value)
 	DECLARE @FutureAchievementWeighting DECIMAL(5,2) = 1
 
+	--English and Maths Funding Rates from Allocation Statement
+	DECLARE @EnglishMathsFundingHigherRate INT = 418
+	DECLARE @EnglishMathsFundingLowerRate INT = 255
+
+	--Core Maths Funding Rate from Allocation Statement
+	DECLARE @CoreMathsPremiumFundingRate INT = 900
+
+	--Block 2 Disadvantage Funding Rates from Allocation Statement
+	DECLARE @Block2DisadvFundingTLevelRate INT = 825
+	DECLARE @Block2DisadvFundingHigherRate INT = 609
+	DECLARE @Block2DisadvFundingLowerRate INT = 371
+
+	--Higher Value ourse Premium Funding Rate from Allocation Statement
+	--List of Quals at: 
+	--https://www.gov.uk/government/publications/qualifications-attracting-high-value-courses-premium
+	DECLARE @HighValueCoursesPremiumFundingRate INT = 600
+
 	--Insert new ILR return data leaving existing data from other imported returns or clear out table and replace (default is I for Insert, R = Replace)
 	--DECLARE @Mode NCHAR(1) = 'I' 
 
@@ -120,6 +137,13 @@ BEGIN
 			@IncludeHEAdvLoanPossibleIncome,
 			@IncludeAdvLoanBursaryIncome,
 			@FutureAchievementWeighting,
+			@EnglishMathsFundingHigherRate,
+			@EnglishMathsFundingLowerRate,
+			@CoreMathsPremiumFundingRate,
+			@Block2DisadvFundingTLevelRate,
+			@Block2DisadvFundingHigherRate,
+			@Block2DisadvFundingLowerRate,
+			@HighValueCoursesPremiumFundingRate,
 			@Mode,
 			@FISOutputTableLocation,
 			@FISOutputTableName,
@@ -156,6 +180,13 @@ BEGIN
 		@IncludeHEAdvLoanPossibleIncome BIT,
 		@IncludeAdvLoanBursaryIncome BIT,
 		@FutureAchievementWeighting DECIMAL(3,2),
+		@EnglishMathsFundingHigherRate INT,
+		@EnglishMathsFundingLowerRate INT,
+		@CoreMathsPremiumFundingRate INT,
+		@Block2DisadvFundingTLevelRate INT,
+		@Block2DisadvFundingHigherRate INT,
+		@Block2DisadvFundingLowerRate INT,
+		@HighValueCoursesPremiumFundingRate INT,
 		@Mode NCHAR(1),
 		@FISOutputTableLocation NVARCHAR(200),
 		@FISOutputTableName NVARCHAR(200),
@@ -194,6 +225,13 @@ BEGIN
 		@IncludeHEAdvLoanPossibleIncome = @IncludeHEAdvLoanPossibleIncome,
 		@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
 		@FutureAchievementWeighting = @FutureAchievementWeighting,
+		@EnglishMathsFundingHigherRate = @EnglishMathsFundingHigherRate,
+		@EnglishMathsFundingLowerRate = @EnglishMathsFundingLowerRate,
+		@CoreMathsPremiumFundingRate = @CoreMathsPremiumFundingRate,
+		@Block2DisadvFundingTLevelRate = @Block2DisadvFundingTLevelRate,
+		@Block2DisadvFundingHigherRate = @Block2DisadvFundingHigherRate,
+		@Block2DisadvFundingLowerRate = @Block2DisadvFundingLowerRate,
+		@HighValueCoursesPremiumFundingRate = @HighValueCoursesPremiumFundingRate,
 		@Mode = @Mode,
 		@FISOutputTableLocation = @FISOutputTableLocation,
 		@FISOutputTableName = @FISOutputTableName,

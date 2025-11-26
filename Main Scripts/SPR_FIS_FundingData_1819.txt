@@ -17,6 +17,13 @@ CREATE PROCEDURE SPR_FIS_FundingData_1819
 	@IncludeHEAdvLoanPossibleIncome BIT,
 	@IncludeAdvLoanBursaryIncome BIT,
 	@FutureAchievementWeighting DECIMAL(3,2),
+	@EnglishMathsFundingHigherRate INT,
+	@EnglishMathsFundingLowerRate INT,
+	@CoreMathsPremiumFundingRate INT,
+	@Block2DisadvFundingTLevelRate INT,
+	@Block2DisadvFundingHigherRate INT,
+	@Block2DisadvFundingLowerRate INT,
+	@HighValueCoursesPremiumFundingRate INT,
 	@Mode NCHAR(1),
 	@FISOutputTableLocation NVARCHAR(200),
 	@FISOutputTableName NVARCHAR(200),
@@ -91,6 +98,23 @@ BEGIN
 
 	--Future achievement weighting factor. If 1 then is 100% of all remaining ach monies (default is 0 - decimal value)
 	DECLARE @FutureAchievementWeighting DECIMAL(5,2) = 1
+
+	--English and Maths Funding Rates from Allocation Statement
+	DECLARE @EnglishMathsFundingHigherRate INT = 0
+	DECLARE @EnglishMathsFundingLowerRate INT = 0
+
+	--Core Maths Funding Rate from Allocation Statement
+	DECLARE @CoreMathsPremiumFundingRate INT = 0
+
+	--Block 2 Disadvantage Funding Rates from Allocation Statement
+	DECLARE @Block2DisadvFundingTLevelRate INT = 0
+	DECLARE @Block2DisadvFundingHigherRate INT = 0
+	DECLARE @Block2DisadvFundingLowerRate INT = 0
+
+	--Higher Value ourse Premium Funding Rate from Allocation Statement
+	--List of Quals at: 
+	--https://www.gov.uk/government/publications/qualifications-attracting-high-value-courses-premium
+	DECLARE @HighValueCoursesPremiumFundingRate INT = 0
 
 	--Insert new ILR return data leaving existing data from other imported returns or clear out table and replace (default is I for Insert, R = Replace)
 	DECLARE @Mode NCHAR(1) = 'I' 
@@ -275,6 +299,14 @@ BEGIN
 			DIS.Description
 		INTO #Disabilities
 		FROM VW_FIS_Disabilities DIS
+
+		DROP TABLE IF EXISTS #HighValueCourses;
+		SELECT
+			HVC.LearnAimRef
+		INTO #HighValueCourses
+		FROM VW_FIS_HighValueCourses HVC
+		WHERE
+			HVC.AcademicYear = @AcademicYear
 
 		DROP TABLE IF EXISTS #DestinationProgressionOutcomes;
 		SELECT
@@ -4467,9 +4499,6 @@ BEGIN
 						THEN 0
 					ELSE 1
 				END,
-			Block1DisadvUplift = FM25.Block1DisadvUpliftNew,
-			Block2DisadvElements = FM25.Block2DisadvElementsNew,
-			ProgWeightingFactor = FM25.ProgWeightNew,
 			ThresholdDays = FM25.ThresholdDays,
 			FAMLearningDeliverySOF = FAMA.FAMLearningDeliverySOF,
 			FAMLearningDeliveryFFI = FAMA.FAMLearningDeliveryFFI,
@@ -6079,6 +6108,67 @@ BEGIN
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
 					ELSE COALESCE ( FM35.AchieveElement - FM35P.AchCompPaymentYearEnd, FM36PE.PriceEpisodeCompletionElement - COALESCE ( FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd ) ) * @FutureAchievementWeighting
 				END,
+	'
+
+	SET @SQLString += 
+        N'
+		NatRate = 
+			CASE 
+				WHEN FM25.StartFund = 0 THEN 0
+				WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN FM25.NatRate 
+				ELSE 0 
+			END,
+		PrvRetentFactHist = FM25.PrvRetentFactHist,
+		ProgWeightHist = FM25.ProgWeightHist,
+		ProgWeightNew = FM25.ProgWeightNew,
+		LearnerEnglishMathsFundingRate = 
+			CASE
+				WHEN FM25.StartFund = 0 THEN 0
+				WHEN FM25.RateBand LIKE ''%T level Band 8%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%T level Band 7%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%T level Band 6%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 5%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 4b%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 4a%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 3%'' THEN COALESCE ( @EnglishMathsFundingLowerRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 2%'' THEN COALESCE ( @EnglishMathsFundingLowerRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 1%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 ) * FM25.FullTimeEquiv
+				ELSE 0
+			END,
+		LearnerEnglishMathsInstances = COALESCE ( FM25.LearnerEnglishMathsInstances, 0 ),
+		LearnerCoreMathsPremiumFundingRate = 
+			CASE
+				WHEN FM25.StartFund = 0 THEN 0
+				WHEN LD.LearnAimRef IN (
+					''60147830'',
+					''60147829'',
+					''60148573'',
+					''60149450''
+				) THEN COALESCE ( @CoreMathsPremiumFundingRate, 0 ) 
+				ELSE 0
+			END,
+		Block1DisadvUplift = COALESCE ( FM25.Block1DisadvUpliftNew, 0 ),
+		Block2DisadvFundingRate = 
+			CASE
+				WHEN FM25.StartFund = 0 THEN 0
+				WHEN FM25.RateBand LIKE ''%T level Band 8%'' THEN COALESCE ( @Block2DisadvFundingTLevelRate, 0 )
+				WHEN FM25.RateBand LIKE ''%T level Band 7%'' THEN COALESCE ( @Block2DisadvFundingTLevelRate, 0 )
+				WHEN FM25.RateBand LIKE ''%T level Band 6%'' THEN COALESCE ( @Block2DisadvFundingTLevelRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 5%'' THEN COALESCE ( @Block2DisadvFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 4b%'' THEN COALESCE ( @Block2DisadvFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 4a%'' THEN COALESCE ( @Block2DisadvFundingHigherRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 3%'' THEN COALESCE ( @Block2DisadvFundingLowerRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 2%'' THEN COALESCE ( @Block2DisadvFundingLowerRate, 0 )
+				WHEN FM25.RateBand LIKE ''%Band 1%'' THEN COALESCE ( @Block2DisadvFundingHigherRate, 0 ) * FM25.FullTimeEquiv
+				ELSE 0
+			END,
+		Block2DisadvElementsNew = COALESCE ( FM25.Block2DisadvElementsNew, 0 ),
+		HighValueCoursesPremiumFundingRate = 
+			CASE
+				WHEN HVC.LearnAimRef IS NOT NULL THEN COALESCE ( @HighValueCoursesPremiumFundingRate, 0 )
+				ELSE 0
+			END,
+		AreaCostFact1618Hist = COALESCE ( FM25.AreaCostFact1618Hist, 0 ),
 	'
 
     SET @SQLString += 
@@ -7864,6 +7954,8 @@ BEGIN
 			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
+		LEFT JOIN #HighValueCourses HVC
+			ON HVC.LearnAimRef = LD.LearnAimRef
 		LEFT JOIN #DestinationProgressionOutcomes DES
 			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
 			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
@@ -7888,6 +7980,13 @@ BEGIN
 		@IncludeHEAdvLoanPossibleIncome BIT,
 		@IncludeAdvLoanBursaryIncome BIT,
 		@FutureAchievementWeighting DECIMAL(3,2),
+		@EnglishMathsFundingHigherRate INT,
+		@EnglishMathsFundingLowerRate INT,
+		@CoreMathsPremiumFundingRate INT,
+		@Block2DisadvFundingTLevelRate INT,
+		@Block2DisadvFundingHigherRate INT,
+		@Block2DisadvFundingLowerRate INT,
+		@HighValueCoursesPremiumFundingRate INT,
 		@Mode NCHAR(1),
 		@FISOutputTableLocation NVARCHAR(200),
 		@FISOutputTableName NVARCHAR(200),
@@ -7923,6 +8022,13 @@ BEGIN
 		@IncludeHEAdvLoanPossibleIncome = @IncludeHEAdvLoanPossibleIncome,
 		@IncludeAdvLoanBursaryIncome = @IncludeAdvLoanBursaryIncome,
 		@FutureAchievementWeighting = @FutureAchievementWeighting,
+		@EnglishMathsFundingHigherRate = @EnglishMathsFundingHigherRate,
+		@EnglishMathsFundingLowerRate = @EnglishMathsFundingLowerRate,
+		@CoreMathsPremiumFundingRate = @CoreMathsPremiumFundingRate,
+		@Block2DisadvFundingTLevelRate = @Block2DisadvFundingTLevelRate,
+		@Block2DisadvFundingHigherRate = @Block2DisadvFundingHigherRate,
+		@Block2DisadvFundingLowerRate = @Block2DisadvFundingLowerRate,
+		@HighValueCoursesPremiumFundingRate = @HighValueCoursesPremiumFundingRate,
 		@Mode = @Mode,
 		@FISOutputTableLocation = @FISOutputTableLocation,
 		@FISOutputTableName = @FISOutputTableName,

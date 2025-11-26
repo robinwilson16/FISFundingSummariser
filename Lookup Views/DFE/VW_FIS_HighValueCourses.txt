@@ -1,0 +1,11 @@
+CREATE VIEW [dbo].[VW_FIS_HighValueCourses]
+AS
+	--https://www.gov.uk/government/publications/qualifications-attracting-high-value-courses-premium
+	SELECT
+		AcademicYear = '25/26',
+		LearnAimRef = HVC.[Qualification Reference]
+	FROM HighValueCourses2526 HVC
+	WHERE
+		HVC.[Qualification Reference] IS NOT NULL
+	--ORDER BY
+	--	HVC.[Qualification Reference]
