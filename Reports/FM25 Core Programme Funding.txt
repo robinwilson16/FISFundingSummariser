@@ -30,7 +30,8 @@ SELECT
 			+ FD.Block2DisadvFundingRate
 			+ FD.HighValueCoursesPremiumFundingRate
 		)
-		* FD.AreaCostFact1618Hist
+		* FD.AreaCostFact1618Hist,
+	FD.TotalEarnedCashYearEnd
 FROM FIS_FundingData FD
 WHERE
 	FD.FundLineCategory = '16-19 Funding'
