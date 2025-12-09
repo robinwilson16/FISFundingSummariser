@@ -1144,14 +1144,17 @@ BEGIN
 						ROW_NUMBER () OVER (
 							ORDER BY
 								CASE
-									WHEN FM25.RateBand LIKE ''Up to%'' THEN 1
-									ELSE 2
-								END,
-								CASE
-									WHEN FM25.RateBand NOT LIKE ''%4a%'' THEN 1
-									ELSE 2
-								END,
-								FM25.RateBand
+									WHEN 
+										CHARINDEX ( ''Band '', FM25.RateBand ) > 0 
+										AND CHARINDEX ( '')'', FM25.RateBand ) > 0 
+										THEN
+											SUBSTRING ( 
+												FM25.RateBand, 
+												CHARINDEX ( ''Band '', FM25.RateBand ) + 5,
+												CHARINDEX ( '')'', FM25.RateBand ) - ( CHARINDEX ( ''Band '', FM25.RateBand ) + 5 )
+											)
+									ELSE ''0''
+								END
 						)
 				FROM (
 					SELECT DISTINCT
@@ -7864,14 +7867,17 @@ BEGIN
 						ROW_NUMBER () OVER (
 							ORDER BY
 								CASE
-									WHEN FM25.RateBand LIKE ''Up to%'' THEN 1
-									ELSE 2
-								END,
-								CASE
-									WHEN FM25.RateBand NOT LIKE ''%4a%'' THEN 1
-									ELSE 2
-								END,
-								FM25.RateBand
+									WHEN 
+										CHARINDEX ( ''Band '', FM25.RateBand ) > 0 
+										AND CHARINDEX ( '')'', FM25.RateBand ) > 0 
+										THEN
+											SUBSTRING ( 
+												FM25.RateBand, 
+												CHARINDEX ( ''Band '', FM25.RateBand ) + 5,
+												CHARINDEX ( '')'', FM25.RateBand ) - ( CHARINDEX ( ''Band '', FM25.RateBand ) + 5 )
+											)
+									ELSE ''0''
+								END
 						)
 				FROM (
 					SELECT DISTINCT
