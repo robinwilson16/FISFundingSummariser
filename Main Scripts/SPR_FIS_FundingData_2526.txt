@@ -3,7 +3,7 @@ Changes since 24/25
 Apprenticeship Framework and Pathway Fields Removed
 */
 
-CREATE PROCEDURE SPR_FIS_FundingData_2526
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2526
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),

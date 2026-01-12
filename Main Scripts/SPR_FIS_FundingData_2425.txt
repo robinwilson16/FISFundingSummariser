@@ -5,7 +5,7 @@ Destination and Progression Fields Removed
 
 */
 
-CREATE PROCEDURE SPR_FIS_FundingData_2425
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2425
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -1287,7 +1287,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
@@ -1320,7 +1319,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
@@ -1357,7 +1355,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
@@ -1451,7 +1448,9 @@ BEGIN
 				FundModel = LD.FundModel,
 				CompStatus = LD.CompStatus,
 				StdCode = COALESCE ( LD.StdCode, 0 ),
+				FworkCode = COALESCE ( LD.FworkCode, 0 ),
 				ProgType = LD.ProgType,
+				PwayCode = COALESCE ( LD.PwayCode, 0 ),
 
 				OnProgPaymentToPeriod = SUM ( CASE WHEN FM38P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM38P.OnProgPayment ELSE 0 END ),
 				LearnSuppPaymentToPeriod = SUM ( CASE WHEN FM38P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM38P.LearnSuppFundCash ELSE 0 END ),
@@ -1695,7 +1694,9 @@ BEGIN
 				LD.FundModel,
 				LD.CompStatus,
 				COALESCE ( LD.StdCode, 0 ),
-				LD.ProgType
+				COALESCE ( LD.FworkCode, 0 ),
+				LD.ProgType,
+				COALESCE ( LD.PwayCode, 0 )
 	'
 
 	SET @SQLString += 

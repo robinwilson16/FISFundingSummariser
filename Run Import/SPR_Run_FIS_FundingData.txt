@@ -1,4 +1,4 @@
-CREATE PROCEDURE SPR_Run_FIS_FundingData
+CREATE OR ALTER PROCEDURE dbo.SPR_Run_FIS_FundingData
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),

@@ -1,4 +1,4 @@
-CREATE PROCEDURE SPR_FIS_FundingData_1718
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_1718
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -1275,7 +1275,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
@@ -1308,7 +1307,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
@@ -1345,7 +1343,6 @@ BEGIN
 						ORDER BY
 							FM.FundStart DESC,
 							LD.CompStatus,
-                            FM.FundLineOrder,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
 								WHEN LD.LearnAimRef = ''ZPROG001'' THEN 2
