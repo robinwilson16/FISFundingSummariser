@@ -607,7 +607,7 @@ BEGIN
 
 							ProgType INT NULL,
 							StandardCode INT NULL,
-							StandardName VARCHAR(750) NULL,
+							StandardName VARCHAR(150) NULL,
 							FrameworkCode INT NULL,
 							FrameworkName VARCHAR(150) NULL,
 							PathwayCode INT NULL,
