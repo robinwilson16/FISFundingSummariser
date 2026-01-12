@@ -7,6 +7,7 @@ CREATE OR ALTER PROCEDURE dbo.SPR_Run_FIS_FundingData
 AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
+	SET ANSI_WARNINGS OFF; --Hide Null value is eliminated messages
 
 	/**************************************************
 	 * Change/check values each time an import is run *
