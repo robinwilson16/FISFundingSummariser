@@ -7914,13 +7914,13 @@ BEGIN
 			AND MAFM.FundLine = FM.FundLine
 			AND MAFM.RowNumFundLine = 1
 		LEFT JOIN #MainAim MAFMA
-			ON MAFM.LearnRefNumber = LD.LearnRefNumber
-			AND MAFM.FundLine = FM.FundLine
-			AND MAFM.StdCode = COALESCE ( LD.StdCode, 0 )
-			AND MAFM.FworkCode = COALESCE ( LD.FworkCode, 0 )
-			AND MAFM.ProgType = LD.ProgType
-			AND MAFM.PwayCode = COALESCE ( LD.PwayCode, 0 )
-			AND MAFM.RowNumFundLineApps = 1
+			ON MAFMA.LearnRefNumber = LD.LearnRefNumber
+			AND MAFMA.FundLine = FM.FundLine
+			AND MAFMA.StdCode = COALESCE ( LD.StdCode, 0 )
+			AND MAFMA.FworkCode = COALESCE ( LD.FworkCode, 0 )
+			AND MAFMA.ProgType = LD.ProgType
+			AND MAFMA.PwayCode = COALESCE ( LD.PwayCode, 0 )
+			AND MAFMA.RowNumFundLineApps = 1
 	'
 
 	SET @SQLString += 
