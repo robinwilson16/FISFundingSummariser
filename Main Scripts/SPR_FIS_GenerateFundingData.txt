@@ -161,6 +161,7 @@ BEGIN
 
 
 	DECLARE @TableExists BIT = 1;
+	DECLARE @TableExtraExists BIT = 1;
 	DECLARE @ProviderNumber INT;
 	DECLARE @FileDate DATETIME;
 	DECLARE @NumExistingRecords INT = 0;
@@ -178,8 +179,8 @@ BEGIN
 	SET @ILRReturnSummary = 
 		N'Importing ' + @AcademicYear + ' ' + @ILRReturn
 		+ CASE
-			WHEN @IsFinalReturn = 1 THEN N'Final'
-			ELSE N'Non-Final'
+			WHEN @IsFinalReturn = 1 THEN N' Final'
+			ELSE N' Non-Final'
 		END
 		+ N' ILR Return';
 
@@ -257,6 +258,33 @@ BEGIN
 			SET @Message = N'Number Of Records Removed for Provider ' + CAST ( @ProviderNumber AS VARCHAR(50) ) + ': ' + CAST ( @@ROWCOUNT AS VARCHAR(50) );
 			RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 
+			SET @SQLString = 
+			N'
+				DELETE FROM FD
+				FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra] FD
+				WHERE
+					FD.ProviderNumber = @ProviderNumber
+					AND FD.AcademicYear = @AcademicYear
+					AND FD.ILRReturn = @ILRReturn
+					AND FD.IsFinalReturn = @IsFinalReturn
+					AND FORMAT ( FD.ILRReturnDate, ''yyyy-MM-dd HH:mm:ss'' ) = FORMAT ( @FileDate, ''yyyy-MM-dd HH:mm:ss'' )';
+
+			SET @SQLParams = 
+			N'
+				@ProviderNumber INT,
+				@AcademicYear VARCHAR(5),
+				@ILRReturn VARCHAR(3),
+				@IsFinalReturn BIT,
+				@FileDate DATETIME';
+
+			EXECUTE sp_executesql 
+				@SQLString, 
+				@SQLParams, 
+				@ProviderNumber = @ProviderNumber,
+				@AcademicYear = @AcademicYear,
+				@ILRReturn = @ILRReturn,
+				@IsFinalReturn = @IsFinalReturn,
+				@FileDate = @FileDate;
 		END
 	ELSE
 		BEGIN
@@ -266,9 +294,26 @@ BEGIN
 			IF @Mode = N'R'
 				--If mode is to replace then drop the table
 				BEGIN
+					SET @Message = N'Droping existing ' + @FISOutputTableName + N' table';
+					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
+					
 					SET @SQLString = 
 					N'
-						DROP TABLE IF EXISTS dbo.[' + @FISOutputTableName + ']';
+						DROP TABLE IF EXISTS dbo.[' + @FISOutputTableName + N']';
+
+					SET @SQLParams = 
+					N'';
+
+					EXECUTE sp_executesql 
+						@SQLString, 
+						@SQLParams;
+
+					SET @Message = N'Droping existing ' + @FISOutputTableName + N'Extra table';
+					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
+					
+					SET @SQLString = 
+					N'
+						DROP TABLE IF EXISTS dbo.[' + @FISOutputTableName + N'Extra]';
 
 					SET @SQLParams = 
 					N'';
@@ -282,9 +327,14 @@ BEGIN
 				IF OBJECT_ID(@FISOutputTableLocation + '[' + @FISOutputTableName + ']', 'U') IS NULL 
 					SET @TableExists = 0;
 
+				--Confirm table extra exists already
+				IF OBJECT_ID(@FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra]', 'U') IS NULL 
+					SET @TableExtraExists = 0;
+
 			IF @Mode = 'R' OR @TableExists = 0
 				--If mode is to replace or table does not exist then create it
 				BEGIN
+					--Create main table
 					SET @SQLString = 
 					N'
 						CREATE TABLE ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] (
@@ -782,7 +832,45 @@ BEGIN
 							AppStandardPriceEpisodeCompExemCode INT NULL,
 							AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate DATE NULL,
 							AppStandardPriceEpisodeRedStartDate DATE NULL,
-							AppStandardPriceEpisodeRedStatusCode INT NULL,
+							AppStandardPriceEpisodeRedStatusCode INT NULL
+						)';
+
+					SET @SQLParams = 
+					N'';
+
+					EXECUTE sp_executesql 
+						@SQLString, 
+						@SQLParams;
+
+					SET @SQLString = 
+					N'
+						CREATE CLUSTERED INDEX [CX_' + @FISOutputTableName + '] ON ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] ( AcademicYear, ProviderNumber, ILRReturn, IsFinalReturn, ILRReturnDate, LearnRefNumber, AimSeqNumber )';
+
+					SET @SQLParams = 
+					N'';
+
+					EXECUTE sp_executesql 
+						@SQLString, 
+						@SQLParams;
+
+					SET @Message = N'Created ' + @FISOutputTableName + N' Table';
+					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
+				END
+
+			IF @Mode = 'R' OR @TableExtraExists = 0
+				--If mode is to replace or table does not exist then create it
+				BEGIN
+					--Add additional data to second table (gets around SQL Server maximum row size of 8060)
+					SET @SQLString = 
+					N'
+						CREATE TABLE ' + @FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra] (
+							AcademicYear VARCHAR(5) NULL,
+							ProviderNumber INT NULL,
+							ILRReturn VARCHAR(3) NULL,
+							IsFinalReturn BIT NULL,
+							ILRReturnDate DATETIME NULL,
+							LearnRefNumber VARCHAR(12) NULL,
+							AimSeqNumber INT NULL,
 					'
     
 					SET @SQLString += 
@@ -893,7 +981,7 @@ BEGIN
 
 					SET @SQLString = 
 					N'
-						CREATE CLUSTERED INDEX CX_FIS_FundingData ON ' + @FISOutputTableLocation + '[' + @FISOutputTableName + '] ( AcademicYear, ILRReturn, ILRReturnDate )';
+						CREATE CLUSTERED INDEX [CX_' + @FISOutputTableName + 'Extra] ON ' + @FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra] ( AcademicYear, ProviderNumber, ILRReturn, IsFinalReturn, ILRReturnDate, LearnRefNumber, AimSeqNumber )';
 
 					SET @SQLParams = 
 					N'';
@@ -902,7 +990,7 @@ BEGIN
 						@SQLString, 
 						@SQLParams;
 
-					SET @Message = N'Created ' + @FISOutputTableName + N' Table';
+					SET @Message = N'Created ' + @FISOutputTableName + N'Extra Table';
 					RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
 				END
 			ELSE
@@ -957,6 +1045,25 @@ BEGIN
 
 							SET @Message = N'Return Already Imported So Deleting Existing ' + CAST ( @NumExistingRecords AS VARCHAR(10) ) + ' Records From ' + @FISOutputTableName + ' Table';
 							RAISERROR ( @Message, 10, 1 ) WITH NOWAIT;
+
+							SET @SQLString = 
+							N'
+								DELETE FD
+								FROM ' + @FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra] FD
+								WHERE
+									FD.AcademicYear = @AcademicYear
+									AND FORMAT ( FD.ILRReturnDate, ''yyyy-MM-dd HH:mm:ss'' ) = FORMAT ( @FileDate, ''yyyy-MM-dd HH:mm:ss'' )';
+
+							SET @SQLParams = 
+							N'
+								@AcademicYear VARCHAR(5),
+								@FileDate DATETIME';
+
+							EXECUTE sp_executesql 
+								@SQLString, 
+								@SQLParams,
+								@AcademicYear = @AcademicYear,
+								@FileDate = @FileDate;
 						END
 				END
 

@@ -4609,14 +4609,14 @@ BEGIN
 			OriginalCollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
 			OriginalCollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
 			
-			MainAimCollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
-			MainAimCollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
-			MainAimCollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
-			MainAimCollegeLevel2Name = COALESCE ( CS.CollegeLevel2Name, ''-- Unknown --''),
-			MainAimCollegeLevel3Code = COALESCE ( CS.CollegeLevel3Code, ''-''),
-			MainAimCollegeLevel3Name = COALESCE ( CS.CollegeLevel3Name, ''-- Unknown --''),
-			MainAimCollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
-			MainAimCollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
+			MainAimCollegeLevel1Code = COALESCE ( MCS.CollegeLevel1Code, ''-''),
+			MainAimCollegeLevel1Name = COALESCE ( MCS.CollegeLevel1Name, ''-- Unknown --''),
+			MainAimCollegeLevel2Code = COALESCE ( MCS.CollegeLevel2Code, ''-''),
+			MainAimCollegeLevel2Name = COALESCE ( MCS.CollegeLevel2Name, ''-- Unknown --''),
+			MainAimCollegeLevel3Code = COALESCE ( MCS.CollegeLevel3Code, ''-''),
+			MainAimCollegeLevel3Name = COALESCE ( MCS.CollegeLevel3Name, ''-- Unknown --''),
+			MainAimCollegeLevel4Code = COALESCE ( MCS.CollegeLevel4Code, ''-''),
+			MainAimCollegeLevel4Name = COALESCE ( MCS.CollegeLevel4Name, ''-- Unknown --''),
 
 			SSA1Code = AIM.SSA1Code,
 			SSA1Title = AIM.SSA1Name,
@@ -6214,7 +6214,755 @@ BEGIN
 			AppStandardPriceEpisodeCompExemCode = FM36PE.PriceEpisodeCompExemCode,
 			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
 			AppStandardPriceEpisodeRedStartDate = FM36PE.PriceEpisodeRedStartDate,
-			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode,
+			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode
+
+			--INTO FIS_FundingDataTemp
+	'
+    
+    SET @SQLString += 
+        N'
+		FROM ' + @FISDatabase + '.dbo.Valid_Learner L
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_DV_Learner DV
+			ON DV.LearnRefNumber = L.LearnRefNumber
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			ON LD.LearnRefNumber = L.LearnRefNumber
+		INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_DV_LearningDelivery LDR
+			ON LDR.LearnRefNumber = LD.LearnRefNumber
+			AND LDR.AimSeqNumber = LD.AimSeqNumber
+		INNER JOIN ' + @FISDatabase + '.dbo.Valid_Source SRC
+			ON 1 = 1
+		INNER JOIN #HybridEndYears EY
+			ON EY.LearnRefNumber = LD.LearnRefNumber
+			AND EY.AimSeqNumber = LD.AimSeqNumber
+	'
+    
+    SET @SQLString += 
+		N'
+		INNER JOIN #MainAim MA
+			ON MA.LearnRefNumber = LD.LearnRefNumber
+			AND MA.RowNumLearner = 1
+	'
+
+    SET @SQLString += 
+        N'
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryFAM FFI
+			ON FFI.LearnRefNumber = LD.LearnRefNumber
+			AND FFI.AimSeqNumber = LD.AimSeqNumber
+			AND FFI.LearnDelFAMType = ''FFI''
+
+		LEFT JOIN (
+			SELECT
+				LearnerRef = EMP.LearnRefNumber,
+				EmpStatusCode = EMP.EmpStat,
+				EmpStatusName = 
+					CASE
+						WHEN EMP.EmpStat = 10 THEN ''InEmp''
+						WHEN EMP.EmpStat = 11 THEN ''NoEmpLooking''
+						WHEN EMP.EmpStat = 12 THEN ''NoEmpNotLooking''
+						WHEN EMP.EmpStat = 98 THEN ''Unknown''
+						ELSE ''Unknown''
+					END,
+				EmpStatusAppliesDate = EMP.DateEmpStatApp,
+				EmployerID = EMP.EmpId,
+				RowNum =
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							EMP.LearnRefNumber
+						ORDER BY
+							EMP.DateEmpStatApp DESC
+					)
+			FROM ' + @FISDatabase + '.dbo.Valid_LearnerEmploymentStatus EMP
+		) EMP
+			ON EMP.LearnerRef = L.LearnRefNumber
+			AND EMP.RowNum = 1
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LLDDandHealthProblem LLDD
+			ON LLDD.LearnRefNumber = L.LearnRefNumber
+			AND LLDD.PrimaryLLDD = 1
+		LEFT JOIN (
+			SELECT
+				PVT.LearnRefNumber,
+				PVT.DateEmpStatApp,
+				PVT.LOE,
+				PVT.LOU,
+				PVT.BSI,
+				PVT.SEM,
+				PVT.SEI,
+				PVT.EII,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							PVT.LearnRefNumber
+						ORDER BY
+							PVT.DateEmpStatApp DESC
+					)
+			FROM (
+				SELECT
+					ESM.LearnRefNumber,
+					ESM.DateEmpStatApp,
+					ESM.ESMType,
+					ESM.ESMCode
+				FROM ' + @FISDatabase + '.dbo.Valid_EmploymentStatusMonitoring ESM
+			) ESM
+			PIVOT (
+				MAX ( ESMCode )
+				FOR ESMType IN ( [LOE], [LOU], [BSI], [SEM], [SEI], [EII] )
+			) AS PVT
+		) ESM
+			ON ESM.LearnRefNumber = L.LearnRefNumber
+			AND ESM.RowNum = 1
+    '
+
+    SET @SQLString += 
+        N'
+		LEFT JOIN (
+			SELECT
+				LearnRefNumber = OC.LearnRefNumber,
+				DPOutcomeType = OC.OutType,
+				DPOutcomeCode = OC.OutCode,
+				DPOutcomeStartDate = OC.OutStartDate,
+				DPOutcomeEndDate = OC.OutEndDate,
+				DPOutcomeCollectionDate = OC.OutCollDate,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							OC.LearnRefNumber
+						ORDER BY
+							OC.OutCollDate DESC,
+							OC.OutStartDate DESC
+					)
+			FROM ' + @FISDatabase + '.dbo.Valid_DPOutcome OC
+		) OC
+			ON OC.LearnRefNumber = L.LearnRefNumber
+			AND OC.RowNum = 1
+		LEFT JOIN ( --Partner UKPRN not against prog aim so get this here
+			SELECT
+				LD.LearnRefNumber,
+				LD.PartnerUKPRN,
+				RowNum = ROW_NUMBER () OVER (
+					PARTITION BY
+						LD.LearnRefNumber
+					ORDER BY
+						LD.CompStatus,
+						DATEDIFF ( DAY, LD.LearnStartDate, LD.LearnPlanEndDate ) DESC,
+						LD.PartnerUKPRN
+				)
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			WHERE
+				LD.PartnerUKPRN IS NOT NULL
+		) PTR
+			ON PTR.LearnRefNumber = L.LearnRefNumber
+			AND PTR.RowNum = 1
+
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMA
+			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMA.ProvSpecLearnMonOccur = ''A''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMB
+			ON PSLMB.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMB.ProvSpecLearnMonOccur = ''B''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMC
+			ON PSLMC.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMC.ProvSpecLearnMonOccur = ''C''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMD
+			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
+			AND PSLMD.ProvSpecLearnMonOccur = ''D''
+		
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
+			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
+			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
+			AND PSDMA.ProvSpecDelMonOccur = ''A''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMB
+			ON PSDMB.LearnRefNumber = LD.LearnRefNumber
+			AND PSDMB.AimSeqNumber = LD.AimSeqNumber
+			AND PSDMB.ProvSpecDelMonOccur = ''B''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMC
+			ON PSDMC.LearnRefNumber = LD.LearnRefNumber
+			AND PSDMC.AimSeqNumber = LD.AimSeqNumber
+			AND PSDMC.ProvSpecDelMonOccur = ''C''
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMD
+			ON PSDMD.LearnRefNumber = LD.LearnRefNumber
+			AND PSDMD.AimSeqNumber = LD.AimSeqNumber
+			AND PSDMD.ProvSpecDelMonOccur = ''D''
+	'
+
+    SET @SQLString += 
+        N'
+		--16-19
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			ON FM25.LearnRefNumber = LD.LearnRefNumber
+			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
+			--AND FM25.StartFund = 1
+
+		--AEB (Adult Education Budget) and Legacy Apps
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+			ON FM35.LearnRefNumber = LD.LearnRefNumber
+			AND FM35.AimSeqNumber = LD.AimSeqNumber
+			--AND FM35.FundStart = 1
+
+		--Apps (Reformed)
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_AEC_LearningDelivery FM36
+			ON FM36.LearnRefNumber = LD.LearnRefNumber
+			AND FM36.AimSeqNumber = LD.AimSeqNumber
+		
+		--Loans and Bursaries
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery ALB
+			ON ALB.LearnRefNumber = LD.LearnRefNumber
+			AND ALB.AimSeqNumber = LD.AimSeqNumber
+
+		--Higher Education
+		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryHE HE
+			ON HE.LearnRefNumber = LD.LearnRefNumber
+			AND HE.AimSeqNumber = LD.AimSeqNumber
+	'
+
+    SET @SQLString += 
+		N'
+		LEFT JOIN (
+			SELECT
+				ALBV.LearnRefNumber,
+				ALBV.AimSeqNumber,
+				TotalEarnedCashToPeriod = 
+					CASE
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 1 THEN
+							ALBV.Period_1
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 2 THEN
+							ALBV.Period_1 + ALBV.Period_2
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 3 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 4 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 5 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 6 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 7 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 8 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 9 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 10 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 11 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10 + ALBV.Period_11
+						WHEN TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) = 12 THEN
+							ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10 + ALBV.Period_11 + ALBV.Period_12
+						ELSE 0
+					END,
+				TotalEarnedCashMidYear = ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6,
+				TotalEarnedCashYearEnd = ALBV.Period_1 + ALBV.Period_2 + ALBV.Period_3 + ALBV.Period_4 + ALBV.Period_5 + ALBV.Period_6 + ALBV.Period_7 + ALBV.Period_8 + ALBV.Period_9 + ALBV.Period_10 + ALBV.Period_11 + ALBV.Period_12,
+				TotalEarnedCashP01 = ALBV.Period_1,
+				TotalEarnedCashP02 = ALBV.Period_2,
+				TotalEarnedCashP03 = ALBV.Period_3,
+				TotalEarnedCashP04 = ALBV.Period_4,
+				TotalEarnedCashP05 = ALBV.Period_5,
+				TotalEarnedCashP06 = ALBV.Period_6,
+				TotalEarnedCashP07 = ALBV.Period_7,
+				TotalEarnedCashP08 = ALBV.Period_8,
+				TotalEarnedCashP09 = ALBV.Period_9,
+				TotalEarnedCashP10 = ALBV.Period_10,
+				TotalEarnedCashP11 = ALBV.Period_11,
+				TotalEarnedCashP12 = ALBV.Period_12
+			FROM ' + @FISDatabase + '.dbo.Rulebase_ALB_LearningDelivery_PeriodisedValues ALBV
+			WHERE
+				ALBV.AttributeName = ''ALBSupportPayment''
+		) ALBP
+			ON ALBP.LearnRefNumber = LD.LearnRefNumber
+			AND ALBP.AimSeqNumber = LD.AimSeqNumber
+	'
+    
+    SET @SQLString += 
+        N'
+		--Invalid Learners
+		LEFT JOIN (
+			SELECT
+				InvalidLearners = COUNT ( L.Learner_Id )
+			FROM ' + @FISDatabase + '.dbo.Invalid_Learner L
+		) INV
+			ON 1 = 1
+		LEFT JOIN #LearnerOverallDates LOD
+			ON LOD.LearnRefNumber = L.LearnRefNumber
+		LEFT JOIN #FAMLearner FAML
+			ON FAML.LearnRefNumber = L.LearnRefNumber
+		LEFT JOIN #FundModelAim FM
+			ON FM.LearnRefNumber = LD.LearnRefNumber
+			AND FM.AimSeqNumber = LD.AimSeqNumber
+		LEFT JOIN #FAMLearningDelivery FAMA
+			ON FAMA.LearnRefNumber = LD.LearnRefNumber
+			AND FAMA.AimSeqNumber = LD.AimSeqNumber
+		LEFT JOIN #Standards STD
+			ON STD.StandardCode = LD.StdCode
+		LEFT JOIN #Frameworks FW
+			ON FW.FrameworkCode = LD.FworkCode
+		LEFT JOIN #Pathways PWAY
+			ON PWAY.FrameworkCode = LD.FworkCode
+			AND PWAY.ProgType = LD.ProgType
+			AND PWAY.PathwayCode = LD.PwayCode
+		LEFT JOIN #PostCodes PC
+			ON PC.PostCode COLLATE DATABASE_DEFAULT = L.Postcode COLLATE DATABASE_DEFAULT
+			AND PC.SourceOfFunding COLLATE DATABASE_DEFAULT = ''105/107'' COLLATE DATABASE_DEFAULT
+	'
+    
+    SET @SQLString += 
+        N'
+		LEFT JOIN #LearningAims AIM
+			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+		LEFT JOIN #CollegeStructure CS
+			ON CS.AcademicYear = @AcademicYear
+			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
+				CASE
+					WHEN @ProvSpecDelMonCourseLocation1 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+				END 
+				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+					ELSE ''''
+				END 
+				COLLATE DATABASE_DEFAULT
+		LEFT JOIN #CollegeStructure PCS
+			ON PCS.AcademicYear = @AcademicYear
+			AND PCS.ProvSpecValue COLLATE DATABASE_DEFAULT =
+				CASE
+					WHEN @ProvSpecDelMonParentCourseLocation1 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation1 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation1 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+				END 
+				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation2 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation2 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonParentCourseLocation2 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+					ELSE ''''
+				END 
+				COLLATE DATABASE_DEFAULT
+		LEFT JOIN #CollegeStructure MCS
+			ON MCS.AcademicYear = @AcademicYear
+			AND MCS.ProvSpecValue COLLATE DATABASE_DEFAULT = MA.CourseCode COLLATE DATABASE_DEFAULT
+		'
+    
+    SET @SQLString += 
+        N'
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel1Code = @EnglishCollegeLevel1Code
+		) CL1ENG
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel2Code = @EnglishCollegeLevel2Code
+		) CL2ENG
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel3Code = @EnglishCollegeLevel3Code
+		) CL3ENG
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel4Code = @EnglishCollegeLevel4Code
+		) CL4ENG
+			ON 1 = 1
+	'
+
+	SET @SQLString += 
+        N'
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel1Code = @MathsCollegeLevel1Code
+		) CL1MAT
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel2Code = @MathsCollegeLevel2Code
+		) CL2MAT
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel3Code = @MathsCollegeLevel3Code
+		) CL3MAT
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel4Code = @MathsCollegeLevel4Code
+		) CL4MAT
+			ON 1 = 1
+	'
+
+	SET @SQLString += 
+        N'
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel1Code = @PartnerCollegeLevel1Code
+		) CL1PAR
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel2Code = @PartnerCollegeLevel2Code
+		) CL2PAR
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel3Code = @PartnerCollegeLevel3Code
+		) CL3PAR
+			ON 1 = 1
+		LEFT JOIN (
+			SELECT
+				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
+			FROM #CollegeStructure CS
+			WHERE
+				CS.CollegeLevel4Code = @PartnerCollegeLevel4Code
+		) CL4PAR
+			ON 1 = 1
+	'
+
+    SET @SQLString += 
+        N'
+		LEFT JOIN #CourseHours CH
+			ON CH.AcademicYear = @AcademicYear
+			AND CH.ProvSpecValue COLLATE DATABASE_DEFAULT =
+				CASE
+					WHEN @ProvSpecDelMonCourseLocation1 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+				END 
+				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
+						PSDMA.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''B'' THEN
+						PSDMB.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''C'' THEN
+						PSDMC.ProvSpecDelMon
+					WHEN @ProvSpecDelMonCourseLocation2 = ''D'' THEN
+						PSDMD.ProvSpecDelMon
+					ELSE ''''
+				END 
+				COLLATE DATABASE_DEFAULT
+	'
+    
+    SET @SQLString += 
+        N'
+        LEFT JOIN #Providers PROV
+			ON PROV.ProviderUKPRN = SRC.UKPRN
+	'
+
+    SET @SQLString += 
+        N'
+		--FM25 for counting hours
+		LEFT JOIN (
+			SELECT
+				LD.LearnRefNumber,
+				FM25.FundLine,
+				FM25.RateBand,
+				ORD.RateBandOrder,
+				TFerOnly = CASE WHEN ACT.LearnRefNumber IS NULL THEN 1 ELSE 0 END,
+				PlannedHours = COALESCE ( SUM ( CH.PlannedHours ), 0 ),
+				EEPHours = COALESCE ( SUM ( CH.EEPHours ), 0 ),
+				TLevelHours = COALESCE ( SUM ( CH.TLevelHours ), 0 ),
+				OnProgPayment = 
+					MAX ( FM25.OnProgPayment )
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( MAX ( FM25.OnProgPayment ) / 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END,
+				LearnSuppPayment = 
+					CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( MAX ( FM25.OnProgPayment ) / 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END,
+				TotalEarnedCash = MAX ( FM25.OnProgPayment ),
+				IsFunded = MAX ( CAST ( FM25.StartFund AS INT ) )
+			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+				ON FM25.LearnRefNumber = LD.LearnRefNumber
+			LEFT JOIN #FundModelAim FM
+				ON FM.LearnRefNumber = LD.LearnRefNumber
+				AND FM.AimSeqNumber = LD.AimSeqNumber
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
+				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
+				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
+				AND PSDMA.ProvSpecDelMonOccur = ''A''
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMB
+				ON PSDMB.LearnRefNumber = LD.LearnRefNumber
+				AND PSDMB.AimSeqNumber = LD.AimSeqNumber
+				AND PSDMB.ProvSpecDelMonOccur = ''B''
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMC
+				ON PSDMC.LearnRefNumber = LD.LearnRefNumber
+				AND PSDMC.AimSeqNumber = LD.AimSeqNumber
+				AND PSDMC.ProvSpecDelMonOccur = ''C''
+			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMD
+				ON PSDMD.LearnRefNumber = LD.LearnRefNumber
+				AND PSDMD.AimSeqNumber = LD.AimSeqNumber
+				AND PSDMD.ProvSpecDelMonOccur = ''D''
+	'
+
+	SET @SQLString += 
+        N'
+			LEFT JOIN #CourseHours CH
+				ON CH.AcademicYear = @AcademicYear
+				AND CH.ProvSpecValue COLLATE DATABASE_DEFAULT =
+					CASE
+						WHEN @ProvSpecDelMonCourseLocation1 = ''A'' THEN
+							PSDMA.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation1 = ''B'' THEN
+							PSDMB.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation1 = ''C'' THEN
+							PSDMC.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
+							PSDMD.ProvSpecDelMon
+					END 
+					+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					+ CASE
+						WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
+							PSDMA.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation2 = ''B'' THEN
+							PSDMB.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation2 = ''C'' THEN
+							PSDMC.ProvSpecDelMon
+						WHEN @ProvSpecDelMonCourseLocation2 = ''D'' THEN
+							PSDMD.ProvSpecDelMon
+						ELSE ''''
+					END 
+					COLLATE DATABASE_DEFAULT
+			LEFT JOIN (
+				SELECT DISTINCT
+					LD.LearnRefNumber
+				FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
+				LEFT JOIN #FundModelAim FM
+					ON FM.LearnRefNumber = LD.LearnRefNumber
+					AND FM.AimSeqNumber = LD.AimSeqNumber
+				WHERE
+					LD.FundModel = 25
+					AND FM.Transfer = 0 --Exclude transfers
+					--AND LD.LearnRefNumber = ''17002435''
+				GROUP BY
+					LD.LearnRefNumber
+			) ACT
+				ON ACT.LearnRefNumber = LD.LearnRefNumber
+			LEFT JOIN (
+				SELECT
+					FM25.RateBand,
+					RateBandOrder = 
+						ROW_NUMBER () OVER (
+							ORDER BY
+								CASE
+									WHEN 
+										CHARINDEX ( ''Band '', FM25.RateBand ) > 0 
+										AND CHARINDEX ( '')'', FM25.RateBand ) > 0 
+										THEN
+											SUBSTRING ( 
+												FM25.RateBand, 
+												CHARINDEX ( ''Band '', FM25.RateBand ) + 5,
+												CHARINDEX ( '')'', FM25.RateBand ) - ( CHARINDEX ( ''Band '', FM25.RateBand ) + 5 )
+											)
+									ELSE ''0''
+								END
+						)
+				FROM (
+					SELECT DISTINCT
+						FM25.RateBand
+					FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+				) FM25
+			) ORD
+				ON ORD.RateBand = FM25.RateBand
+			WHERE
+				LD.FundModel = 25
+				--AND LD.LearnRefNumber = ''18000292''
+				AND 
+					CASE --If lrn has no active aims then count tfer instead
+						WHEN ACT.LearnRefNumber IS NOT NULL THEN
+							CASE
+								WHEN FM.Transfer = 0 THEN 1
+								ELSE 0
+							END
+						ELSE
+							1
+						END = 1
+			GROUP BY
+				LD.LearnRefNumber,
+				FM25.FundLine,
+				FM25.RateBand,
+				ORD.RateBandOrder,
+				ACT.LearnRefNumber
+		) HRS
+			ON HRS.LearnRefNumber = L.LearnRefNumber
+    '
+
+	SET @SQLString += 
+		N'
+		LEFT JOIN #MainAim MAFM
+			ON MAFM.LearnRefNumber = LD.LearnRefNumber
+			AND MAFM.FundLine = FM.FundLine
+			AND MAFM.RowNumFundLine = 1
+		LEFT JOIN #MainAim MAFMA
+			ON MAFMA.LearnRefNumber = LD.LearnRefNumber
+			AND MAFMA.FundLine = FM.FundLine
+			AND MAFMA.StdCode = COALESCE ( LD.StdCode, 0 )
+			AND MAFMA.FworkCode = COALESCE ( LD.FworkCode, 0 )
+			AND MAFMA.ProgType = LD.ProgType
+			AND MAFMA.PwayCode = COALESCE ( LD.PwayCode, 0 )
+			AND MAFMA.RowNumFundLineApps = 1
+	'
+
+	SET @SQLString += 
+        N'
+		LEFT JOIN #FM35PeriodFunding FM35P
+			ON FM35P.LearnRefNumber = FM35.LearnRefNumber
+			AND FM35P.AimSeqNumber = FM35.AimSeqNumber
+		LEFT JOIN #FM35PeriodFunding FM35PM
+			ON FM35PM.LearnRefNumber = FM35.LearnRefNumber
+			AND FM35PM.LearnAimRef = ''ZPROG001''
+			AND FM35PM.FundModel = LD.FundModel
+			AND FM35PM.StdCode = COALESCE ( LD.StdCode, 0 )
+			AND FM35PM.FworkCode = COALESCE ( LD.FworkCode, 0 )
+			AND FM35PM.ProgType = LD.ProgType
+			AND FM35PM.PwayCode = COALESCE ( LD.PwayCode, 0 )
+			AND 
+				CASE
+					WHEN LD.CompStatus = 6 THEN
+						CASE
+							WHEN FM35PM.CompStatus = 6 THEN 1
+							ELSE 0
+						END
+					ELSE
+						CASE
+							WHEN FM35PM.CompStatus = 6 THEN 0
+							ELSE 1
+						END
+				END = 1
+			AND LD.AimSeqNumber = MAFM.AimSeqNumber
+	'
+
+    SET @SQLString += 
+        N'
+		LEFT JOIN #FM36PriceEpisode FM36PE
+			ON FM36PE.LearnRefNumber = FM36.LearnRefNumber
+			AND FM36PE.AimSeqNumber = FM36.AimSeqNumber
+			AND FM36PE.RowNum = 1
+	'
+    
+    SET @SQLString += 
+        N'
+		LEFT JOIN #FM36PeriodFunding FM36P
+			ON FM36P.LearnRefNumber = FM36.LearnRefNumber
+			AND FM36P.AimSeqNumber = FM36.AimSeqNumber
+			AND @AppsMoveFundingToMainComponentAim = 0
+		LEFT JOIN #FM36PeriodFundingSummary FM36PM
+			ON FM36PM.LearnRefNumber = FM36.LearnRefNumber
+			AND FM36PM.FundModel = LD.FundModel
+			AND FM36PM.StdCode = COALESCE ( LD.StdCode, 0 )
+			AND FM36PM.FworkCode = COALESCE ( LD.FworkCode, 0 )
+			AND FM36PM.ProgType = LD.ProgType
+			AND FM36PM.PwayCode = COALESCE ( LD.PwayCode, 0 )
+			AND LD.AimSeqNumber = MAFMA.AimSeqNumber
+			AND @AppsMoveFundingToMainComponentAim = 1
+	'
+
+    SET @SQLString += 
+        N'
+		LEFT JOIN #Employers EMPN
+			ON EMPN.EmployerEDRS = LDR.LearnDel_EmpID
+		LEFT JOIN #Partners PAR
+			ON PAR.PartnerUKPRN = 
+				CASE
+					WHEN LD.LearnAimRef = ''ZPROG001'' THEN PTR.PartnerUKPRN
+					ELSE LD.PartnerUKPRN
+				END 
+		LEFT JOIN #Ethnicities ETH
+			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
+		LEFT JOIN #Disabilities DIS
+			ON DIS.Code = LLDD.LLDDCat
+		LEFT JOIN #HighValueCourses HVC
+			ON HVC.LearnAimRef = LD.LearnAimRef
+		LEFT JOIN #DestinationProgressionOutcomes DES
+			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
+			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
+		LEFT JOIN #CarryIn FM35CI
+			ON FM35CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
+			AND FM35CI.AimSeqNumber = LD.AimSeqNumber
+
+		--WHERE
+			--L.LearnRefNumber = ''11024003''
+	'
+
+
+
+	SET @SQLString += 
+        N'
+		INSERT INTO ' + @FISOutputTableLocation + '[' + @FISOutputTableName + 'Extra] WITH (TABLOCKX)
+		SELECT
+			AcademicYear = @AcademicYear,
+            ProviderNumber = SRC.UKPRN,
+			ILRReturn = @ILRReturn,
+			IsFinalReturn = @IsFinalReturn,
+			ILRReturnDate = DATEADD ( MS, - DATEPART ( MS, SRC.DateTime ), SRC.DateTime ), --Remove milliseconds as SSRS truncates these in parameters
+			LearnRefNumber = L.LearnRefNumber,
+			AimSeqNumber = LD.AimSeqNumber,
 	'
 
     SET @SQLString += 
@@ -7251,141 +7999,6 @@ BEGIN
 			AND LDR.AimSeqNumber = LD.AimSeqNumber
 		INNER JOIN ' + @FISDatabase + '.dbo.Valid_Source SRC
 			ON 1 = 1
-		INNER JOIN #HybridEndYears EY
-			ON EY.LearnRefNumber = LD.LearnRefNumber
-			AND EY.AimSeqNumber = LD.AimSeqNumber
-	'
-    
-    SET @SQLString += 
-		N'
-		INNER JOIN #MainAim MA
-			ON MA.LearnRefNumber = LD.LearnRefNumber
-			AND MA.RowNumLearner = 1
-	'
-
-    SET @SQLString += 
-        N'
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LearningDeliveryFAM FFI
-			ON FFI.LearnRefNumber = LD.LearnRefNumber
-			AND FFI.AimSeqNumber = LD.AimSeqNumber
-			AND FFI.LearnDelFAMType = ''FFI''
-
-		LEFT JOIN (
-			SELECT
-				LearnerRef = EMP.LearnRefNumber,
-				EmpStatusCode = EMP.EmpStat,
-				EmpStatusName = 
-					CASE
-						WHEN EMP.EmpStat = 10 THEN ''InEmp''
-						WHEN EMP.EmpStat = 11 THEN ''NoEmpLooking''
-						WHEN EMP.EmpStat = 12 THEN ''NoEmpNotLooking''
-						WHEN EMP.EmpStat = 98 THEN ''Unknown''
-						ELSE ''Unknown''
-					END,
-				EmpStatusAppliesDate = EMP.DateEmpStatApp,
-				EmployerID = EMP.EmpId,
-				RowNum =
-					ROW_NUMBER () OVER (
-						PARTITION BY
-							EMP.LearnRefNumber
-						ORDER BY
-							EMP.DateEmpStatApp DESC
-					)
-			FROM ' + @FISDatabase + '.dbo.Valid_LearnerEmploymentStatus EMP
-		) EMP
-			ON EMP.LearnerRef = L.LearnRefNumber
-			AND EMP.RowNum = 1
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_LLDDandHealthProblem LLDD
-			ON LLDD.LearnRefNumber = L.LearnRefNumber
-			AND LLDD.PrimaryLLDD = 1
-		LEFT JOIN (
-			SELECT
-				PVT.LearnRefNumber,
-				PVT.DateEmpStatApp,
-				PVT.LOE,
-				PVT.LOU,
-				PVT.BSI,
-				PVT.SEM,
-				PVT.SEI,
-				PVT.EII,
-				RowNum = 
-					ROW_NUMBER () OVER (
-						PARTITION BY
-							PVT.LearnRefNumber
-						ORDER BY
-							PVT.DateEmpStatApp DESC
-					)
-			FROM (
-				SELECT
-					ESM.LearnRefNumber,
-					ESM.DateEmpStatApp,
-					ESM.ESMType,
-					ESM.ESMCode
-				FROM ' + @FISDatabase + '.dbo.Valid_EmploymentStatusMonitoring ESM
-			) ESM
-			PIVOT (
-				MAX ( ESMCode )
-				FOR ESMType IN ( [LOE], [LOU], [BSI], [SEM], [SEI], [EII] )
-			) AS PVT
-		) ESM
-			ON ESM.LearnRefNumber = L.LearnRefNumber
-			AND ESM.RowNum = 1
-    '
-
-    SET @SQLString += 
-        N'
-		LEFT JOIN (
-			SELECT
-				LearnRefNumber = OC.LearnRefNumber,
-				DPOutcomeType = OC.OutType,
-				DPOutcomeCode = OC.OutCode,
-				DPOutcomeStartDate = OC.OutStartDate,
-				DPOutcomeEndDate = OC.OutEndDate,
-				DPOutcomeCollectionDate = OC.OutCollDate,
-				RowNum = 
-					ROW_NUMBER () OVER (
-						PARTITION BY
-							OC.LearnRefNumber
-						ORDER BY
-							OC.OutCollDate DESC,
-							OC.OutStartDate DESC
-					)
-			FROM ' + @FISDatabase + '.dbo.Valid_DPOutcome OC
-		) OC
-			ON OC.LearnRefNumber = L.LearnRefNumber
-			AND OC.RowNum = 1
-		LEFT JOIN ( --Partner UKPRN not against prog aim so get this here
-			SELECT
-				LD.LearnRefNumber,
-				LD.PartnerUKPRN,
-				RowNum = ROW_NUMBER () OVER (
-					PARTITION BY
-						LD.LearnRefNumber
-					ORDER BY
-						LD.CompStatus,
-						DATEDIFF ( DAY, LD.LearnStartDate, LD.LearnPlanEndDate ) DESC,
-						LD.PartnerUKPRN
-				)
-			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-			WHERE
-				LD.PartnerUKPRN IS NOT NULL
-		) PTR
-			ON PTR.LearnRefNumber = L.LearnRefNumber
-			AND PTR.RowNum = 1
-
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMA
-			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
-			AND PSLMA.ProvSpecLearnMonOccur = ''A''
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMB
-			ON PSLMB.LearnRefNumber = LD.LearnRefNumber
-			AND PSLMB.ProvSpecLearnMonOccur = ''B''
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMC
-			ON PSLMC.LearnRefNumber = LD.LearnRefNumber
-			AND PSLMC.ProvSpecLearnMonOccur = ''C''
-		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecLearnerMonitoring PSLMD
-			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
-			AND PSLMD.ProvSpecLearnMonOccur = ''D''
-		
 		LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -7492,203 +8105,9 @@ BEGIN
     
     SET @SQLString += 
         N'
-		--Invalid Learners
-		LEFT JOIN (
-			SELECT
-				InvalidLearners = COUNT ( L.Learner_Id )
-			FROM ' + @FISDatabase + '.dbo.Invalid_Learner L
-		) INV
-			ON 1 = 1
-		LEFT JOIN #LearnerOverallDates LOD
-			ON LOD.LearnRefNumber = L.LearnRefNumber
-		LEFT JOIN #FAMLearner FAML
-			ON FAML.LearnRefNumber = L.LearnRefNumber
 		LEFT JOIN #FundModelAim FM
 			ON FM.LearnRefNumber = LD.LearnRefNumber
 			AND FM.AimSeqNumber = LD.AimSeqNumber
-		LEFT JOIN #FAMLearningDelivery FAMA
-			ON FAMA.LearnRefNumber = LD.LearnRefNumber
-			AND FAMA.AimSeqNumber = LD.AimSeqNumber
-		LEFT JOIN #Standards STD
-			ON STD.StandardCode = LD.StdCode
-		LEFT JOIN #Frameworks FW
-			ON FW.FrameworkCode = LD.FworkCode
-		LEFT JOIN #Pathways PWAY
-			ON PWAY.FrameworkCode = LD.FworkCode
-			AND PWAY.ProgType = LD.ProgType
-			AND PWAY.PathwayCode = LD.PwayCode
-		LEFT JOIN #PostCodes PC
-			ON PC.PostCode COLLATE DATABASE_DEFAULT = L.Postcode COLLATE DATABASE_DEFAULT
-			AND PC.SourceOfFunding COLLATE DATABASE_DEFAULT = ''105/107'' COLLATE DATABASE_DEFAULT
-	'
-    
-    SET @SQLString += 
-        N'
-		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
-		LEFT JOIN #CollegeStructure CS
-			ON CS.AcademicYear = @AcademicYear
-			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
-				CASE
-					WHEN @ProvSpecDelMonCourseLocation1 = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation1 = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation1 = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-				END 
-				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
-				+ CASE
-					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation2 = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation2 = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProvSpecDelMonCourseLocation2 = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''''
-				END 
-				COLLATE DATABASE_DEFAULT
-		LEFT JOIN #CollegeStructure PCS
-			ON PCS.AcademicYear = @AcademicYear
-			AND PCS.ProvSpecValue COLLATE DATABASE_DEFAULT =
-				CASE
-					WHEN @ProvSpecDelMonParentCourseLocation1 = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation1 = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation1 = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-				END 
-				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
-				+ CASE
-					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
-						PSDMA.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation2 = ''B'' THEN
-						PSDMB.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation2 = ''C'' THEN
-						PSDMC.ProvSpecDelMon
-					WHEN @ProvSpecDelMonParentCourseLocation2 = ''D'' THEN
-						PSDMD.ProvSpecDelMon
-					ELSE ''''
-				END 
-				COLLATE DATABASE_DEFAULT
-		LEFT JOIN #CollegeStructure MCS
-			ON MCS.AcademicYear = @AcademicYear
-			AND MCS.ProvSpecValue COLLATE DATABASE_DEFAULT = MA.CourseCode COLLATE DATABASE_DEFAULT
-		'
-    
-    SET @SQLString += 
-        N'
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel1Code = @EnglishCollegeLevel1Code
-		) CL1ENG
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel2Code = @EnglishCollegeLevel2Code
-		) CL2ENG
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel3Code = @EnglishCollegeLevel3Code
-		) CL3ENG
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel4Code = @EnglishCollegeLevel4Code
-		) CL4ENG
-			ON 1 = 1
-	'
-
-	SET @SQLString += 
-        N'
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel1Code = @MathsCollegeLevel1Code
-		) CL1MAT
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel2Code = @MathsCollegeLevel2Code
-		) CL2MAT
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel3Code = @MathsCollegeLevel3Code
-		) CL3MAT
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel4Code = @MathsCollegeLevel4Code
-		) CL4MAT
-			ON 1 = 1
-	'
-
-	SET @SQLString += 
-        N'
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel1Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel1Code = @PartnerCollegeLevel1Code
-		) CL1PAR
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel2Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel2Code = @PartnerCollegeLevel2Code
-		) CL2PAR
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel3Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel3Code = @PartnerCollegeLevel3Code
-		) CL3PAR
-			ON 1 = 1
-		LEFT JOIN (
-			SELECT
-				CollegeLevelName = MIN ( CS.CollegeLevel4Name )
-			FROM #CollegeStructure CS
-			WHERE
-				CS.CollegeLevel4Code = @PartnerCollegeLevel4Code
-		) CL4PAR
-			ON 1 = 1
 	'
 
     SET @SQLString += 
@@ -7719,12 +8138,6 @@ BEGIN
 					ELSE ''''
 				END 
 				COLLATE DATABASE_DEFAULT
-	'
-    
-    SET @SQLString += 
-        N'
-        LEFT JOIN #Providers PROV
-			ON PROV.ProviderUKPRN = SRC.UKPRN
 	'
 
     SET @SQLString += 
@@ -7917,14 +8330,6 @@ BEGIN
 				END = 1
 			AND LD.AimSeqNumber = MAFM.AimSeqNumber
 	'
-
-    SET @SQLString += 
-        N'
-		LEFT JOIN #FM36PriceEpisode FM36PE
-			ON FM36PE.LearnRefNumber = FM36.LearnRefNumber
-			AND FM36PE.AimSeqNumber = FM36.AimSeqNumber
-			AND FM36PE.RowNum = 1
-	'
     
     SET @SQLString += 
         N'
@@ -7941,30 +8346,6 @@ BEGIN
 			AND FM36PM.PwayCode = COALESCE ( LD.PwayCode, 0 )
 			AND LD.AimSeqNumber = MAFMA.AimSeqNumber
 			AND @AppsMoveFundingToMainComponentAim = 1
-	'
-
-    SET @SQLString += 
-        N'
-		LEFT JOIN #Employers EMPN
-			ON EMPN.EmployerEDRS = LDR.LearnDel_EmpID
-		LEFT JOIN #Partners PAR
-			ON PAR.PartnerUKPRN = 
-				CASE
-					WHEN LD.LearnAimRef = ''ZPROG001'' THEN PTR.PartnerUKPRN
-					ELSE LD.PartnerUKPRN
-				END 
-		LEFT JOIN #Ethnicities ETH
-			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
-		LEFT JOIN #Disabilities DIS
-			ON DIS.Code = LLDD.LLDDCat
-		LEFT JOIN #HighValueCourses HVC
-			ON HVC.LearnAimRef = LD.LearnAimRef
-		LEFT JOIN #DestinationProgressionOutcomes DES
-			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
-			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
-		LEFT JOIN #CarryIn FM35CI
-			ON FM35CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
-			AND FM35CI.AimSeqNumber = LD.AimSeqNumber
 
 		--WHERE
 			--L.LearnRefNumber = ''11024003''
