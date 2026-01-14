@@ -1,2 +1,2 @@
---Parameters are: Name of ILR Database Created by FIS | Academic Year | Return | If Final Return | Replace/Insert Data
+--Parameters are: Name of ILR Database Created by FIS [ILR2526] | Academic Year [25/26] | Return [R14] | If Final Return [1/0] | [R]eplace/[I]nsert Data
 EXEC SPR_Run_FIS_FundingData 'ILR2324', '23/24', 'R14', 1, 'I'
