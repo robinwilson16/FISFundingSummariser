@@ -1,0 +1,11 @@
+CREATE OR ALTER VIEW [dbo].[VW_FIS_AdvancedMathsPremium]
+AS
+	--https://www.gov.uk/government/publications/qualifications-attracting-high-value-courses-premium
+	SELECT
+		AcademicYear = '25/26',
+		LearnAimRef = LTRIM ( STR ( AMP.[Qualification number], 25, 0 ) )
+	FROM FIS_AdvancedMathsPremium2526 AMP
+	WHERE
+		AMP.[Qualification number] IS NOT NULL
+	--ORDER BY
+	--	AMP.[Qualification number]
