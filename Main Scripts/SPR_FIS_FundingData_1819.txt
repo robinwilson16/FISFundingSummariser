@@ -6143,7 +6143,7 @@ BEGIN
 					WHEN FM25.RateBand LIKE ''%Band 1%'' THEN COALESCE ( @EnglishMathsFundingHigherRate, 0 ) * FM25.FullTimeEquiv
 					ELSE 0
 				END,
-			LearnerEnglishMathsInstances = COALESCE ( FM25.LearnerEnglishMathsInstances, 0 ),
+			LearnerEnglishMathsInstances = 1,
 			Block1DisadvUplift = COALESCE ( FM25.Block1DisadvUpliftNew, 0 ),
 			Block2DisadvFundingRate = 
 				CASE
