@@ -211,8 +211,6 @@ BEGIN
 		SELECT
 			HRS.AcademicYear,
 			HRS.ProvSpecValue,
-			HRS.CourseCode,
-			HRS.CourseInstance,
 			HRS.PlannedHours,
 			HRS.EEPHours,
 			HRS.TLevelHours
@@ -6945,7 +6943,7 @@ BEGIN
 		LEFT JOIN #DestinationProgressionOutcomes DES
 			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
 			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
-		LEFT JOIN #CarryIn FM35CI
+		LEFT JOIN #FM35CarryIn FM35CI
 			ON FM35CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
 			AND FM35CI.AimSeqNumber = LD.AimSeqNumber
 

@@ -218,7 +218,6 @@ BEGIN
 		SELECT
 			HRS.AcademicYear,
 			HRS.ProvSpecValue,
-			HRS.CourseCode,
 			HRS.PlannedHours,
 			HRS.EEPHours,
 			HRS.TLevelHours
