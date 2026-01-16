@@ -1381,7 +1381,7 @@ BEGIN
 							DATEDIFF ( DAY, LD.LearnStartDate, COALESCE ( LD.LearnActEndDate, LD.LearnPlanEndDate ) ) DESC,
 							LD.LearnStartDate,
 							LD.AimSeqNumber
-					),
+					)
 				INTO #MainAim
 	'
     
