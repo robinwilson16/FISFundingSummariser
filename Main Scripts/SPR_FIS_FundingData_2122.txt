@@ -4783,6 +4783,7 @@ BEGIN
 					WHEN 
 						FM.AimStart = 1
 						AND LD.CompStatus IN ( 1, 2, 3 )
+						AND FM.Transfer = 0
 						THEN 1
 					ELSE 0
 				END,
@@ -4797,6 +4798,7 @@ BEGIN
 						END = 0
 						AND FM.AimStart = 1
 						AND LD.CompStatus IN ( 1, 2, 3 )
+						AND FM.Transfer = 0
 						THEN 1
 					ELSE 0
 				END,
