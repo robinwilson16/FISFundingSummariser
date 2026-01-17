@@ -4809,7 +4809,7 @@ BEGIN
 					WHEN 
 						FM.AimStart = 1
 						AND LD.CompStatus IN ( 1, 2 )
-						AND NOT LD.Outcome = 3
+						AND COALESCE ( LD.Outcome, 0 ) <> 3
 						THEN 1
 					ELSE 0
 				END,
@@ -4824,7 +4824,7 @@ BEGIN
 						END = 0
 						AND FM.AimStart = 1
 						AND LD.CompStatus IN ( 1, 2 )
-						AND NOT LD.Outcome = 3
+						AND COALESCE ( LD.Outcome, 0 ) <> 3
 						THEN 1
 					ELSE 0
 				END,

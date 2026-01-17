@@ -1,5 +1,5 @@
 DECLARE @AcademicYear NVARCHAR(5) = '25/26'
-DECLARE @ILRReturn NVARCHAR(3) = 'R03'
+DECLARE @ILRReturn NVARCHAR(3) = 'R05'
 DECLARE @IsFinalReturn BIT = 1
 
 
