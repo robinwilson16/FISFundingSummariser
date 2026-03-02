@@ -1,0 +1,6 @@
+CREATE TABLE FIS_1619RateBands (
+	AcademicYear NVARCHAR(5) NOT NULL,
+	RateBand NVARCHAR(2) NOT NULL,
+	NationalFundingRate INT NOT NULL,
+	CONSTRAINT FIS_1619RateBands_PK PRIMARY KEY (AcademicYear, RateBand)
+)
