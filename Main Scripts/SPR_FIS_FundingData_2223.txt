@@ -4388,12 +4388,12 @@ BEGIN
 						CASE
 							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
 							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
-						END <= 24 THEN ''19-24''
+						END <= 23 THEN ''19-23''
 					WHEN
 						CASE
 							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN ''20'' + LEFT ( @AcademicYear, 2 ) - YEAR ( L.DateOfBirth )
 							ELSE CAST (''20'' + LEFT ( @AcademicYear, 2 ) - 1 AS INT ) - YEAR ( L.DateOfBirth )
-						END >= 25 THEN ''25+''
+						END >= 24 THEN ''24+''
 					ELSE ''-''
 				END,
 			AgeGroupEarliestStartYear = 
@@ -4412,12 +4412,12 @@ BEGIN
 						CASE
 							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
 							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
-						END <= 24 THEN ''19-24''
+						END <= 23 THEN ''19-23''
 					WHEN
 						CASE
 							WHEN MONTH ( L.DateOfBirth ) <= 8 THEN YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - YEAR ( L.DateOfBirth )
 							ELSE YEAR ( COALESCE ( LOD.EarliestStartDate, LD.LearnStartDate ) ) - 1 - YEAR ( L.DateOfBirth )
-						END >= 25 THEN ''25+''
+						END >= 24 THEN ''24+''
 					ELSE ''-''
 				END,
 	'
