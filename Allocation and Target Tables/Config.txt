@@ -1,0 +1,8 @@
+CREATE TABLE Config (
+	ConfigID NVARCHAR(50),
+	Description NVARCHAR(200),
+	Value NVARCHAR(10),
+	CONSTRAINT Config_PK PRIMARY KEY CLUSTERED (
+		ConfigID ASC
+	)
+)

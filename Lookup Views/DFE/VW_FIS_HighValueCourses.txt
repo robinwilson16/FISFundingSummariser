@@ -1,4 +1,4 @@
-CREATE OR ALTER VIEW [dbo].[VW_FIS_HighValueCourses]
+CREATE OR ALTER VIEW W_FIS_HighValueCourses
 AS
 	--https://www.gov.uk/government/publications/qualifications-attracting-high-value-courses-premium
 	SELECT
