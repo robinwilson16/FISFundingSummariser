@@ -1,4 +1,4 @@
-CREATE VIEW [dbo].[VW_FIS_CollegeStructure]
+CREATE OR ALTER VIEW VW_FIS_CollegeStructure
 AS
     SELECT DISTINCT
 		AcademicYear = CRS.AcademicYearID,

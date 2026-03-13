@@ -1,4 +1,4 @@
-CREATE VIEW VW_FIS_Pathways
+CREATE OR ALTER VIEW VW_FIS_Pathways
 AS
 	SELECT
 		FrameworkCode = PWAY.Framework_Code,

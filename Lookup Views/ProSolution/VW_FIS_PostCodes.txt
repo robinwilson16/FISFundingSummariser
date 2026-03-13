@@ -1,4 +1,4 @@
-CREATE VIEW [dbo].[VW_FIS_PostCodes]
+CREATE OR ALTER VIEW VW_FIS_PostCodes
 AS
 	SELECT
 		PostCode = PCW.Postcode,
@@ -13,6 +13,6 @@ AS
 		--UpliftApp = COALESCE ( PCU.APP_FUNDING_UPLIFT, 1 ),
 		SourceOfFunding = CAST ( NULL AS VARCHAR(50) ),
 		DisadvUplift = COALESCE ( PCU.EFA_UPLIFT, 1 )
-	FROM ProGeneral.dbo.PostCodeWard PCW
-	LEFT JOIN ProGeneral.dbo.PostCodeUplift PCU
+	FROM [dbs-mis-02\advanced].ProGeneral.dbo.PostCodeWard PCW
+	LEFT JOIN [dbs-mis-02\advanced].ProGeneral.dbo.PostCodeUplift PCU
 		ON  PCU.POSTCODE = PCW.Postcode

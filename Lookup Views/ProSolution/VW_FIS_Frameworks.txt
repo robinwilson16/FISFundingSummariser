@@ -1,6 +1,6 @@
-CREATE VIEW [dbo].[VW_FIS_Frameworks]
+CREATE OR ALTER VIEW VW_FIS_Frameworks
 AS
 	SELECT DISTINCT
 		FrameworkCode = FW.Framework_Code,
 		FrameworkName = FW.Framework_Desc
-	FROM besql05.ProGeneral.dbo.Frameworks_QSR FW
+	FROM [dbs-mis-02\advanced].ProGeneral.dbo.Frameworks_QSR FW

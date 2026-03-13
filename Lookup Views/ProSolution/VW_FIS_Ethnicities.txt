@@ -1,4 +1,4 @@
-CREATE VIEW VW_FIS_Ethnicities
+CREATE OR ALTER VIEW VW_FIS_Ethnicities
 AS
 	SELECT
 		Code = ETH.EthnicGroupID,

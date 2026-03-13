@@ -1,4 +1,4 @@
-CREATE VIEW VW_FIS_DestinationProgressionOutcomes
+CREATE OR ALTER VIEW VW_FIS_DestinationProgressionOutcomes
 AS
 	SELECT
 		OutcomeCode = RIGHT ( RTRIM ( DES.Code ), 1 ),

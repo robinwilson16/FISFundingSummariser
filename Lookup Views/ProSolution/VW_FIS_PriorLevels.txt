@@ -1,4 +1,4 @@
-CREATE VIEW VW_FIS_PriorLevels
+CREATE OR ALTER VIEW VW_FIS_PriorLevels
 AS
 	SELECT
 		Code = LEV.PriorLevelID,

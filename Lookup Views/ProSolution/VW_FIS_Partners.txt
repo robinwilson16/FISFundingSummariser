@@ -1,4 +1,4 @@
-CREATE VIEW VW_FIS_Partners
+CREATE OR ALTER VIEW VW_FIS_Partners
 AS
 	SELECT
 		PartnerUKPRN = LTRIM ( RTRIM ( COALESCE ( ORG.FranchPartnerRef, ORG.UKPRN, ORG.OrganisationRef ) ) ),
