@@ -1250,6 +1250,7 @@ BEGIN
         N'
 			FundLine = FM.FundLine,
 			FundStart = FM.FundStart,
+			IsCoreAim = FM.IsCoreAim,
 			AimStart = 
 				CASE
 					WHEN FM.IsWithdrawnPreEligibility = 1 THEN 0
@@ -1322,6 +1323,7 @@ BEGIN
 							LD.LearnRefNumber
 						ORDER BY
 							FM.FundStart DESC,
+							FM.IsCoreAim DESC,
 							LD.CompStatus,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
@@ -1354,6 +1356,7 @@ BEGIN
 							FM.FundLine
 						ORDER BY
 							FM.FundStart DESC,
+							FM.IsCoreAim DESC,
 							LD.CompStatus,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
@@ -1390,6 +1393,7 @@ BEGIN
 							COALESCE ( LD.PwayCode, 0 )
 						ORDER BY
 							FM.FundStart DESC,
+							FM.IsCoreAim DESC,
 							LD.CompStatus,
 							CASE
 								--In case learners in gateway so only parent active but have started something else
