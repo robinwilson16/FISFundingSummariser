@@ -1,12 +1,10 @@
 /*
-Changes since 18/19
-Tables now generated directly to SQL Server. Schema was always dbo. but now first part of table name is the schema
-e.g. dbo.Valid_Learner in 18/19 to Valid.Learner in 19/20
-DV_Learner and DV_LearningDelivery tables no longer populated so must calculate age and would need to use LARS for First Full L2/L3 Status
-Apprenticeships now also split into additional Employer on App Service so amended FundLineSummary field to split these out
+Changes since 20/21
+PriorLevel added
+ILRReturnDate now contains milliseconds
 */
 
-CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_1920
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2122
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -75,10 +73,10 @@ BEGIN
 	 ***********************************************************************************/
 
 	--Name of the database created by the FIS software (default is ILRXXYY where XXYY is the return year)
-	DECLARE @FISDatabase NVARCHAR(100) = 'ILR1920' 
+	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2122' 
 
 	--Academic year used for reporting outputs (e.g. XX/YY)
-	DECLARE @AcademicYear NVARCHAR(5) = '19/20' 
+	DECLARE @AcademicYear NVARCHAR(5) = '21/22' 
 
 
 
@@ -1378,7 +1376,7 @@ BEGIN
 							LD.LearnStartDate,
 							LD.AimSeqNumber
 					),
-				RowNumFundLine = 
+				RowNumFundLineApps = 
 					ROW_NUMBER () OVER ( 
 						PARTITION BY
 							LD.LearnRefNumber,
@@ -1453,7 +1451,11 @@ BEGIN
 						WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 							PSDMD.ProvSpecDelMon
 					END 
-					+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					+ CASE
+						WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+							COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+						ELSE ''''
+					END
 					+ CASE
 						WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -4460,9 +4462,9 @@ BEGIN
 			EmployIntensityInd = ESM.EII,
 			IsFirstFullLevel2 = NULL,
 			IsFirstFullLevel3 = NULL,
-			PriorLevelCode = NULL,
-			PriorLevelName = NULL,
-			PriorLevelDate = NULL,
+			PriorLevelCode = ATN.PriorLevel,
+			PriorLevelName = PLEV.Description,
+			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
 			LLDDHealthProb = L.LLDDHealthProb,
@@ -5795,7 +5797,7 @@ BEGIN
 			FrameworkName = COALESCE ( FW.FrameworkName, CASE WHEN LD.FworkCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
 			PathwayCode = LD.PwayCode,
 			PathwayName = COALESCE ( PWAY.PathwayName, CASE WHEN LD.PwayCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
-			OffTheJobActualHours = NULL,
+			OffTheJobActualHours = LD.OTJActHours,
 			EmployerID = EMP.EmployerID,
 			EmployerName = EMPN.EmployerName,
 			PartnerCode = 
@@ -6408,6 +6410,25 @@ BEGIN
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
+		LEFT JOIN (
+			SELECT
+				ATN.UKPRN,
+				ATN.LearnRefNumber,
+				ATN.PriorLevel,
+				ATN.DateLevelApp,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							ATN.UKPRN,
+							ATN.LearnRefNumber
+						ORDER BY
+							ATN.DateLevelApp DESC
+					)
+			FROM ' + @FISDatabase + '.Valid.LearnerPriorAttain ATN
+		) ATN
+			ON ATN.LearnRefNumber = L.LearnRefNumber
+			AND ATN.UKPRN = L.UKPRN
+			AND ATN.RowNum = 1
 		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
@@ -6498,7 +6519,7 @@ BEGIN
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMD
 			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMD.ProvSpecLearnMonOccur = ''D''
-		
+
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -6668,7 +6689,11 @@ BEGIN
 					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -6694,7 +6719,11 @@ BEGIN
 					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -7082,9 +7111,11 @@ BEGIN
 				CASE
 					WHEN LD.LearnAimRef = ''ZPROG001'' THEN PTR.PartnerUKPRN
 					ELSE LD.PartnerUKPRN
-				END 
+				END
 		LEFT JOIN #Ethnicities ETH
 			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
+		LEFT JOIN #PriorLevels PLEV
+			ON PLEV.Code = ATN.PriorLevel
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN (
@@ -8180,7 +8211,6 @@ BEGIN
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		INNER JOIN ' + @FISDatabase + '.Valid.Source SRC
 			ON 1 = 1
-
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -8565,10 +8595,8 @@ BEGIN
 		@FISOutputTableName NVARCHAR(200),
 		@ProvSpecDelMonCourseLocation1 NCHAR(1),
 		@ProvSpecDelMonCourseLocation2 NCHAR(1),
-		@ProvSpecDelMonCourseSeperator NVARCHAR(50),
 		@ProvSpecDelMonParentCourseLocation1 NCHAR(1),
 		@ProvSpecDelMonParentCourseLocation2 NCHAR(1),
-		@ProvSpecDelMonParentCourseSeperator NVARCHAR(50),
 		@EnglishCollegeLevel1Code NVARCHAR(50),
 		@EnglishCollegeLevel2Code NVARCHAR(50),
 		@EnglishCollegeLevel3Code NVARCHAR(50),

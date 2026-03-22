@@ -1,11 +1,4 @@
-/*
-Changes since 17/18
-EFA_ and SFA_ tables renamed to FM25_ and FM_35
-LearnDelLearnAddPayment added in FM36 table (Rulebase_AEC_LearningDelivery_Period)
-Campus ID added
-*/
-
-CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_1819
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_1718
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -74,10 +67,10 @@ BEGIN
 	 ***********************************************************************************/
 
 	--Name of the database created by the FIS software (default is ILRXXYY where XXYY is the return year)
-	DECLARE @FISDatabase NVARCHAR(100) = 'ILR1819' 
+	DECLARE @FISDatabase NVARCHAR(100) = 'ILR1718' 
 
 	--Academic year used for reporting outputs (e.g. XX/YY)
-	DECLARE @AcademicYear NVARCHAR(5) = '18/19' 
+	DECLARE @AcademicYear NVARCHAR(5) = '17/18' 
 
 
 
@@ -597,7 +590,7 @@ BEGIN
 		LEFT JOIN #FM25LearnerStarts DUR
 			ON DUR.LearnRefNumber = L.LearnRefNumber
 		--AEB (Adult Education Budget) and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 		LEFT JOIN (
@@ -1036,11 +1029,11 @@ BEGIN
 		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 		--AEB (Adult Education Budget) and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 		--Apps
@@ -1117,7 +1110,7 @@ BEGIN
 				TotalEarnedCash = MAX ( FM25.OnProgPayment ),
 				IsFunded = MAX ( CAST ( FM25.StartFund AS INT ) )
 			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				ON FM25.LearnRefNumber = LD.LearnRefNumber
 			LEFT JOIN ' + @FISDatabase + '.dbo.Valid_ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
@@ -1200,7 +1193,7 @@ BEGIN
 				FROM (
 					SELECT DISTINCT
 						FM25.RateBand
-					FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+					FROM ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				) FM25
 			) ORD
 				ON ORD.RateBand = FM25.RateBand
@@ -1452,7 +1445,11 @@ BEGIN
 						WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 							PSDMD.ProvSpecDelMon
 					END 
-					+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					+ CASE
+						WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+							COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+						ELSE ''''
+					END
 					+ CASE
 						WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -1700,10 +1697,10 @@ BEGIN
 				ELSE 0 END )
 				INTO #FM35PeriodFunding
 			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 				ON FM35.LearnRefNumber = LD.LearnRefNumber
 				AND FM35.AimSeqNumber = LD.AimSeqNumber
-			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery_Period FM35P
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery_Period FM35P
 				ON FM35P.LearnRefNumber = FM35.LearnRefNumber
 				AND FM35P.AimSeqNumber = FM35.AimSeqNumber
 			GROUP BY
@@ -1765,9 +1762,6 @@ BEGIN
 				FM36PE.PriceEpisodeTotalPMRs,
 				FM36PE.PriceEpisodeCumulativePMRs,
 				FM36PE.PriceEpisodeCompExemCode,
-				FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
-				FM36PE.PriceEpisodeRedStartDate,
-				FM36PE.PriceEpisodeRedStatusCode,
 				RowNum =
 					ROW_NUMBER () OVER (
 						PARTITION BY
@@ -1841,7 +1835,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashToPeriod = 
@@ -1865,7 +1858,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -1909,7 +1901,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashMidYear = 
@@ -1933,7 +1924,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -1970,7 +1960,6 @@ BEGIN
 					SUM ( 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
@@ -1993,7 +1982,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 					),
 	'
 
@@ -2036,7 +2024,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP01 = 
@@ -2060,7 +2047,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2101,7 +2087,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP02 = 
@@ -2125,7 +2110,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2169,7 +2153,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP03 = 
@@ -2193,7 +2176,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2234,7 +2216,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP04 = 
@@ -2258,7 +2239,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2302,7 +2282,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP05 = 
@@ -2326,7 +2305,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2367,7 +2345,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP06 = 
@@ -2391,7 +2368,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2435,7 +2411,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP07 = 
@@ -2459,7 +2434,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2500,7 +2474,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP08 = 
@@ -2524,7 +2497,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2568,7 +2540,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP09 = 
@@ -2592,7 +2563,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2633,7 +2603,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP10 = 
@@ -2657,7 +2626,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2701,7 +2669,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP11 = 
@@ -2725,7 +2692,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2766,7 +2732,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP12 = 
@@ -2790,7 +2755,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					)
 				INTO #FM36PeriodFunding
@@ -2866,7 +2830,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashToPeriod = 
@@ -2890,7 +2853,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -2934,7 +2896,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashMidYear = 
@@ -2958,7 +2919,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -2995,7 +2955,6 @@ BEGIN
 					SUM ( 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
@@ -3018,7 +2977,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 					),
 	'
 
@@ -3061,7 +3019,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP01 = 
@@ -3085,7 +3042,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3126,7 +3082,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP02 = 
@@ -3150,7 +3105,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -3194,7 +3148,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP03 = 
@@ -3218,7 +3171,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3259,7 +3211,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP04 = 
@@ -3283,7 +3234,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -3327,7 +3277,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP05 = 
@@ -3351,7 +3300,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3392,7 +3340,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP06 = 
@@ -3416,7 +3363,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -3460,7 +3406,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP07 = 
@@ -3484,7 +3429,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3525,7 +3469,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP08 = 
@@ -3549,7 +3492,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -3593,7 +3535,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP09 = 
@@ -3617,7 +3558,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3658,7 +3598,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP10 = 
@@ -3682,7 +3621,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 	'
@@ -3726,7 +3664,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP11 = 
@@ -3750,7 +3687,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 
@@ -3791,7 +3727,6 @@ BEGIN
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				TotalEarnedCashP12 = 
@@ -3815,7 +3750,6 @@ BEGIN
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
 						+ FM36P.LearnDelSecondEmp1618Pay
-						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					)
 				INTO #FM36PeriodFundingSummary
@@ -4005,12 +3939,12 @@ BEGIN
 		INNER JOIN ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 
 		--AEB (Adult Education Budget) and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 
@@ -4311,7 +4245,7 @@ BEGIN
 								FM35.PlannedNumOnProgInstalm
 						END
 				FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-				INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+				INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 					ON FM35.LearnRefNumber = LD.LearnRefNumber
 					AND FM35.AimSeqNumber = LD.AimSeqNumber
 				WHERE
@@ -4560,7 +4494,7 @@ BEGIN
 
     SET @SQLString += 
         N'
-			CampusID = L.CampId,
+			CampusID = NULL,
 			ParentCollegeLevel1Code = COALESCE ( PCS.CollegeLevel1Code, ''-''),
 			ParentCollegeLevel1Name = COALESCE ( PCS.CollegeLevel1Name, ''-- Unknown --''),
 			ParentCollegeLevel2Code = COALESCE ( PCS.CollegeLevel2Code, ''-''),
@@ -6344,9 +6278,9 @@ BEGIN
 			AppStandardPriceEpisodeTotalPMRs = FM36PE.PriceEpisodeTotalPMRs,
 			AppStandardPriceEpisodeCumulativePMRs = FM36PE.PriceEpisodeCumulativePMRs,
 			AppStandardPriceEpisodeCompExemCode = FM36PE.PriceEpisodeCompExemCode,
-			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
-			AppStandardPriceEpisodeRedStartDate = FM36PE.PriceEpisodeRedStartDate,
-			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode
+			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = NULL,
+			AppStandardPriceEpisodeRedStartDate = NULL,
+			AppStandardPriceEpisodeRedStatusCode = NULL
 
 			--INTO FIS_FundingDataTemp
 	'
@@ -6519,13 +6453,13 @@ BEGIN
     SET @SQLString += 
         N'
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 			--AND FM25.StartFund = 1
 
 		--AEB (Adult Education Budget) and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 			--AND FM35.FundStart = 1
@@ -6546,7 +6480,7 @@ BEGIN
 			AND HE.AimSeqNumber = LD.AimSeqNumber
 	'
 
-    SET @SQLString += 
+	SET @SQLString += 
 		N'
 		LEFT JOIN (
 			SELECT
@@ -6651,7 +6585,11 @@ BEGIN
 					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -6677,7 +6615,11 @@ BEGIN
 					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -6849,8 +6791,8 @@ BEGIN
 				FM25.RateBand,
 				ORD.RateBandOrder,
 				TFerOnly = CASE WHEN ACT.LearnRefNumber IS NULL THEN 1 ELSE 0 END,
-				PlannedHours = COALESCE ( SUM ( CH.PlannedHours ), 0 ),
-				EEPHours = COALESCE ( SUM ( CH.EEPHours ), 0 ),
+				PLH = COALESCE ( SUM ( CH.PlannedHours ), 0 ),
+				EEP = COALESCE ( SUM ( CH.EEPHours ), 0 ),
 				TLevelHours = COALESCE ( SUM ( CH.TLevelHours ), 0 ),
 				OnProgPayment = 
 					MAX ( FM25.OnProgPayment )
@@ -6870,7 +6812,7 @@ BEGIN
 				TotalEarnedCash = MAX ( FM25.OnProgPayment ),
 				IsFunded = MAX ( CAST ( FM25.StartFund AS INT ) )
 			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				ON FM25.LearnRefNumber = LD.LearnRefNumber
 			LEFT JOIN #FundModelAim FM
 				ON FM.LearnRefNumber = LD.LearnRefNumber
@@ -6958,7 +6900,7 @@ BEGIN
 				FROM (
 					SELECT DISTINCT
 						FM25.RateBand
-					FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+					FROM ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				) FM25
 			) ORD
 				ON ORD.RateBand = FM25.RateBand
@@ -7072,7 +7014,7 @@ BEGIN
 		LEFT JOIN (
 			SELECT
 				Learners = COUNT ( FM25.LearnRefNumber )
-			FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			FROM ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 			WHERE
 				FM25.StartFund = 1
 		) FM25LRNS
@@ -7110,7 +7052,7 @@ BEGIN
 		LEFT JOIN #DestinationProgressionOutcomes DES
 			ON DES.OutcomeType COLLATE DATABASE_DEFAULT = OC.DPOutcomeType COLLATE DATABASE_DEFAULT
 			AND TRY_CAST ( DES.OutcomeCode AS INT ) = OC.DPOutcomeCode
-		LEFT JOIN #CarryIn FM35CI
+		LEFT JOIN #FM35CarryIn FM35CI
 			ON FM35CI.LearnRefNumber COLLATE DATABASE_DEFAULT = LD.LearnRefNumber COLLATE DATABASE_DEFAULT
 			AND FM35CI.AimSeqNumber = LD.AimSeqNumber
 
@@ -8188,13 +8130,13 @@ BEGIN
     SET @SQLString += 
         N'
 		--16-19
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
 			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 			--AND FM25.StartFund = 1
 
 		--AEB (Adult Education Budget) and Legacy Apps
-		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM35_LearningDelivery FM35
+		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_SFA_LearningDelivery FM35
 			ON FM35.LearnRefNumber = LD.LearnRefNumber
 			AND FM35.AimSeqNumber = LD.AimSeqNumber
 			--AND FM35.FundStart = 1
@@ -8215,7 +8157,7 @@ BEGIN
 			AND HE.AimSeqNumber = LD.AimSeqNumber
 	'
 
-    SET @SQLString += 
+	SET @SQLString += 
 		N'
 		LEFT JOIN (
 			SELECT
@@ -8318,8 +8260,8 @@ BEGIN
 				FM25.RateBand,
 				ORD.RateBandOrder,
 				TFerOnly = CASE WHEN ACT.LearnRefNumber IS NULL THEN 1 ELSE 0 END,
-				PlannedHours = COALESCE ( SUM ( CH.PlannedHours ), 0 ),
-				EEPHours = COALESCE ( SUM ( CH.EEPHours ), 0 ),
+				PLH = COALESCE ( SUM ( CH.PlannedHours ), 0 ),
+				EEP = COALESCE ( SUM ( CH.EEPHours ), 0 ),
 				TLevelHours = COALESCE ( SUM ( CH.TLevelHours ), 0 ),
 				OnProgPayment = 
 					MAX ( FM25.OnProgPayment )
@@ -8339,7 +8281,7 @@ BEGIN
 				TotalEarnedCash = MAX ( FM25.OnProgPayment ),
 				IsFunded = MAX ( CAST ( FM25.StartFund AS INT ) )
 			FROM ' + @FISDatabase + '.dbo.Valid_LearningDelivery LD
-			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+			INNER JOIN ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				ON FM25.LearnRefNumber = LD.LearnRefNumber
 			LEFT JOIN #FundModelAim FM
 				ON FM.LearnRefNumber = LD.LearnRefNumber
@@ -8427,7 +8369,7 @@ BEGIN
 				FROM (
 					SELECT DISTINCT
 						FM25.RateBand
-					FROM ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
+					FROM ' + @FISDatabase + '.dbo.Rulebase_EFA_Learner FM25
 				) FM25
 			) ORD
 				ON ORD.RateBand = FM25.RateBand

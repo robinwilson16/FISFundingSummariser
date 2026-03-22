@@ -1,10 +1,9 @@
 /*
-Changes since 20/21
-PriorLevel added
-ILRReturnDate now contains milliseconds
+Changes since 21/22
+
 */
 
-CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2122
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2223
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -73,10 +72,10 @@ BEGIN
 	 ***********************************************************************************/
 
 	--Name of the database created by the FIS software (default is ILRXXYY where XXYY is the return year)
-	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2122' 
+	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2223' 
 
 	--Academic year used for reporting outputs (e.g. XX/YY)
-	DECLARE @AcademicYear NVARCHAR(5) = '21/22' 
+	DECLARE @AcademicYear NVARCHAR(5) = '22/23' 
 
 
 
@@ -1451,7 +1450,11 @@ BEGIN
 						WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 							PSDMD.ProvSpecDelMon
 					END 
-					+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					+ CASE
+						WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+							COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+						ELSE ''''
+					END
 					+ CASE
 						WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -4579,7 +4582,7 @@ BEGIN
 			ParentCollegeLevel4Name = COALESCE ( PCS.CollegeLevel4Name, ''-- Unknown --''),
     '
 
-    SET @SQLString += 
+   SET @SQLString += 
         N'
 			CollegeLevel1Code = 
 				COALESCE (
@@ -5766,7 +5769,7 @@ BEGIN
 
 	'
 
-    SET @SQLString += 
+	SET @SQLString += 
         N'
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
@@ -6351,7 +6354,7 @@ BEGIN
 			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
 			AppStandardPriceEpisodeRedStartDate = FM36PE.PriceEpisodeRedStartDate,
 			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode
-
+    
 			--INTO FIS_FundingDataTemp
 	'
     
@@ -6502,7 +6505,7 @@ BEGIN
 		) PTR
 			ON PTR.LearnRefNumber = L.LearnRefNumber
 			AND PTR.RowNum = 1
-
+		
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMA
 			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMA.ProvSpecLearnMonOccur = ''A''
@@ -6685,7 +6688,11 @@ BEGIN
 					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -6711,7 +6718,11 @@ BEGIN
 					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -8546,7 +8557,7 @@ BEGIN
 			AND FM36PM.PwayCode = COALESCE ( LD.PwayCode, 0 )
 			AND LD.AimSeqNumber = MAFMA.AimSeqNumber
 			AND @AppsMoveFundingToMainComponentAim = 1
-
+   
 		--WHERE
 			--L.LearnRefNumber = ''11024003''
 	'
@@ -8583,8 +8594,10 @@ BEGIN
 		@FISOutputTableName NVARCHAR(200),
 		@ProvSpecDelMonCourseLocation1 NCHAR(1),
 		@ProvSpecDelMonCourseLocation2 NCHAR(1),
+		@ProvSpecDelMonCourseSeperator NVARCHAR(50),
 		@ProvSpecDelMonParentCourseLocation1 NCHAR(1),
 		@ProvSpecDelMonParentCourseLocation2 NCHAR(1),
+		@ProvSpecDelMonParentCourseSeperator NVARCHAR(50),
 		@EnglishCollegeLevel1Code NVARCHAR(50),
 		@EnglishCollegeLevel2Code NVARCHAR(50),
 		@EnglishCollegeLevel3Code NVARCHAR(50),

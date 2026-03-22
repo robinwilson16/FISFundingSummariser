@@ -1,10 +1,10 @@
 /*
-Changes since 19/20
-Database collation changed to SQL_Latin1_General_CP1_CI_AS
-Added LearningDelivery.OTJActHours
+Changes since 22/23
+HE Percent Taught First, Second and Third LDCS Deprecated and Removed
+
 */
 
-CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2021
+CREATE OR ALTER PROCEDURE dbo.SPR_FIS_FundingData_2324
 	@FISDatabase NVARCHAR(50),
 	@AcademicYear NVARCHAR(5),
 	@ILRReturn NVARCHAR(3),
@@ -73,10 +73,10 @@ BEGIN
 	 ***********************************************************************************/
 
 	--Name of the database created by the FIS software (default is ILRXXYY where XXYY is the return year)
-	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2021' 
+	DECLARE @FISDatabase NVARCHAR(100) = 'ILR2324' 
 
 	--Academic year used for reporting outputs (e.g. XX/YY)
-	DECLARE @AcademicYear NVARCHAR(5) = '20/21' 
+	DECLARE @AcademicYear NVARCHAR(5) = '23/24' 
 
 
 
@@ -1451,7 +1451,11 @@ BEGIN
 						WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 							PSDMD.ProvSpecDelMon
 					END 
-					+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					+ CASE
+						WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+							COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+						ELSE ''''
+					END
 					+ CASE
 						WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 							PSDMA.ProvSpecDelMon
@@ -1719,9 +1723,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Price Episode
-		DROP TABLE IF EXISTS #FM36PriceEpisode
-		SELECT
+			--Fund Model 36 Price Episode
+			DROP TABLE IF EXISTS #FM36PriceEpisode
+			SELECT
 				FM36PE.UKPRN,
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
@@ -1798,9 +1802,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Period Funding
-		DROP TABLE IF EXISTS #FM36PeriodFunding
-		SELECT
+			--Fund Model 36 Period Funding
+			DROP TABLE IF EXISTS #FM36PeriodFunding
+			SELECT
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
 				LearnAimRef = LD.LearnAimRef,
@@ -2826,9 +2830,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Period Funding Summary
-		DROP TABLE IF EXISTS #FM36PeriodFundingSummary
-		SELECT
+			--Fund Model 36 Period Funding Summary
+			DROP TABLE IF EXISTS #FM36PeriodFundingSummary
+			SELECT
 				LearnRefNumber = LD.LearnRefNumber,
 				FundModel = LD.FundModel,
 				StdCode = COALESCE ( LD.StdCode, 0 ),
@@ -4045,6 +4049,7 @@ BEGIN
 			L.LearnRefNumber
 	'
 
+
 	SET @SQLString += 
         N'
 		DROP TABLE IF EXISTS #FAMLearner
@@ -4458,9 +4463,9 @@ BEGIN
 			EmployIntensityInd = ESM.EII,
 			IsFirstFullLevel2 = NULL,
 			IsFirstFullLevel3 = NULL,
-			PriorLevelCode = NULL,
-			PriorLevelName = NULL,
-			PriorLevelDate = NULL,
+			PriorLevelCode = ATN.PriorLevel,
+			PriorLevelName = PLEV.Description,
+			PriorLevelDate = ATN.DateLevelApp,
 			EthnicityCode = L.Ethnicity,
 			EthnicityName = ETH.Description,
 			LLDDHealthProb = L.LLDDHealthProb,
@@ -4579,7 +4584,7 @@ BEGIN
 			ParentCollegeLevel4Name = COALESCE ( PCS.CollegeLevel4Name, ''-- Unknown --''),
     '
 
-   SET @SQLString += 
+    SET @SQLString += 
         N'
 			CollegeLevel1Code = 
 				COALESCE (
@@ -4713,7 +4718,7 @@ BEGIN
 			MainAimIsMathsAndEnglish = COALESCE ( MA.IsMathsAndEnglish, AIM.IsMathsAndEnglish ),
 	'
 
-	 SET @SQLString += 
+	SET @SQLString += 
         N'
 			CompletionStatusCode = LD.CompStatus,
 			CompletionStatusName = 
@@ -5807,6 +5812,7 @@ BEGIN
 			ProgWeightFactor = FM35.ApplicProgWeightFact,
 			UnweightFundRate = FM35.ApplicUnweightFundRate,
 			WeightFundRate = FM35.ApplicWeightFundRate,
+
 			CoFundingIndicator = 
 				CASE
 					WHEN FFI.LearnDelFAMCode IS NULL THEN NULL
@@ -5831,9 +5837,9 @@ BEGIN
 			HEYearStu = HE.YEARSTU,
 			HEMajorSourceStuFee = HE.MSTUFEE,
 			HEPercentageNotTaught = HE.PCOLAB,
-			HEPercentTaughtFirstLDCS = HE.PCFLDCS,
-			HEPercentTaughtSecondLDCS = HE.PCSLDCS,
-			HEPercentTaughtThirdLDCS = HE.PCTLDCS,
+			HEPercentTaughtFirstLDCS = NULL,
+			HEPercentTaughtSecondLDCS = NULL,
+			HEPercentTaughtThirdLDCS = NULL,
 			HESpecialFeeIndicator = HE.SPECFEE,
 			HENetTuitionFee = HE.NETFEE,
 			HEGrossTuitionFee = HE.GROSSFEE,
@@ -5854,7 +5860,7 @@ BEGIN
 			ProvSpecDelMonB = PSDMB.ProvSpecDelMon,
 			ProvSpecDelMonC = PSDMC.ProvSpecDelMon,
 			ProvSpecDelMonD = PSDMD.ProvSpecDelMon,
-
+			
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
 			AchieveElement = FM35.AchieveElement,
@@ -6132,7 +6138,7 @@ BEGIN
 			AchCompPaymentYearEnd = COALESCE ( FM35P.AchCompPaymentYearEnd, FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd, 0 ),
 			BalancePaymentYearEnd = COALESCE ( FM35P.BalancePaymentYearEnd, FM36PM.BalancePaymentYearEnd, FM36P.BalancePaymentYearEnd, 0 ),
 			EmpOutcomePayYearEnd = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
-			OtherPaymentYearEnd = COALESCE ( FM36P.OtherPaymentYearEnd, FM36P.OtherPaymentYearEnd, 0 ),
+			OtherPaymentYearEnd = COALESCE ( FM36PM.OtherPaymentYearEnd, FM36P.OtherPaymentYearEnd, 0 ),
 			TotalEarnedCashYearEnd = COALESCE ( CASE WHEN LD.FundModel = 25 THEN CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6406,6 +6412,25 @@ BEGIN
 		) EMP
 			ON EMP.LearnerRef = L.LearnRefNumber
 			AND EMP.RowNum = 1
+		LEFT JOIN (
+			SELECT
+				ATN.UKPRN,
+				ATN.LearnRefNumber,
+				ATN.PriorLevel,
+				ATN.DateLevelApp,
+				RowNum = 
+					ROW_NUMBER () OVER (
+						PARTITION BY
+							ATN.UKPRN,
+							ATN.LearnRefNumber
+						ORDER BY
+							ATN.DateLevelApp DESC
+					)
+			FROM ' + @FISDatabase + '.Valid.LearnerPriorAttain ATN
+		) ATN
+			ON ATN.LearnRefNumber = L.LearnRefNumber
+			AND ATN.UKPRN = L.UKPRN
+			AND ATN.RowNum = 1
 		LEFT JOIN ' + @FISDatabase + '.Valid.LLDDandHealthProblem LLDD
 			ON LLDD.LearnRefNumber = L.LearnRefNumber
 			AND LLDD.PrimaryLLDD = 1
@@ -6496,7 +6521,7 @@ BEGIN
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMD
 			ON PSLMD.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMD.ProvSpecLearnMonOccur = ''D''
-		
+
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 			ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -6600,7 +6625,7 @@ BEGIN
 			ON ALBP.LearnRefNumber = LD.LearnRefNumber
 			AND ALBP.AimSeqNumber = LD.AimSeqNumber
 	'
-    
+
     SET @SQLString += 
         N'
 		--Invalid Learners
@@ -6666,7 +6691,11 @@ BEGIN
 					WHEN @ProvSpecDelMonCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -6692,7 +6721,11 @@ BEGIN
 					WHEN @ProvSpecDelMonParentCourseLocation1 = ''D'' THEN
 						PSDMD.ProvSpecDelMon
 				END 
-				+ COALESCE ( @ProvSpecDelMonParentCourseSeperator, '''' )
+				+ CASE
+					WHEN @ProvSpecDelMonCourseLocation2 IS NOT NULL THEN
+						COALESCE ( @ProvSpecDelMonCourseSeperator, '''' )
+					ELSE ''''
+				END
 				+ CASE
 					WHEN @ProvSpecDelMonParentCourseLocation2 = ''A'' THEN
 						PSDMA.ProvSpecDelMon
@@ -7083,6 +7116,8 @@ BEGIN
 				END
 		LEFT JOIN #Ethnicities ETH
 			ON TRY_CAST ( ETH.Code AS INT ) = L.Ethnicity
+		LEFT JOIN #PriorLevels PLEV
+			ON PLEV.Code = ATN.PriorLevel
 		LEFT JOIN #Disabilities DIS
 			ON DIS.Code = LLDD.LLDDCat
 		LEFT JOIN (
@@ -8281,7 +8316,7 @@ BEGIN
 			ON ALBP.LearnRefNumber = LD.LearnRefNumber
 			AND ALBP.AimSeqNumber = LD.AimSeqNumber
 	'
-    
+
     SET @SQLString += 
         N'
 		LEFT JOIN #FundModelAim FM
