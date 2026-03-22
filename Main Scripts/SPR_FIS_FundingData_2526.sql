@@ -4170,6 +4170,7 @@ BEGIN
 			CI.AimSeqNumber,
 			CI.CarryInOnProgTotal,
 			CI.CarryInOnProgMonthly,
+			CI.CompletionElement,
 			CI.AchieveElement,
 			CarryInYr1R01 = MAX ( CASE WHEN CI.YearNum = 1 AND CI.ILRReturn = ''R01'' THEN CI.CarryInAmount ELSE 0 END ),
 			CarryInYr1R02 = MAX ( CASE WHEN CI.YearNum = 1 AND CI.ILRReturn = ''R02'' THEN CI.CarryInAmount ELSE 0 END ),
@@ -4202,6 +4203,7 @@ BEGIN
 				FMC.AimSeqNumber,
 				FMC.CarryInOnProgTotal,
 				FMC.CarryInOnProgMonthly,
+				FMC.CompletionElement,
 				FMC.AchieveElement,
 				CI.ReturnYear,
 				CI.YearNum,
@@ -4224,7 +4226,7 @@ BEGIN
 					+
 					CASE --Finished in the month so add achievement element
 						WHEN FMC.LearnPlanEndDate >= CI.DateFrom
-						AND FMC.LearnPlanEndDate <= CI.DateTo THEN FMC.AchieveElement
+						AND FMC.LearnPlanEndDate <= CI.DateTo THEN FMC.CompletionElement + FMC.AchieveElement
 						ELSE 0
 					END
 			FROM (
@@ -4235,12 +4237,13 @@ BEGIN
 					LD.LearnStartDate,
 					LD.LearnPlanEndDate,
 					NumPlannedOnProgPayments = FM38.PlannedNumOnProgInstalm,
+					FM38.CompletionElement,
 					FM38.AchieveElement,
 					CarryInOnProgTotal = 
 						CASE
 							WHEN COALESCE ( FM38.PropFundRemain, 0 ) = 0 THEN 0
 							ELSE 
-								( FM38.AimValue - FM38.NonGovCont - FM38.AchieveElement ) * FM38.PropFundRemain
+								( FM38.AimValue - FM38.NonGovCont - FM38.CompletionElement - FM38.AchieveElement ) * FM38.PropFundRemain
 						END,
 					CarryInOnProgMonthly = 
 						CASE
@@ -4249,7 +4252,7 @@ BEGIN
 								CASE
 									WHEN COALESCE ( FM38.PropFundRemain, 0 ) = 0 THEN 0
 									ELSE 
-										( FM38.AimValue - FM38.NonGovCont - FM38.AchieveElement ) * FM38.PropFundRemain
+										( FM38.AimValue - FM38.NonGovCont - FM38.CompletionElement - FM38.AchieveElement ) * FM38.PropFundRemain
 								END
 								/ 
 								FM38.PlannedNumOnProgInstalm
@@ -4271,6 +4274,7 @@ BEGIN
 			CI.AimSeqNumber,
 			CI.CarryInOnProgTotal,
 			CI.CarryInOnProgMonthly,
+			CI.CompletionElement,
 			CI.AchieveElement
 	'
 
@@ -5905,7 +5909,8 @@ BEGIN
 			
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM38.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM38.OutstndNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
-			AchieveElement = COALESCE ( FM38.AchieveElement, FM35.AchieveElement ),
+			CompletionElement = COALESCE ( FM38.CompletionElement, 0 ),
+			AchieveElement = COALESCE ( FM38.AchieveElement, FM35.AchieveElement, 0 ),
 			NonGovCont = COALESCE ( FM38.NonGovCont, FM35.NonGovCont ),
 			PropFundRemain = COALESCE ( FM38.PropFundRemain, FM35.PropFundRemain ),
 			PropFundRemainAchComp = FM38.PropFundRemainAchComp,
@@ -5914,7 +5919,7 @@ BEGIN
 				CASE
 					WHEN COALESCE ( FM38.PropFundRemain, FM35.PropFundRemain, 0 ) = 0 THEN 0
 					ELSE 
-						( COALESCE ( FM38.AimValue, FM35.AimValue ) - COALESCE ( FM38.NonGovCont, FM35.NonGovCont ) - COALESCE ( FM38.AchieveElement, FM35.AchieveElement ) ) * COALESCE ( FM38.PropFundRemain, FM35.PropFundRemain )
+						( COALESCE ( FM38.AimValue, FM35.AimValue ) - COALESCE ( FM38.NonGovCont, FM35.NonGovCont ) - COALESCE ( FM38.CompletionElement, 0 ) - COALESCE ( FM38.AchieveElement, FM35.AchieveElement ) ) * COALESCE ( FM38.PropFundRemain, FM35.PropFundRemain )
 				END,
 	'
 
@@ -6220,14 +6225,14 @@ BEGIN
 				CASE
 					WHEN LD.CompStatus <> 1 AND NOT ( LD.CompStatus = 2 AND LD.Outcome = 8 ) THEN 0
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
-					ELSE COALESCE ( FM38.AchieveElement - FM38P.AchCompPaymentYearEnd, FM35.AchieveElement - FM35P.AchCompPaymentYearEnd, FM36PE.PriceEpisodeCompletionElement - COALESCE ( FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd ) )
+					ELSE COALESCE ( ( FM38.CompletionElement + FM38.AchieveElement ) - FM38P.AchCompPaymentYearEnd, FM35.AchieveElement - FM35P.AchCompPaymentYearEnd, FM36PE.PriceEpisodeCompletionElement - COALESCE ( FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd ) )
 				END,
 			FutureAchieveWeighting = @FutureAchievementWeighting,
 			FutureAchievePaymentWeighted = 
 				CASE
 					WHEN LD.CompStatus <> 1 AND NOT ( LD.CompStatus = 2 AND LD.Outcome = 8 ) THEN 0
 					WHEN LD.LearnPlanEndDate NOT BETWEEN ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' AND ''20'' + RIGHT ( @AcademicYear, 2 ) + ''-07-31'' THEN 0
-					ELSE COALESCE ( FM38.AchieveElement - FM38P.AchCompPaymentYearEnd, FM35.AchieveElement - FM35P.AchCompPaymentYearEnd, FM36PE.PriceEpisodeCompletionElement - COALESCE ( FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd ) ) * @FutureAchievementWeighting
+					ELSE COALESCE ( ( FM38.CompletionElement + FM38.AchieveElement ) - FM38P.AchCompPaymentYearEnd, FM35.AchieveElement - FM35P.AchCompPaymentYearEnd, FM36PE.PriceEpisodeCompletionElement - COALESCE ( FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd ) ) * @FutureAchievementWeighting
 				END,
 	'
 

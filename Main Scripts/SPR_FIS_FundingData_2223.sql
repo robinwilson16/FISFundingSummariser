@@ -5868,7 +5868,8 @@ BEGIN
 
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
-			AchieveElement = FM35.AchieveElement,
+			CompletionElement = 0,
+			AchieveElement = COALESCE ( FM35.AchieveElement, 0 ),
 			NonGovCont = FM35.NonGovCont,
 			PropFundRemain = FM35.PropFundRemain,
 			PropFundRemainAchComp = NULL,

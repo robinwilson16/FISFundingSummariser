@@ -740,6 +740,7 @@ BEGIN
 
 							NumPlannedOnProgPayments INT NULL,
 							NumOutstandingOnProgPayments INT NULL,
+							CompletionElement DECIMAL(10, 5) NULL,
 							AchieveElement DECIMAL(10, 5) NULL,
 							NonGovCont DECIMAL(10, 5) NULL,
 							PropFundRemain DECIMAL(10, 5) NULL,
