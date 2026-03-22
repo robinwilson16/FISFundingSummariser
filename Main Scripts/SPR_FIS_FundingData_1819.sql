@@ -6533,7 +6533,8 @@ BEGIN
 		--16-19
 		LEFT JOIN ' + @FISDatabase + '.dbo.Rulebase_FM25_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
-			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
+			--AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
+			AND LD.FundModel = 25
 			--AND FM25.StartFund = 1
 
 		--AEB (Adult Education Budget) and Legacy Apps
