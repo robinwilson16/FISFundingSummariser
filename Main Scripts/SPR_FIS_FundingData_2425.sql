@@ -759,7 +759,7 @@ BEGIN
 			AIM.NVQLevelCode,
 			FundLineCategory = 
 				CASE
-					WHEN FM25.FundLine IS NOT NULL THEN ''16-19 Funding''
+					WHEN LD.FundModel = 25 THEN ''16-19 Funding''
 					WHEN FMALB.AdvLoan = 1 THEN ''Advanced Learner Loan''
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' THEN ''Adult Skills Fund''
 					WHEN FM35.FundLine LIKE ''%Adult Skills Fund%'' THEN ''Adult Skills Fund''
@@ -779,7 +779,7 @@ BEGIN
 				END,
 			FundLineCategoryOrder = 
 				CASE
-					WHEN FM25.FundLine IS NOT NULL THEN 1
+					WHEN LD.FundModel = 25 THEN 1
 					WHEN FMALB.AdvLoan = 1 THEN 4
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' THEN 2
 					WHEN FM35.FundLine LIKE ''%Adult Skills Fund%'' THEN 2
@@ -799,8 +799,8 @@ BEGIN
 				END,
 			FundLineSubCategory = 
 				CASE
-					WHEN FM25.FundLine IS NOT NULL AND LD.ProgType IS NULL THEN ''Study Programmes''
-					WHEN FM25.FundLine IS NOT NULL AND LD.ProgType IS NOT NULL THEN ''T Levels''
+					WHEN LD.FundModel = 25 AND LD.ProgType IS NULL THEN ''Study Programmes''
+					WHEN LD.FundModel = 25 AND LD.ProgType IS NOT NULL THEN ''T Levels''
 					WHEN FMALB.AdvLoan = 1 THEN ''Advanced Learner Loan''
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' AND FM38.FundLine LIKE ''%ESFA%'' THEN ''DFE - '' + FM38.LearnDelFundOrgCode
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' AND FM38.FundLine NOT LIKE ''%ESFA%'' THEN ''Devolved - '' + FM38.LearnDelFundOrgCode
@@ -828,8 +828,8 @@ BEGIN
 				END,
 			FundLineSubCategoryOrder = 
 				CASE
-					WHEN FM25.FundLine IS NOT NULL AND LD.ProgType IS NULL THEN 1
-					WHEN FM25.FundLine IS NOT NULL AND LD.ProgType IS NOT NULL THEN 2
+					WHEN LD.FundModel = 25 AND LD.ProgType IS NULL THEN 1
+					WHEN LD.FundModel = 25 AND LD.ProgType IS NOT NULL THEN 2
 					WHEN FMALB.AdvLoan = 1 THEN 1
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' AND FM38.FundLine LIKE ''%ESFA%'' THEN 1
 					WHEN FM38.FundLine LIKE ''%Adult Skills Fund%'' AND FM38.FundLine NOT LIKE ''%ESFA%'' THEN 2
@@ -857,7 +857,7 @@ BEGIN
 				END,
 			FundLine = 
 				COALESCE (
-					FM25.FundLine,
+					CASE WHEN LD.FundModel = 25 THEN FM25.FundLine END,
 					CASE WHEN FMALB.AdvLoan = 1 THEN ''Advanced Learner Loan'' END,
 					CASE WHEN FM36PMO.FundLine = ''None'' THEN NULL ELSE FM36PMO.FundLine END,
 					CASE WHEN FM36PMO.InitialFundLine = ''None'' THEN NULL ELSE FM36PMO.InitialFundLine END,
@@ -881,6 +881,11 @@ BEGIN
 	SET @SQLString += 
         N'
 			FundStart = COALESCE ( CASE WHEN LD.FundModel = 25 THEN HRS.IsFunded END, FM25.StartFund, FMALB.FundStart, FM38.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
+			IsCoreAim = 
+				CASE
+					WHEN FM25.CoreAimSeqNumber = LD.AimSeqNumber THEN 1
+					ELSE 0
+				END,
 			CompStatus = LD.CompStatus,
 			WithdrawReason = LD.WithdrawReason,
 			Transfer = 
@@ -1040,7 +1045,6 @@ BEGIN
 		--16-19
 		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM25_Learner FM25
 			ON FM25.LearnRefNumber = LD.LearnRefNumber
-			AND FM25.CoreAimSeqNumber = LD.AimSeqNumber
 		--ASF (Adult Skills Fund)
 		LEFT JOIN ' + @FISDatabase + '.Rulebase.FM38_LearningDelivery FM38
 			ON FM38.LearnRefNumber = LD.LearnRefNumber
