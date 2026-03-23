@@ -6272,7 +6272,7 @@ BEGIN
 				CASE
 					WHEN COALESCE ( FM38.PropFundRemain, FM35.PropFundRemain, 0 ) = 0 THEN 0
 					ELSE 
-						( COALESCE ( FM38.AimValue, FM35.AimValue )  - COALESCE ( FM38.NonGovCont, FM35.NonGovCont ) - COALESCE ( CompletionElement, 0 ) - COALESCE ( FM38.AchieveElement, FM35.AchieveElement ) ) * COALESCE ( FM38.PropFundRemain,  FM35.PropFundRemain )
+						( COALESCE ( FM38.AimValue, FM35.AimValue )  - COALESCE ( FM38.NonGovCont, FM35.NonGovCont ) - COALESCE ( FM38.CompletionElement, 0 ) - COALESCE ( FM38.AchieveElement, FM35.AchieveElement ) ) * COALESCE ( FM38.PropFundRemain,  FM35.PropFundRemain )
 				END,
 	'
 
