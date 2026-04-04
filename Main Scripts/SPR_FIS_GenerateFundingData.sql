@@ -544,8 +544,8 @@ BEGIN
 							LearnerAndAimRowNum INT NULL,
 							AimType INT NULL,
 
-							LearningAimCode VARCHAR(8) NULL,
-							LearningAimTitle VARCHAR(254) NULL,
+							LearnAimRef VARCHAR(8) NULL,
+							LearnAimTitle VARCHAR(254) NULL,
 							LearningAimTypeCode VARCHAR(4) NULL,
 							LearningAimTypeName VARCHAR(150) NULL,
 
@@ -1796,7 +1796,7 @@ BEGIN
 			SELECT
 				ProviderNumber = COALESCE ( YLM.ProviderNumber, FD.ProviderNumber ),
 				LearnRefNumber = COALESCE ( YLM.LearnRefNumber, FD.LearnRefNumber ),
-				FD.LearningAimCode,
+				FD.LearnAimRef,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
 				FD.FrameworkCode,
@@ -1814,7 +1814,7 @@ BEGIN
 				HybridEndYear = MAX ( FD.HybridEndYear ),
 				EarliestReportingYear = MIN ( FD.ReportingYear ),
 				LatestReportingYear = MAX ( FD.ReportingYear),
-				NumMergedRecords = COUNT ( FD.LearningAimCode ),
+				NumMergedRecords = COUNT ( FD.LearnAimRef ),
 				IsOverallStart = MAX ( FD.IsOverallStart ),
 				IsTimelyStart = MAX ( FD.IsTimelyStart ),
 				IsOverallLeaver = MAX ( FD.IsOverallLeaver ),
@@ -1937,7 +1937,7 @@ BEGIN
 			GROUP BY
 				COALESCE ( YLM.ProviderNumber, FD.ProviderNumber ),
 				COALESCE ( YLM.LearnRefNumber, FD.LearnRefNumber ),
-				FD.LearningAimCode,
+				FD.LearnAimRef,
 				FD.LearnerAndAimRowNum,
 				FD.StandardCode,
 				FD.FrameworkCode,
@@ -2041,7 +2041,7 @@ BEGIN
 				ON FD.ProviderNumber = MD.ProviderNumber
 				AND FD.ReportingYear = MD.LatestReportingYear
 				AND FD.LearnRefNumber = MD.LearnRefNumber
-				AND FD.LearningAimCode = MD.LearningAimCode
+				AND FD.LearnAimRef = MD.LearnAimRef
 				AND COALESCE ( FD.StandardCode, 0 ) = COALESCE ( MD.StandardCode, 0 )
 				AND COALESCE ( FD.FrameworkCode, 0 ) = COALESCE ( MD.FrameworkCode, 0 )
 				AND COALESCE ( FD.PathwayCode, 0 ) = COALESCE ( MD.PathwayCode, 0 )

@@ -198,8 +198,8 @@ BEGIN
 			AIM.SSA1Name,
 			AIM.SSA2Code,
 			AIM.SSA2Name,
-			AIM.LearningAimCode,
-			AIM.LearningAimTitle,
+			AIM.LearnAimRef,
+			AIM.LearnAimTitle,
 			AIM.LearningAimTypeCode,
 			AIM.LearningAimTypeName,
 			AIM.NVQLevelCode,
@@ -592,7 +592,7 @@ BEGIN
 		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		INNER JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #FM25LearnerStarts DUR
 			ON DUR.LearnRefNumber = L.LearnRefNumber
 		--AEB (Adult Education Budget) and Legacy Apps
@@ -610,7 +610,7 @@ BEGIN
 			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
 			LEFT JOIN #LearningAims AIM
-				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+				ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		) RET
 			ON RET.LearnRefNumber = LD.LearnRefNumber
 			AND RET.AimSeqNumber > LD.AimSeqNumber
@@ -669,7 +669,7 @@ BEGIN
 		INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 			ON LD.LearnRefNumber = L.LearnRefNumber
 		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN (
 			SELECT
 				LearnRefNumber = L.LearnRefNumber,
@@ -681,7 +681,7 @@ BEGIN
 			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
 			LEFT JOIN #LearningAims AIM
-				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+				ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 			WHERE
 				(
 					LD.FundModel = 36
@@ -1070,7 +1070,7 @@ BEGIN
 			ON FMHE.LearnRefNumber = LD.LearnRefNumber
 			AND FMHE.AimSeqNumber = LD.AimSeqNumber
 		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #ExclusionsCoreAims EXCA
 			ON EXCA.LearnRefNumber = LD.LearnRefNumber
 			AND EXCA.AimSeqNumber = LD.AimSeqNumber
@@ -1309,8 +1309,8 @@ BEGIN
 				SSA1Name = AIM.SSA1Name,
 				SSA2Code = AIM.SSA2Code,
 				SSA2Name = AIM.SSA2Name,
-				LearningAimCode = AIM.LearningAimCode,
-				LearningAimTitle = AIM.LearningAimTitle,
+				LearnAimRef = AIM.LearnAimRef,
+				LearnAimTitle = AIM.LearnAimTitle,
 				LearningAimTypeCode = AIM.LearningAimTypeCode,
 				LearningAimTypeName = AIM.LearningAimTypeName,
 				NVQLevelCode = AIM.NVQLevelCode,
@@ -1429,7 +1429,7 @@ BEGIN
 			INNER JOIN ' + @FISDatabase + '.Valid.LearningDelivery LD
 				ON LD.LearnRefNumber = L.LearnRefNumber
 			LEFT JOIN #LearningAims AIM
-				ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+				ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 			LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecDeliveryMonitoring PSDMA
 				ON PSDMA.LearnRefNumber = LD.LearnRefNumber
 				AND PSDMA.AimSeqNumber = LD.AimSeqNumber
@@ -4711,8 +4711,8 @@ BEGIN
 						LD.AimSeqNumber
 				),
 			AimType = LD.AimType,
-			LearningAimCode = LD.LearnAimRef,
-			LearningAimTitle = AIM.LearningAimTitle,
+			LearnAimRef = LD.LearnAimRef,
+			LearnAimTitle = AIM.LearnAimTitle,
 			LearningAimTypeCode = AIM.LearningAimTypeCode,
 			LearningAimTypeName = AIM.LearningAimTypeName,
 			NVQLevelCode = AIM.NVQLevelCode,
@@ -6666,7 +6666,7 @@ BEGIN
     SET @SQLString += 
         N'
 		LEFT JOIN #LearningAims AIM
-			ON AIM.LearningAimCode COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
+			ON AIM.LearnAimRef COLLATE DATABASE_DEFAULT = LD.LearnAimRef COLLATE DATABASE_DEFAULT
 		LEFT JOIN #CollegeStructure CS
 			ON CS.AcademicYear = @AcademicYear
 			AND CS.ProvSpecValue COLLATE DATABASE_DEFAULT =
