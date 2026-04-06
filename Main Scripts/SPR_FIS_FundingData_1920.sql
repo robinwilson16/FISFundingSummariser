@@ -4597,64 +4597,64 @@ BEGIN
         N'
 			CollegeLevel1Code = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel1Code END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel1Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel1Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel1Code END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN @PartnerCollegeLevel1Code END,
 					CS.CollegeLevel1Code,
 					''-''
 				),
 			CollegeLevel1Name = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN CL1ENG.CollegeLevelName END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN CL1MAT.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN CL1ENG.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN CL1MAT.CollegeLevelName END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN CL1PAR.CollegeLevelName END,
 					CS.CollegeLevel1Name,
 					''-- Unknown --''
 				),
 			CollegeLevel2Code = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel2Code END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel2Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel2Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel2Code END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN @PartnerCollegeLevel2Code END,
 					CS.CollegeLevel2Code,
 					''-''
 				),
 			CollegeLevel2Name = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN CL2ENG.CollegeLevelName END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN CL2MAT.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN CL2ENG.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN CL2MAT.CollegeLevelName END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN CL2PAR.CollegeLevelName END,
 					CS.CollegeLevel2Name,
 					''-- Unknown --''
 				),
 			CollegeLevel3Code = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel3Code END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel3Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel3Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel3Code END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN @PartnerCollegeLevel3Code END,
 					CS.CollegeLevel3Code,
 					''-''
 				),
 			CollegeLevel3Name = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN CL3ENG.CollegeLevelName END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN CL3MAT.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN CL3ENG.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN CL3MAT.CollegeLevelName END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN CL3PAR.CollegeLevelName END,
 					CS.CollegeLevel3Name,
 					''-- Unknown --''
 				),
 			CollegeLevel4Code = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel4Code END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel4Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel4Code END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN @MathsCollegeLevel4Code END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN @PartnerCollegeLevel4Code END,
 					CS.CollegeLevel4Code,
 					''-''
 				),
 			CollegeLevel4Name = 
 				COALESCE (
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%English%'' THEN CL4ENG.CollegeLevelName END,
-					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearningAimTitle LIKE ''%Math%'' THEN CL4MAT.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN CL4ENG.CollegeLevelName END,
+					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%Math%'' THEN CL4MAT.CollegeLevelName END,
 					CASE WHEN LD.PartnerUKPRN IS NOT NULL AND LD.FundModel IN ( 25, 35 ) THEN CL4PAR.CollegeLevelName END,
 					CS.CollegeLevel4Name,
 					''-- Unknown --''
