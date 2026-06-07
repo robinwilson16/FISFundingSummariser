@@ -6,6 +6,8 @@ AS
 		CourseCode = UIO.FES_UINS_INSTANCE_CODE,
 		CourseInstance = UIO.COURSE_OCCURRENCE_CODE,
 		CourseTitle = UIO.LONG_DESCRIPTION,
+		CampusCode = '-',
+		CampusName = '-- Unknown --',
 		CollegeLevel1Code = COALESCE ( FAC.ORGANISATION_CODE, '-' ),
 		CollegeLevel1Name = COALESCE ( FAC.FES_FULL_NAME, '-- Unknown --' ),
 		CollegeLevel2Code = COALESCE ( UIO.OFFERING_ORGANISATION, '-' ),

@@ -217,6 +217,8 @@ BEGIN
 			CS.CourseCode,
 			CS.CourseInstance,
 			CS.CourseTitle,
+			CS.CampusCode,
+			CS.CampusName,
 			CS.CollegeLevel1Code,
 			CS.CollegeLevel1Name,
 			CS.CollegeLevel2Code,
@@ -1294,6 +1296,8 @@ BEGIN
 				FworkCode = COALESCE ( LD.FworkCode, 0 ),
 				ProgType = LD.ProgType,
 				PwayCode = COALESCE ( LD.PwayCode, 0 ),
+				CampusCode = COALESCE ( CS.CampusCode, ''-''),
+				CampusName = COALESCE ( CS.CampusName, ''-- Unknown --''),
 				CollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
 				CollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
 				CollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
@@ -4581,6 +4585,8 @@ BEGIN
     SET @SQLString += 
         N'
 			CampusID = L.CampId,
+			ParentCampusCode = COALESCE ( PCS.CampusCode, ''-''),
+			ParentCampusName = COALESCE ( PCS.CampusName, ''-- Unknown --''),
 			ParentCollegeLevel1Code = COALESCE ( PCS.CollegeLevel1Code, ''-''),
 			ParentCollegeLevel1Name = COALESCE ( PCS.CollegeLevel1Name, ''-- Unknown --''),
 			ParentCollegeLevel2Code = COALESCE ( PCS.CollegeLevel2Code, ''-''),
@@ -4593,6 +4599,8 @@ BEGIN
 
    SET @SQLString += 
         N'
+			CampusCode = COALESCE ( CS.CampusCode, ''-''),
+			CampusName = COALESCE ( CS.CampusName, ''-- Unknown --''),
 			CollegeLevel1Code = 
 				COALESCE (
 					CASE WHEN AIM.LearningAimTypeCode IN (''0003'', ''2999'', ''1439'') AND  AIM.LearnAimTitle LIKE ''%English%'' THEN @EnglishCollegeLevel1Code END,
@@ -4661,6 +4669,8 @@ BEGIN
 
     SET @SQLString += 
         N'
+			OriginalCampusCode = COALESCE ( CS.CampusCode, ''-''),
+			OriginalCampusName = COALESCE ( CS.CampusName, ''-- Unknown --''),
 			OriginalCollegeLevel1Code = COALESCE ( CS.CollegeLevel1Code, ''-''),
 			OriginalCollegeLevel1Name = COALESCE ( CS.CollegeLevel1Name, ''-- Unknown --''),
 			OriginalCollegeLevel2Code = COALESCE ( CS.CollegeLevel2Code, ''-''),
@@ -4670,6 +4680,8 @@ BEGIN
 			OriginalCollegeLevel4Code = COALESCE ( CS.CollegeLevel4Code, ''-''),
 			OriginalCollegeLevel4Name = COALESCE ( CS.CollegeLevel4Name, ''-- Unknown --''),
 			
+			MainAimCampusCode = COALESCE ( MCS.CampusCode, ''-''),
+			MainAimCampusName = COALESCE ( MCS.CampusName, ''-- Unknown --''),
 			MainAimCollegeLevel1Code = COALESCE ( MCS.CollegeLevel1Code, ''-''),
 			MainAimCollegeLevel1Name = COALESCE ( MCS.CollegeLevel1Name, ''-- Unknown --''),
 			MainAimCollegeLevel2Code = COALESCE ( MCS.CollegeLevel2Code, ''-''),

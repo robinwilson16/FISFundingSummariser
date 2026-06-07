@@ -6,6 +6,8 @@ AS
 		CourseCode = CAST ( NULL AS VARCHAR(50) ),
 		CourseInstance = CAST ( NULL AS VARCHAR(50) ),
 		CourseTitle = CAST ( NULL AS VARCHAR(50) ),
+		CampusCode = '-',
+		CampusName = '-- Unknown --',
 		CollegeLevel1Code = '-',
 		CollegeLevel1Name = '-- Unknown --',
 		CollegeLevel2Code = '-',

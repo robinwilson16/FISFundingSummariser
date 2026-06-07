@@ -496,6 +496,8 @@ BEGIN
 							PostCodeDelivery VARCHAR(10) NULL,
 							CampusID VARCHAR(20) NULL,
 
+							ParentCampusCode VARCHAR(20) NULL,
+							ParentCampusName VARCHAR(150) NULL,
 							ParentCollegeLevel1Code VARCHAR(20) NULL,
 							ParentCollegeLevel1Name VARCHAR(150) NULL,
 							ParentCollegeLevel2Code VARCHAR(20) NULL,
@@ -505,6 +507,8 @@ BEGIN
 							ParentCollegeLevel4Code VARCHAR(20) NULL,
 							ParentCollegeLevel4Name VARCHAR(150) NULL,
 
+							CampusCode VARCHAR(20) NULL,
+							CampusName VARCHAR(150) NULL,
 							CollegeLevel1Code VARCHAR(20) NULL,
 							CollegeLevel1Name VARCHAR(150) NULL,
 							CollegeLevel2Code VARCHAR(20) NULL,
@@ -514,6 +518,8 @@ BEGIN
 							CollegeLevel4Code VARCHAR(20) NULL,
 							CollegeLevel4Name VARCHAR(150) NULL,
 
+							OriginalCampusCode VARCHAR(20) NULL,
+							OriginalCampusName VARCHAR(150) NULL,
 							OriginalCollegeLevel1Code VARCHAR(20) NULL,
 							OriginalCollegeLevel1Name VARCHAR(150) NULL,
 							OriginalCollegeLevel2Code VARCHAR(20) NULL,
@@ -523,6 +529,8 @@ BEGIN
 							OriginalCollegeLevel4Code VARCHAR(20) NULL,
 							OriginalCollegeLevel4Name VARCHAR(150) NULL,
 					
+							MainAimCampusCode VARCHAR(20) NULL,
+							MainAimCampusName VARCHAR(150) NULL,
 							MainAimCollegeLevel1Code VARCHAR(20) NULL,
 							MainAimCollegeLevel1Name VARCHAR(150) NULL,
 							MainAimCollegeLevel2Code VARCHAR(20) NULL,
