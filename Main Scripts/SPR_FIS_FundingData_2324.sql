@@ -4064,44 +4064,49 @@ BEGIN
 
 	SET @SQLString += 
         N'
+		--Funding and Monitoring (FAM) Data
+		DROP TABLE IF EXISTS #FAMData
+		SELECT
+			UKPRN = FAM.UKPRN,
+			LearnRefNumber = FAM.LearnRefNumber,
+			LearnFAMType = FAM.LearnFAMType,
+			LearnFAMCode = FAM.LearnFAMCode,
+			RowNum =
+				ROW_NUMBER () OVER (
+					PARTITION BY
+						FAM.UKPRN,
+						FAM.LearnRefNumber,
+						FAM.LearnFAMType
+					ORDER BY
+						FAM.LearnFAMCode
+				)
+			INTO #FAMData
+		FROM ' + @FISDatabase + '.Valid.LearnerFAM FAM
+
+
+		--Funding and Monitoring (FAM) By Learner
 		DROP TABLE IF EXISTS #FAMLearner
 		SELECT
-			LearnRefNumber = FAML.LearnRefNumber,
-			FAMLearnerHNS = FAML.HNS,
-			FAMLearnerEHC = FAML.EHC,
-			FAMLearnerDLA = FAML.DLA,
-			FAMLearnerLSR = FAML.LSR,
-			FAMLearnerSEN = FAML.SEN,
-			FAMLearnerNLM = FAML.NLM,
-			FAMLearnerEDF = FAML.EDF,
-			FAMLearnerMCF = FAML.MCF,
-			FAMLearnerECF = FAML.ECF,
-			FAMLearnerFME = FAML.FME
+			FAM.UKPRN,
+			FAM.LearnRefNumber,
+			FAMLearnerHNS = MAX ( CASE WHEN FAM.LearnFAMType = ''HNS'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerEHC = MAX ( CASE WHEN FAM.LearnFAMType = ''EHC'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerDLA = MAX ( CASE WHEN FAM.LearnFAMType = ''DLA'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerLSR = MAX ( CASE WHEN FAM.LearnFAMType = ''LSR'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerSEN = MAX ( CASE WHEN FAM.LearnFAMType = ''SEN'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerNLM = MAX ( CASE WHEN FAM.LearnFAMType = ''NLM'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerEDF1 = MAX ( CASE WHEN FAM.LearnFAMType = ''EDF'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerEDF2 = MAX ( CASE WHEN FAM.LearnFAMType = ''EDF'' AND FAM.RowNum = 2 THEN FAM.LearnFAMCode END ),
+			FAMLearnerMCF = MAX ( CASE WHEN FAM.LearnFAMType = ''MCF'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerECF = MAX ( CASE WHEN FAM.LearnFAMType = ''ECF'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerFME = MAX ( CASE WHEN FAM.LearnFAMType = ''FME'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerMMH = MAX ( CASE WHEN FAM.LearnFAMType = ''MMH'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END ),
+			FAMLearnerEMH = MAX ( CASE WHEN FAM.LearnFAMType = ''EMH'' AND FAM.RowNum = 1 THEN FAM.LearnFAMCode END )
 			INTO #FAMLearner
-		FROM (
-			SELECT
-				FAML.LearnRefNumber,
-				FAML.LearnFAMType,
-				FAML.LearnFAMCode
-			FROM ' + @FISDatabase + '.Valid.LearnerFAM FAML
-		) FAML
-		PIVOT (
-			MAX ( FAML.LearnFAMCode )
-			FOR
-				FAML.LearnFAMType IN (
-					[HNS],
-					[EHC],
-					[DLA],
-					[LSR],
-					[SEN],
-					[NLM],
-					[EDF],
-					[MCF],
-					[ECF],
-					[FME]
-				)
-		) FAML
-
+		FROM #FAMData FAM
+		GROUP BY
+			FAM.UKPRN,
+			FAM.LearnRefNumber
 	'
 
 	SET @SQLString += 
@@ -4489,10 +4494,13 @@ BEGIN
 			FAMLearnerLSR = FAML.FAMLearnerLSR,
 			FAMLearnerSEN = FAML.FAMLearnerSEN,
 			FAMLearnerNLM = FAML.FAMLearnerNLM,
-			FAMLearnerEDF = FAML.FAMLearnerEDF,
+			FAMLearnerEDF1 = FAML.FAMLearnerEDF1,
+			FAMLearnerEDF2 = FAML.FAMLearnerEDF2,
 			FAMLearnerMCF = FAML.FAMLearnerMCF,
 			FAMLearnerECF = FAML.FAMLearnerECF,
 			FAMLearnerFME = FAML.FAMLearnerFME,
+			FAMLearnerMMH = FAML.FAMLearnerMMH,
+			FAMLearnerEMH = FAML.FAMLearnerEMH,
 			DestinationProgressionType = OC.DPOutcomeType,
 			DestinationProgressionNumber = OC.DPOutcomeCode,
 			DestinationProgressionCode = DES.Code,
@@ -6661,6 +6669,7 @@ BEGIN
 			ON LOD.LearnRefNumber = L.LearnRefNumber
 		LEFT JOIN #FAMLearner FAML
 			ON FAML.LearnRefNumber = L.LearnRefNumber
+			AND FAML.UKPRN = SRC.UKPRN
 		LEFT JOIN #FundModelAim FM
 			ON FM.LearnRefNumber = LD.LearnRefNumber
 			AND FM.AimSeqNumber = LD.AimSeqNumber
