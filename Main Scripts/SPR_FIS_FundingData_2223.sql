@@ -54,6 +54,7 @@ AS
 BEGIN
 	SET XACT_ABORT, NOCOUNT ON;
 
+	
 	/*
 	/**************************************************
 	 * Change/check values each time an import is run *
@@ -1734,9 +1735,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Price Episode
-		DROP TABLE IF EXISTS #FM36PriceEpisode
-		SELECT
+			--Fund Model 36 Price Episode
+			DROP TABLE IF EXISTS #FM36PriceEpisode
+			SELECT
 				FM36PE.UKPRN,
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
@@ -1813,9 +1814,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Period Funding
-		DROP TABLE IF EXISTS #FM36PeriodFunding
-		SELECT
+			--Fund Model 36 Period Funding
+			DROP TABLE IF EXISTS #FM36PeriodFunding
+			SELECT
 				LearnRefNumber = LD.LearnRefNumber,
 				AimSeqNumber = LD.AimSeqNumber,
 				LearnAimRef = LD.LearnAimRef,
@@ -1839,9 +1840,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentToPeriod = 
@@ -1907,9 +1918,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentMidYear = 
@@ -1971,9 +1992,17 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 					),
+				ProgFundIndMaxEmpContYearEnd = 
+					SUM ( 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+					),
 				LearnSuppPaymentYearEnd = 
 					SUM ( 
 						FM36P.LearnSuppFundCash 
+					),
+				MatEngOnProgPaymentYearEnd = 
+					SUM ( 
+						FM36P.MathEngOnProgPayment 
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
@@ -2034,9 +2063,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP01 = 
@@ -2099,9 +2138,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP02 = 
@@ -2167,9 +2216,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP03 = 
@@ -2232,9 +2291,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP04 = 
@@ -2300,9 +2369,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP05 = 
@@ -2365,9 +2444,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP06 = 
@@ -2433,9 +2522,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP07 = 
@@ -2498,9 +2597,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP08 = 
@@ -2566,9 +2675,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP09 = 
@@ -2631,9 +2750,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP10 = 
@@ -2699,9 +2828,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP11 = 
@@ -2764,9 +2903,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP12 = 
@@ -2841,9 +2990,9 @@ BEGIN
 
 	SET @SQLString += 
         N'
-		--Fund Model 36 Period Funding Summary
-		DROP TABLE IF EXISTS #FM36PeriodFundingSummary
-		SELECT
+			--Fund Model 36 Period Funding Summary
+			DROP TABLE IF EXISTS #FM36PeriodFundingSummary
+			SELECT
 				LearnRefNumber = LD.LearnRefNumber,
 				FundModel = LD.FundModel,
 				StdCode = COALESCE ( LD.StdCode, 0 ),
@@ -2864,9 +3013,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentToPeriod = 
@@ -2932,9 +3091,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentMidYear = 
@@ -2996,9 +3165,17 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 					),
+				ProgFundIndMaxEmpContYearEnd = 
+					SUM ( 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+					),
 				LearnSuppPaymentYearEnd = 
 					SUM ( 
 						FM36P.LearnSuppFundCash 
+					),
+				MatEngOnProgPaymentYearEnd = 
+					SUM ( 
+						FM36P.MathEngOnProgPayment 
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
@@ -3059,9 +3236,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP01 = 
@@ -3124,9 +3311,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP02 = 
@@ -3192,9 +3389,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP03 = 
@@ -3257,9 +3464,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP04 = 
@@ -3325,9 +3542,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP05 = 
@@ -3390,9 +3617,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP06 = 
@@ -3458,9 +3695,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP07 = 
@@ -3523,9 +3770,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP08 = 
@@ -3591,9 +3848,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP09 = 
@@ -3656,9 +3923,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP10 = 
@@ -3724,9 +4001,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP11 = 
@@ -3789,9 +4076,19 @@ BEGIN
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
 					),
+				ProgFundIndMaxEmpContP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnSuppFundCash 
+						ELSE 0 END
+					),
+				MatEngOnProgPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP12 = 
@@ -4059,6 +4356,7 @@ BEGIN
 		GROUP BY
 			L.LearnRefNumber
 	'
+
 
 	SET @SQLString += 
         N'
@@ -4604,7 +4902,7 @@ BEGIN
 			ParentCollegeLevel4Name = COALESCE ( PCS.CollegeLevel4Name, ''-- Unknown --''),
     '
 
-   SET @SQLString += 
+    SET @SQLString += 
         N'
 			CampusCode = COALESCE ( CS.CampusCode, ''-''),
 			CampusName = COALESCE ( CS.CampusName, ''-- Unknown --''),
@@ -5797,7 +6095,7 @@ BEGIN
 
 	'
 
-	SET @SQLString += 
+    SET @SQLString += 
         N'
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
@@ -5838,6 +6136,7 @@ BEGIN
 			ProgWeightFactor = FM35.ApplicProgWeightFact,
 			UnweightFundRate = FM35.ApplicUnweightFundRate,
 			WeightFundRate = FM35.ApplicWeightFundRate,
+
 			CoFundingIndicator = 
 				CASE
 					WHEN FFI.LearnDelFAMCode IS NULL THEN NULL
@@ -5847,7 +6146,7 @@ BEGIN
 				END,
 			IsCarryIn = 
 				CASE
-					WHEN CAST ( LD.LearnStartDate AS DATE ) <= ''20'' + LEFT ( @AcademicYear, 2) + ''-08-01'' THEN 1
+					WHEN CAST ( LD.LearnStartDate AS DATE ) <= ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' THEN 1
 					ELSE 0
 				END,
 			HEQualEnt3 = HE.QUALENT3,
@@ -5885,7 +6184,7 @@ BEGIN
 			ProvSpecDelMonB = PSDMB.ProvSpecDelMon,
 			ProvSpecDelMonC = PSDMC.ProvSpecDelMon,
 			ProvSpecDelMonD = PSDMD.ProvSpecDelMon,
-
+			
 			NumPlannedOnProgPayments = COALESCE ( ALB.PlannedNumOnProgInstalm, FM36.PlannedNumOnProgInstalm, FM35.PlannedNumOnProgInstalm ),
 			NumOutstandingOnProgPayments = COALESCE ( ALB.OutstndNumOnProgInstalm, FM36.OutstandNumOnProgInstalm, FM35.OutstndNumOnProgInstalm ),
 			CompletionElement = 0,
@@ -5966,6 +6265,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossibleIncome = 1 THEN ALBP.TotalEarnedCashToPeriod END, FM35P.OnProgPaymentToPeriod, FM36PM.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
+			ProgFundIndMaxEmpContToPeriod = COALESCE ( FM36PM.ProgFundIndMaxEmpContToPeriod, FM36P.ProgFundIndMaxEmpContToPeriod, 0 ),
 			LearnSuppPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -5991,6 +6291,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, FM35P.LearnSuppPaymentToPeriod, FM36PM.LearnSuppPaymentToPeriod, FM36P.LearnSuppPaymentToPeriod, 0 ),
+			MatEngOnProgPaymentToPeriod = COALESCE ( FM36PM.MatEngOnProgPaymentToPeriod, FM36P.MatEngOnProgPaymentToPeriod, 0 ),
 			AchCompPaymentToPeriod = COALESCE ( FM35P.AchCompPaymentToPeriod, FM36PM.AchCompPaymentToPeriod, FM36P.AchCompPaymentToPeriod, 0 ),
 			BalancePaymentToPeriod = COALESCE ( FM35P.BalancePaymentToPeriod, FM36PM.BalancePaymentToPeriod, FM36P.BalancePaymentToPeriod, 0 ),
 			EmpOutcomePayToPeriod = COALESCE ( FM35P.EmpOutcomePayToPeriod, 0 ),
@@ -6051,6 +6352,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM35P.OnProgPaymentMidYear, FM36PM.OnProgPaymentMidYear, FM36P.OnProgPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
+			ProgFundIndMaxEmpContMidYear = COALESCE ( FM36PM.ProgFundIndMaxEmpContMidYear, FM36P.ProgFundIndMaxEmpContMidYear, 0 ),
 			LearnSuppPaymentMidYear = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6076,6 +6378,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * 6 END, FM35P.LearnSuppPaymentMidYear, FM36PM.LearnSuppPaymentMidYear, FM36P.LearnSuppPaymentMidYear, 0 ),
+			MatEngOnProgPaymentMidYear = COALESCE ( FM36PM.MatEngOnProgPaymentMidYear, FM36P.MatEngOnProgPaymentMidYear, 0 ),
 			AchCompPaymentMidYear = COALESCE ( FM35P.AchCompPaymentMidYear, FM36PM.AchCompPaymentMidYear, FM36P.AchCompPaymentMidYear, 0 ),
 			BalancePaymentMidYear = COALESCE ( FM35P.BalancePaymentMidYear, FM36PM.BalancePaymentMidYear, FM36P.BalancePaymentMidYear, 0 ),
 			EmpOutcomePayMidYear = COALESCE ( FM35P.EmpOutcomePayMidYear, 0 ),
@@ -6136,6 +6439,7 @@ BEGIN
 							0
 					END
 				END END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashYearEnd END, FM35P.OnProgPaymentYearEnd, FM36PM.OnProgPaymentYearEnd, FM36P.OnProgPaymentYearEnd, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END, 0 ),
+			ProgFundIndMaxEmpContYearEnd = COALESCE ( FM36PM.ProgFundIndMaxEmpContYearEnd, FM36P.ProgFundIndMaxEmpContYearEnd, 0 ),
 			LearnSuppPaymentYearEnd = COALESCE ( CASE WHEN LD.FundModel = 25 THEN CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6161,6 +6465,7 @@ BEGIN
 							0
 					END
 				END END, FM35P.LearnSuppPaymentYearEnd, FM36PM.LearnSuppPaymentYearEnd, FM36P.LearnSuppPaymentYearEnd, 0 ),
+			MatEngOnProgPaymentYearEnd = COALESCE ( FM36PM.MatEngOnProgPaymentYearEnd, FM36P.MatEngOnProgPaymentYearEnd, 0 ),
 			AchCompPaymentYearEnd = COALESCE ( FM35P.AchCompPaymentYearEnd, FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd, 0 ),
 			BalancePaymentYearEnd = COALESCE ( FM35P.BalancePaymentYearEnd, FM36PM.BalancePaymentYearEnd, FM36P.BalancePaymentYearEnd, 0 ),
 			EmpOutcomePayYearEnd = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -6383,7 +6688,7 @@ BEGIN
 			AppStandardPriceEpisodeLearnerAdditionalPaymentThresholdDate = FM36PE.PriceEpisodeLearnerAdditionalPaymentThresholdDate,
 			AppStandardPriceEpisodeRedStartDate = FM36PE.PriceEpisodeRedStartDate,
 			AppStandardPriceEpisodeRedStatusCode = FM36PE.PriceEpisodeRedStatusCode
-    
+
 			--INTO FIS_FundingDataTemp
 	'
     
@@ -6534,7 +6839,7 @@ BEGIN
 		) PTR
 			ON PTR.LearnRefNumber = L.LearnRefNumber
 			AND PTR.RowNum = 1
-		
+
 		LEFT JOIN ' + @FISDatabase + '.Valid.ProviderSpecLearnerMonitoring PSLMA
 			ON PSLMA.LearnRefNumber = LD.LearnRefNumber
 			AND PSLMA.ProvSpecLearnMonOccur = ''A''
@@ -6652,7 +6957,7 @@ BEGIN
 			ON ALBP.LearnRefNumber = LD.LearnRefNumber
 			AND ALBP.AimSeqNumber = LD.AimSeqNumber
 	'
-    
+
     SET @SQLString += 
         N'
 		--Invalid Learners
@@ -7248,6 +7553,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP01 END, FM35P.OnProgPaymentP01, FM36PM.OnProgPaymentP01, FM36P.OnProgPaymentP01, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP01 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP01, FM36P.ProgFundIndMaxEmpContP01, 0 ),
 			LearnSuppPaymentP01 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7273,6 +7579,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP01, FM36PM.LearnSuppPaymentP01, FM36P.LearnSuppPaymentP01, 0 ),
+			MatEngOnProgPaymentP01 = COALESCE ( FM36PM.MatEngOnProgPaymentP01, FM36P.MatEngOnProgPaymentP01, 0 ),
 			AchCompPaymentP01 = COALESCE ( FM35P.AchCompPaymentP01, FM36PM.AchCompPaymentP01, FM36P.AchCompPaymentP01, 0 ),
 			BalancePaymentP01 = COALESCE ( FM35P.BalancePaymentP01, FM36PM.BalancePaymentP01, FM36P.BalancePaymentP01, 0 ),
 			EmpOutcomePayP01 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7333,6 +7640,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP02 END, FM35P.OnProgPaymentP02, FM36PM.OnProgPaymentP02, FM36P.OnProgPaymentP02, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP02 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP02, FM36P.ProgFundIndMaxEmpContP02, 0 ),
 			LearnSuppPaymentP02 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7358,6 +7666,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP02, FM36PM.LearnSuppPaymentP02, FM36P.LearnSuppPaymentP02, 0 ),
+			MatEngOnProgPaymentP02 = COALESCE ( FM36PM.MatEngOnProgPaymentP02, FM36P.MatEngOnProgPaymentP02, 0 ),
 			AchCompPaymentP02 = COALESCE ( FM35P.AchCompPaymentP02, FM36PM.AchCompPaymentP02, FM36P.AchCompPaymentP02, 0 ),
 			BalancePaymentP02 = COALESCE ( FM35P.BalancePaymentP02, FM36PM.BalancePaymentP02, FM36P.BalancePaymentP02, 0 ),
 			EmpOutcomePayP02 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7418,6 +7727,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP03 END, FM35P.OnProgPaymentP03, FM36PM.OnProgPaymentP03, FM36P.OnProgPaymentP03, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP03 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP03, FM36P.ProgFundIndMaxEmpContP03, 0 ),
 			LearnSuppPaymentP03 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7443,6 +7753,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP03, FM36PM.LearnSuppPaymentP03, FM36P.LearnSuppPaymentP03, 0 ),
+			MatEngOnProgPaymentP03 = COALESCE ( FM36PM.MatEngOnProgPaymentP03, FM36P.MatEngOnProgPaymentP03, 0 ),
 			AchCompPaymentP03 = COALESCE ( FM35P.AchCompPaymentP03, FM36PM.AchCompPaymentP03, FM36P.AchCompPaymentP03, 0 ),
 			BalancePaymentP03 = COALESCE ( FM35P.BalancePaymentP03, FM36PM.BalancePaymentP03, FM36P.BalancePaymentP03, 0 ),
 			EmpOutcomePayP03 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7503,6 +7814,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP04 END, FM35P.OnProgPaymentP04, FM36PM.OnProgPaymentP04, FM36P.OnProgPaymentP04, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP04 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP04, FM36P.ProgFundIndMaxEmpContP04, 0 ),
 			LearnSuppPaymentP04 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7528,6 +7840,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP04, FM36PM.LearnSuppPaymentP04, FM36P.LearnSuppPaymentP04, 0 ),
+			MatEngOnProgPaymentP04 = COALESCE ( FM36PM.MatEngOnProgPaymentP04, FM36P.MatEngOnProgPaymentP04, 0 ),
 			AchCompPaymentP04 = COALESCE ( FM35P.AchCompPaymentP04, FM36PM.AchCompPaymentP04, FM36P.AchCompPaymentP04, 0 ),
 			BalancePaymentP04 = COALESCE ( FM35P.BalancePaymentP04, FM36PM.BalancePaymentP04, FM36P.BalancePaymentP04, 0 ),
 			EmpOutcomePayP04 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7588,6 +7901,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP05 END, FM35P.OnProgPaymentP05, FM36PM.OnProgPaymentP05, FM36P.OnProgPaymentP05, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP05 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP05, FM36P.ProgFundIndMaxEmpContP05, 0 ),
 			LearnSuppPaymentP05 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7613,6 +7927,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP05, FM36PM.LearnSuppPaymentP05, FM36P.LearnSuppPaymentP05, 0 ),
+			MatEngOnProgPaymentP05 = COALESCE ( FM36PM.MatEngOnProgPaymentP05, FM36P.MatEngOnProgPaymentP05, 0 ),
 			AchCompPaymentP05 = COALESCE ( FM35P.AchCompPaymentP05, FM36PM.AchCompPaymentP05, FM36P.AchCompPaymentP05, 0 ),
 			BalancePaymentP05 = COALESCE ( FM35P.BalancePaymentP05, FM36PM.BalancePaymentP05, FM36P.BalancePaymentP05, 0 ),
 			EmpOutcomePayP05 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7673,6 +7988,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP06 END, FM35P.OnProgPaymentP06, FM36PM.OnProgPaymentP06, FM36P.OnProgPaymentP06, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP06 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP06, FM36P.ProgFundIndMaxEmpContP06, 0 ),
 			LearnSuppPaymentP06 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7698,6 +8014,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP06, FM36PM.LearnSuppPaymentP06, FM36P.LearnSuppPaymentP06, 0 ),
+			MatEngOnProgPaymentP06 = COALESCE ( FM36PM.MatEngOnProgPaymentP06, FM36P.MatEngOnProgPaymentP06, 0 ),
 			AchCompPaymentP06 = COALESCE ( FM35P.AchCompPaymentP06, FM36PM.AchCompPaymentP06, FM36P.AchCompPaymentP06, 0 ),
 			BalancePaymentP06 = COALESCE ( FM35P.BalancePaymentP06, FM36PM.BalancePaymentP06, FM36P.BalancePaymentP06, 0 ),
 			EmpOutcomePayP06 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7758,6 +8075,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP07 END, FM35P.OnProgPaymentP07, FM36PM.OnProgPaymentP07, FM36P.OnProgPaymentP07, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP07 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP07, FM36P.ProgFundIndMaxEmpContP07, 0 ),
 			LearnSuppPaymentP07 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7783,6 +8101,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP07, FM36PM.LearnSuppPaymentP07, FM36P.LearnSuppPaymentP07, 0 ),
+			MatEngOnProgPaymentP07 = COALESCE ( FM36PM.MatEngOnProgPaymentP07, FM36P.MatEngOnProgPaymentP07, 0 ),
 			AchCompPaymentP07 = COALESCE ( FM35P.AchCompPaymentP07, FM36PM.AchCompPaymentP07, FM36P.AchCompPaymentP07, 0 ),
 			BalancePaymentP07 = COALESCE ( FM35P.BalancePaymentP07, FM36PM.BalancePaymentP07, FM36P.BalancePaymentP07, 0 ),
 			EmpOutcomePayP07 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7843,6 +8162,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP08 END, FM35P.OnProgPaymentP08, FM36PM.OnProgPaymentP08, FM36P.OnProgPaymentP08, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP08 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP08, FM36P.ProgFundIndMaxEmpContP08, 0 ),
 			LearnSuppPaymentP08 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7868,6 +8188,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP08, FM36PM.LearnSuppPaymentP08, FM36P.LearnSuppPaymentP08, 0 ),
+			MatEngOnProgPaymentP08 = COALESCE ( FM36PM.MatEngOnProgPaymentP08, FM36P.MatEngOnProgPaymentP08, 0 ),
 			AchCompPaymentP08 = COALESCE ( FM35P.AchCompPaymentP08, FM36PM.AchCompPaymentP08, FM36P.AchCompPaymentP08, 0 ),
 			BalancePaymentP08 = COALESCE ( FM35P.BalancePaymentP08, FM36PM.BalancePaymentP08, FM36P.BalancePaymentP08, 0 ),
 			EmpOutcomePayP08 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7928,6 +8249,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP09 END, FM35P.OnProgPaymentP09, FM36PM.OnProgPaymentP09, FM36P.OnProgPaymentP09, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP09 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP09, FM36P.ProgFundIndMaxEmpContP09, 0 ),
 			LearnSuppPaymentP09 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7953,6 +8275,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP09, FM36PM.LearnSuppPaymentP09, FM36P.LearnSuppPaymentP09, 0 ),
+			MatEngOnProgPaymentP09 = COALESCE ( FM36PM.MatEngOnProgPaymentP09, FM36P.MatEngOnProgPaymentP09, 0 ),
 			AchCompPaymentP09 = COALESCE ( FM35P.AchCompPaymentP09, FM36PM.AchCompPaymentP09, FM36P.AchCompPaymentP09, 0 ),
 			BalancePaymentP09 = COALESCE ( FM35P.BalancePaymentP09, FM36PM.BalancePaymentP09, FM36P.BalancePaymentP09, 0 ),
 			EmpOutcomePayP09 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8013,6 +8336,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP10 END, FM35P.OnProgPaymentP10, FM36PM.OnProgPaymentP10, FM36P.OnProgPaymentP10, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP10 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP10, FM36P.ProgFundIndMaxEmpContP10, 0 ),
 			LearnSuppPaymentP10 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8038,6 +8362,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP10, FM36PM.LearnSuppPaymentP10, FM36P.LearnSuppPaymentP10, 0 ),
+			MatEngOnProgPaymentP10 = COALESCE ( FM36PM.MatEngOnProgPaymentP10, FM36P.MatEngOnProgPaymentP10, 0 ),
 			AchCompPaymentP10 = COALESCE ( FM35P.AchCompPaymentP10, FM36PM.AchCompPaymentP10, FM36P.AchCompPaymentP10, 0 ),
 			BalancePaymentP10 = COALESCE ( FM35P.BalancePaymentP10, FM36PM.BalancePaymentP10, FM36P.BalancePaymentP10, 0 ),
 			EmpOutcomePayP10 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8098,6 +8423,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP11 END, FM35P.OnProgPaymentP11, FM36PM.OnProgPaymentP11, FM36P.OnProgPaymentP11, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP11 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP11, FM36P.ProgFundIndMaxEmpContP11, 0 ),
 			LearnSuppPaymentP11 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8123,6 +8449,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP11, FM36PM.LearnSuppPaymentP11, FM36P.LearnSuppPaymentP11, 0 ),
+			MatEngOnProgPaymentP11 = COALESCE ( FM36PM.MatEngOnProgPaymentP11, FM36P.MatEngOnProgPaymentP11, 0 ),
 			AchCompPaymentP11 = COALESCE ( FM35P.AchCompPaymentP11, FM36PM.AchCompPaymentP11, FM36P.AchCompPaymentP11, 0 ),
 			BalancePaymentP11 = COALESCE ( FM35P.BalancePaymentP11, FM36PM.BalancePaymentP11, FM36P.BalancePaymentP11, 0 ),
 			EmpOutcomePayP11 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8183,6 +8510,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP12 END, FM35P.OnProgPaymentP12, FM36PM.OnProgPaymentP12, FM36P.OnProgPaymentP12, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProgFundIndMaxEmpContP12 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP12, FM36P.ProgFundIndMaxEmpContP12, 0 ),
 			LearnSuppPaymentP12 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8208,6 +8536,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP12, FM36PM.LearnSuppPaymentP12, FM36P.LearnSuppPaymentP12, 0 ),
+			MatEngOnProgPaymentP12 = COALESCE ( FM36PM.MatEngOnProgPaymentP12, FM36P.MatEngOnProgPaymentP12, 0 ),
 			AchCompPaymentP12 = COALESCE ( FM35P.AchCompPaymentP12, FM36PM.AchCompPaymentP12, FM36P.AchCompPaymentP12, 0 ),
 			BalancePaymentP12 = COALESCE ( FM35P.BalancePaymentP12, FM36PM.BalancePaymentP12, FM36P.BalancePaymentP12, 0 ),
 			EmpOutcomePayP12 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8344,9 +8673,9 @@ BEGIN
 			ON ALBP.LearnRefNumber = LD.LearnRefNumber
 			AND ALBP.AimSeqNumber = LD.AimSeqNumber
 	'
-    
-    SET @SQLString += 
-        N'
+
+	SET @SQLString += 
+		N'
 		LEFT JOIN #FundModelAim FM
 			ON FM.LearnRefNumber = LD.LearnRefNumber
 			AND FM.AimSeqNumber = LD.AimSeqNumber
@@ -8588,11 +8917,11 @@ BEGIN
 			AND FM36PM.PwayCode = COALESCE ( LD.PwayCode, 0 )
 			AND LD.AimSeqNumber = MAFMA.AimSeqNumber
 			AND @AppsMoveFundingToMainComponentAim = 1
-   
+
 		--WHERE
 			--L.LearnRefNumber = ''11024003''
 	'
-	
+
 	--SELECT @SQLString AS [processing-instruction(x)] FOR XML PATH('')
 
 	SET @SQLParams = 
@@ -8690,4 +9019,5 @@ BEGIN
 		@PartnerCollegeLevel2Code = @PartnerCollegeLevel2Code,
 		@PartnerCollegeLevel3Code = @PartnerCollegeLevel3Code,
 		@PartnerCollegeLevel4Code = @PartnerCollegeLevel4Code;
+
 END

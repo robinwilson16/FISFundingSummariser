@@ -1,0 +1,73 @@
+DECLARE @AcademicYear VARCHAR(5) = '25/26'
+DECLARE @ILRReturn VARCHAR(3) = 'R10'
+
+SELECT
+	Retained = SUM ( FD.IsOverallRetainedFunded ),
+	Starts = SUM ( FD.IsOverallStart ),
+	Leavers = SUM ( FD.IsOverallLeaver ),
+	Completed = SUM ( FD.IsOverallCompletedFunded ),
+	Achieved = SUM ( FD.IsOverallAchieverFunded ),
+	RetInYrPer = 
+		ROUND (
+			CASE
+				WHEN SUM ( FD.IsOverallStart ) = 0 THEN 0
+				ELSE
+					CAST ( SUM ( FD.IsOverallRetainedFunded ) AS FLOAT )
+					/
+					CAST ( SUM ( FD.IsOverallStart ) AS FLOAT )
+			END,
+			3
+		),
+	RetPer = 
+		ROUND (
+			CASE
+				WHEN SUM ( FD.IsOverallLeaver ) = 0 THEN 0
+				ELSE
+					CAST ( SUM ( FD.IsOverallCompletedFunded ) AS FLOAT )
+					/
+					CAST ( SUM ( FD.IsOverallLeaver ) AS FLOAT )
+			END,
+			3
+		),
+	AchPer = 
+		ROUND (
+			CASE
+				WHEN SUM ( FD.IsOverallLeaver ) = 0 THEN 0
+				ELSE
+					CAST ( SUM ( FD.IsOverallAchieverFunded ) AS FLOAT )
+					/
+					CAST ( SUM ( FD.IsOverallLeaver ) AS FLOAT )
+			END,
+			3
+		),
+	PassPer = 
+		ROUND (
+			CASE
+				WHEN SUM ( FD.IsOverallCompletedFunded ) = 0 THEN 0
+				ELSE
+					CAST ( SUM ( FD.IsOverallAchieverFunded ) AS FLOAT )
+					/
+					CAST ( SUM ( FD.IsOverallCompletedFunded ) AS FLOAT )
+			END,
+			3
+		)
+FROM FIS_FundingData FD
+WHERE
+	FD.HybridEndYear = @AcademicYear
+	AND FD.ILRReturn = @ILRReturn
+	AND FD.IsFinalReturn = 1
+	AND FD.IsFundedStart = 1
+	AND FD.FundLineCategory IN (
+		'16-19 Funding',
+		'Adult Skills Fund',
+		'Adult Education Budget'
+		--'Apprenticeships'
+	)
+	--AND (
+	--	FD.FAMLearnerEDF1 = 1 --No Maths
+	--	OR FD.FAMLearnerEDF2 = 1 --No Maths
+	--)
+	--AND (
+	--	FD.FAMLearnerEDF1 = 2 --No English
+	--	OR FD.FAMLearnerEDF2 = 2 --No English
+	--)
