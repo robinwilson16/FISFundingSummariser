@@ -1860,17 +1860,13 @@ BEGIN
 					),
 				AchCompPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -1892,12 +1888,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -1938,17 +1930,13 @@ BEGIN
 					),
 				AchCompPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -1970,12 +1958,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2009,16 +1993,12 @@ BEGIN
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 					),
 				BalancePaymentYearEnd = 
 					SUM ( 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 					),
 				OtherPaymentYearEnd = 
@@ -2038,12 +2018,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2083,17 +2059,13 @@ BEGIN
 					),
 				AchCompPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2115,12 +2087,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2158,17 +2126,13 @@ BEGIN
 					),
 				AchCompPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2190,12 +2154,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2236,17 +2196,13 @@ BEGIN
 					),
 				AchCompPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2268,12 +2224,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2311,17 +2263,13 @@ BEGIN
 					),
 				AchCompPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2343,12 +2291,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2389,17 +2333,13 @@ BEGIN
 					),
 				AchCompPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2421,12 +2361,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2464,17 +2400,13 @@ BEGIN
 					),
 				AchCompPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2496,12 +2428,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2542,17 +2470,13 @@ BEGIN
 					),
 				AchCompPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2574,12 +2498,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2617,17 +2537,13 @@ BEGIN
 					),
 				AchCompPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2649,12 +2565,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2695,17 +2607,13 @@ BEGIN
 					),
 				AchCompPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2727,12 +2635,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2770,17 +2674,13 @@ BEGIN
 					),
 				AchCompPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2802,12 +2702,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2848,17 +2744,13 @@ BEGIN
 					),
 				AchCompPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2880,12 +2772,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -2923,17 +2811,13 @@ BEGIN
 					),
 				AchCompPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -2955,12 +2839,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3033,17 +2913,13 @@ BEGIN
 					),
 				AchCompPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3065,12 +2941,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3111,17 +2983,13 @@ BEGIN
 					),
 				AchCompPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3143,12 +3011,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3182,16 +3046,12 @@ BEGIN
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 					),
 				BalancePaymentYearEnd = 
 					SUM ( 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 					),
 				OtherPaymentYearEnd = 
@@ -3211,12 +3071,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3256,17 +3112,13 @@ BEGIN
 					),
 				AchCompPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3288,12 +3140,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3331,17 +3179,13 @@ BEGIN
 					),
 				AchCompPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3363,12 +3207,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3409,17 +3249,13 @@ BEGIN
 					),
 				AchCompPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3441,12 +3277,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3484,17 +3316,13 @@ BEGIN
 					),
 				AchCompPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3516,12 +3344,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3562,17 +3386,13 @@ BEGIN
 					),
 				AchCompPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3594,12 +3414,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3637,17 +3453,13 @@ BEGIN
 					),
 				AchCompPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3669,12 +3481,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3715,17 +3523,13 @@ BEGIN
 					),
 				AchCompPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3747,12 +3551,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3790,17 +3590,13 @@ BEGIN
 					),
 				AchCompPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3822,12 +3618,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3868,17 +3660,13 @@ BEGIN
 					),
 				AchCompPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3900,12 +3688,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -3943,17 +3727,13 @@ BEGIN
 					),
 				AchCompPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -3975,12 +3755,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -4021,17 +3797,13 @@ BEGIN
 					),
 				AchCompPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -4053,12 +3825,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
@@ -4096,17 +3864,13 @@ BEGIN
 					),
 				AchCompPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END 
+						FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						ELSE 0 END
 					),
 				BalancePaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						+ FM36P.MathEngBalPayment 
+						FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						ELSE 0 END
 					),
@@ -4128,12 +3892,8 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.LearnSuppFundCash
-						+ CASE 
-							WHEN FM36P.FundLineType LIKE ''16-18 Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.FundLineType LIKE ''19+ Apprenticeship%Non-Levy%'' THEN 0
-							WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimCompletionPayment + FM36P.ProgrammeAimBalPayment
-							ELSE 0 
-						END
+						+ FM36P.ProgrammeAimCompletionPayment 
+						+ FM36P.ProgrammeAimBalPayment
 						+ FM36P.MathEngBalPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
 						+ FM36P.LearnDelFirstEmp1618Pay 
