@@ -881,7 +881,15 @@ BEGIN
 
 	SET @SQLString += 
         N'
-			FundStart = COALESCE ( CASE WHEN LD.FundModel = 25 THEN HRS.IsFunded END, FM25.StartFund, FMALB.FundStart, FM35.FundStart, FM36.FundStart, 0 ),
+			FundStart = 
+				CASE 
+					WHEN LD.FundModel = 25 AND HRS.IsFunded = 1 THEN 1 
+					WHEN FM25.StartFund = 1 THEN 1
+					WHEN FMALB.FundStart = 1 THEN 1
+					WHEN FM35.FundStart = 1 THEN 1
+					WHEN FM36.FundStart = 1 THEN 1
+					ELSE 0
+				END,
 			IsCoreAim = 
 				CASE
 					WHEN FM25.CoreAimSeqNumber = LD.AimSeqNumber THEN 1
