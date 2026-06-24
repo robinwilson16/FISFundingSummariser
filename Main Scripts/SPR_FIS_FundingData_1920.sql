@@ -1833,7 +1833,7 @@ BEGIN
 
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1853,7 +1853,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentToPeriod = 
+				MathEngOnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -1883,7 +1883,7 @@ BEGIN
 					),
 				TotalEarnedCashToPeriod = 
 					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1911,7 +1911,7 @@ BEGIN
 		N'
 				OnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1931,7 +1931,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentMidYear = 
+				MathEngOnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -1961,7 +1961,7 @@ BEGIN
 					),
 				TotalEarnedCashMidYear = 
 					SUM (  CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -1986,7 +1986,7 @@ BEGIN
 
 				OnProgPaymentYearEnd = 
 					SUM ( 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2003,7 +2003,7 @@ BEGIN
 					SUM ( 
 						FM36P.LearnSuppFundCash 
 					),
-				MatEngOnProgPaymentYearEnd = 
+				MathEngOnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.MathEngOnProgPayment 
 					),
@@ -2029,7 +2029,7 @@ BEGIN
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2056,7 +2056,7 @@ BEGIN
 		N'
 				OnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2076,7 +2076,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP01 = 
+				MathEngOnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2106,7 +2106,7 @@ BEGIN
 					),
 				TotalEarnedCashP01 = 
 					SUM (  CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2131,7 +2131,7 @@ BEGIN
 
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2151,7 +2151,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP02 = 
+				MathEngOnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2181,7 +2181,7 @@ BEGIN
 					),
 				TotalEarnedCashP02 = 
 					SUM (  CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2209,7 +2209,7 @@ BEGIN
 		N'
 				OnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2229,7 +2229,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP03 = 
+				MathEngOnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2259,7 +2259,7 @@ BEGIN
 					),
 				TotalEarnedCashP03 = 
 					SUM (  CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2284,7 +2284,7 @@ BEGIN
 
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2304,7 +2304,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP04 = 
+				MathEngOnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2334,7 +2334,7 @@ BEGIN
 					),
 				TotalEarnedCashP04 = 
 					SUM (  CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2362,7 +2362,7 @@ BEGIN
 		N'
 				OnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2382,7 +2382,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP05 = 
+				MathEngOnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2412,7 +2412,7 @@ BEGIN
 					),
 				TotalEarnedCashP05 = 
 					SUM (  CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2437,7 +2437,7 @@ BEGIN
 
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2457,7 +2457,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP06 = 
+				MathEngOnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2487,7 +2487,7 @@ BEGIN
 					),
 				TotalEarnedCashP06 = 
 					SUM (  CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2515,7 +2515,7 @@ BEGIN
 		N'
 				OnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2535,7 +2535,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP07 = 
+				MathEngOnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2565,7 +2565,7 @@ BEGIN
 					),
 				TotalEarnedCashP07 = 
 					SUM (  CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2590,7 +2590,7 @@ BEGIN
 
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2610,7 +2610,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP08 = 
+				MathEngOnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2640,7 +2640,7 @@ BEGIN
 					),
 				TotalEarnedCashP08 = 
 					SUM (  CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2668,7 +2668,7 @@ BEGIN
 		N'
 				OnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2688,7 +2688,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP09 = 
+				MathEngOnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2718,7 +2718,7 @@ BEGIN
 					),
 				TotalEarnedCashP09 = 
 					SUM (  CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2743,7 +2743,7 @@ BEGIN
 
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2763,7 +2763,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP10 = 
+				MathEngOnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2793,7 +2793,7 @@ BEGIN
 					),
 				TotalEarnedCashP10 = 
 					SUM (  CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2821,7 +2821,7 @@ BEGIN
 		N'
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2841,7 +2841,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP11 = 
+				MathEngOnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2871,7 +2871,7 @@ BEGIN
 					),
 				TotalEarnedCashP11 = 
 					SUM (  CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2896,7 +2896,7 @@ BEGIN
 
 				OnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -2916,7 +2916,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP12 = 
+				MathEngOnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -2946,7 +2946,7 @@ BEGIN
 					),
 				TotalEarnedCashP12 = 
 					SUM (  CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3006,7 +3006,7 @@ BEGIN
 
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3026,7 +3026,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentToPeriod = 
+				MathEngOnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3056,7 +3056,7 @@ BEGIN
 					),
 				TotalEarnedCashToPeriod = 
 					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3084,7 +3084,7 @@ BEGIN
 		N'
 				OnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3104,7 +3104,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentMidYear = 
+				MathEngOnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3134,7 +3134,7 @@ BEGIN
 					),
 				TotalEarnedCashMidYear = 
 					SUM (  CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3159,7 +3159,7 @@ BEGIN
 
 				OnProgPaymentYearEnd = 
 					SUM ( 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3176,7 +3176,7 @@ BEGIN
 					SUM ( 
 						FM36P.LearnSuppFundCash 
 					),
-				MatEngOnProgPaymentYearEnd = 
+				MathEngOnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.MathEngOnProgPayment 
 					),
@@ -3202,7 +3202,7 @@ BEGIN
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3229,7 +3229,7 @@ BEGIN
 		N'
 				OnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3249,7 +3249,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP01 = 
+				MathEngOnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3279,7 +3279,7 @@ BEGIN
 					),
 				TotalEarnedCashP01 = 
 					SUM (  CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3304,7 +3304,7 @@ BEGIN
 
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3324,7 +3324,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP02 = 
+				MathEngOnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3354,7 +3354,7 @@ BEGIN
 					),
 				TotalEarnedCashP02 = 
 					SUM (  CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3382,7 +3382,7 @@ BEGIN
 		N'
 				OnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3402,7 +3402,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP03 = 
+				MathEngOnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3432,7 +3432,7 @@ BEGIN
 					),
 				TotalEarnedCashP03 = 
 					SUM (  CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3457,7 +3457,7 @@ BEGIN
 
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3477,7 +3477,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP04 = 
+				MathEngOnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3507,7 +3507,7 @@ BEGIN
 					),
 				TotalEarnedCashP04 = 
 					SUM (  CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3535,7 +3535,7 @@ BEGIN
 		N'
 				OnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3555,7 +3555,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP05 = 
+				MathEngOnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3585,7 +3585,7 @@ BEGIN
 					),
 				TotalEarnedCashP05 = 
 					SUM (  CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3610,7 +3610,7 @@ BEGIN
 
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3630,7 +3630,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP06 = 
+				MathEngOnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3660,7 +3660,7 @@ BEGIN
 					),
 				TotalEarnedCashP06 = 
 					SUM (  CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3688,7 +3688,7 @@ BEGIN
 		N'
 				OnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3708,7 +3708,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP07 = 
+				MathEngOnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3738,7 +3738,7 @@ BEGIN
 					),
 				TotalEarnedCashP07 = 
 					SUM (  CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3763,7 +3763,7 @@ BEGIN
 
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3783,7 +3783,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP08 = 
+				MathEngOnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3813,7 +3813,7 @@ BEGIN
 					),
 				TotalEarnedCashP08 = 
 					SUM (  CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3841,7 +3841,7 @@ BEGIN
 		N'
 				OnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3861,7 +3861,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP09 = 
+				MathEngOnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3891,7 +3891,7 @@ BEGIN
 					),
 				TotalEarnedCashP09 = 
 					SUM (  CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3916,7 +3916,7 @@ BEGIN
 
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3936,7 +3936,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP10 = 
+				MathEngOnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -3966,7 +3966,7 @@ BEGIN
 					),
 				TotalEarnedCashP10 = 
 					SUM (  CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -3994,7 +3994,7 @@ BEGIN
 		N'
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -4014,7 +4014,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP11 = 
+				MathEngOnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -4044,7 +4044,7 @@ BEGIN
 					),
 				TotalEarnedCashP11 = 
 					SUM (  CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -4069,7 +4069,7 @@ BEGIN
 
 				OnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -4089,7 +4089,7 @@ BEGIN
 						FM36P.LearnSuppFundCash 
 						ELSE 0 END
 					),
-				MatEngOnProgPaymentP12 = 
+				MathEngOnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
@@ -4119,7 +4119,7 @@ BEGIN
 					),
 				TotalEarnedCashP12 = 
 					SUM (  CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelContType IN ( ''Levy Contract'', ''Contract for services with the employer'' ) THEN FM36P.ProgrammeAimOnProgPayment ELSE FM36P.ProgrammeAimProgFundIndMinCoInvest END 
+						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftOnProgPayment 
 						+ FM36P.LDApplic1618FrameworkUpliftCompletionPayment 
@@ -6149,7 +6149,7 @@ BEGIN
 				END,
 			IsCarryIn = 
 				CASE
-					WHEN CAST ( LD.LearnStartDate AS DATE ) <= ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' THEN 1
+					WHEN CAST ( COALESCE ( LD.OrigLearnStartDate, LD.LearnStartDate ) AS DATE ) < ''20'' + LEFT ( @AcademicYear, 2 ) + ''-08-01'' THEN 1
 					ELSE 0
 				END,
 			HEQualEnt3 = HE.QUALENT3,
@@ -6294,7 +6294,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, FM35P.LearnSuppPaymentToPeriod, FM36PM.LearnSuppPaymentToPeriod, FM36P.LearnSuppPaymentToPeriod, 0 ),
-			MatEngOnProgPaymentToPeriod = COALESCE ( FM36PM.MatEngOnProgPaymentToPeriod, FM36P.MatEngOnProgPaymentToPeriod, 0 ),
+			MathEngOnProgPaymentToPeriod = COALESCE ( FM36PM.MathEngOnProgPaymentToPeriod, FM36P.MathEngOnProgPaymentToPeriod, 0 ),
 			AchCompPaymentToPeriod = COALESCE ( FM35P.AchCompPaymentToPeriod, FM36PM.AchCompPaymentToPeriod, FM36P.AchCompPaymentToPeriod, 0 ),
 			BalancePaymentToPeriod = COALESCE ( FM35P.BalancePaymentToPeriod, FM36PM.BalancePaymentToPeriod, FM36P.BalancePaymentToPeriod, 0 ),
 			EmpOutcomePayToPeriod = COALESCE ( FM35P.EmpOutcomePayToPeriod, 0 ),
@@ -6381,7 +6381,7 @@ BEGIN
 							0
 					END
 				END / 12 ) * 6 END, FM35P.LearnSuppPaymentMidYear, FM36PM.LearnSuppPaymentMidYear, FM36P.LearnSuppPaymentMidYear, 0 ),
-			MatEngOnProgPaymentMidYear = COALESCE ( FM36PM.MatEngOnProgPaymentMidYear, FM36P.MatEngOnProgPaymentMidYear, 0 ),
+			MathEngOnProgPaymentMidYear = COALESCE ( FM36PM.MathEngOnProgPaymentMidYear, FM36P.MathEngOnProgPaymentMidYear, 0 ),
 			AchCompPaymentMidYear = COALESCE ( FM35P.AchCompPaymentMidYear, FM36PM.AchCompPaymentMidYear, FM36P.AchCompPaymentMidYear, 0 ),
 			BalancePaymentMidYear = COALESCE ( FM35P.BalancePaymentMidYear, FM36PM.BalancePaymentMidYear, FM36P.BalancePaymentMidYear, 0 ),
 			EmpOutcomePayMidYear = COALESCE ( FM35P.EmpOutcomePayMidYear, 0 ),
@@ -6468,7 +6468,7 @@ BEGIN
 							0
 					END
 				END END, FM35P.LearnSuppPaymentYearEnd, FM36PM.LearnSuppPaymentYearEnd, FM36P.LearnSuppPaymentYearEnd, 0 ),
-			MatEngOnProgPaymentYearEnd = COALESCE ( FM36PM.MatEngOnProgPaymentYearEnd, FM36P.MatEngOnProgPaymentYearEnd, 0 ),
+			MathEngOnProgPaymentYearEnd = COALESCE ( FM36PM.MathEngOnProgPaymentYearEnd, FM36P.MathEngOnProgPaymentYearEnd, 0 ),
 			AchCompPaymentYearEnd = COALESCE ( FM35P.AchCompPaymentYearEnd, FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd, 0 ),
 			BalancePaymentYearEnd = COALESCE ( FM35P.BalancePaymentYearEnd, FM36PM.BalancePaymentYearEnd, FM36P.BalancePaymentYearEnd, 0 ),
 			EmpOutcomePayYearEnd = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7561,7 +7561,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP01, FM36PM.LearnSuppPaymentP01, FM36P.LearnSuppPaymentP01, 0 ),
-			MatEngOnProgPaymentP01 = COALESCE ( FM36PM.MatEngOnProgPaymentP01, FM36P.MatEngOnProgPaymentP01, 0 ),
+			MathEngOnProgPaymentP01 = COALESCE ( FM36PM.MathEngOnProgPaymentP01, FM36P.MathEngOnProgPaymentP01, 0 ),
 			AchCompPaymentP01 = COALESCE ( FM35P.AchCompPaymentP01, FM36PM.AchCompPaymentP01, FM36P.AchCompPaymentP01, 0 ),
 			BalancePaymentP01 = COALESCE ( FM35P.BalancePaymentP01, FM36PM.BalancePaymentP01, FM36P.BalancePaymentP01, 0 ),
 			EmpOutcomePayP01 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7648,7 +7648,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP02, FM36PM.LearnSuppPaymentP02, FM36P.LearnSuppPaymentP02, 0 ),
-			MatEngOnProgPaymentP02 = COALESCE ( FM36PM.MatEngOnProgPaymentP02, FM36P.MatEngOnProgPaymentP02, 0 ),
+			MathEngOnProgPaymentP02 = COALESCE ( FM36PM.MathEngOnProgPaymentP02, FM36P.MathEngOnProgPaymentP02, 0 ),
 			AchCompPaymentP02 = COALESCE ( FM35P.AchCompPaymentP02, FM36PM.AchCompPaymentP02, FM36P.AchCompPaymentP02, 0 ),
 			BalancePaymentP02 = COALESCE ( FM35P.BalancePaymentP02, FM36PM.BalancePaymentP02, FM36P.BalancePaymentP02, 0 ),
 			EmpOutcomePayP02 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7735,7 +7735,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP03, FM36PM.LearnSuppPaymentP03, FM36P.LearnSuppPaymentP03, 0 ),
-			MatEngOnProgPaymentP03 = COALESCE ( FM36PM.MatEngOnProgPaymentP03, FM36P.MatEngOnProgPaymentP03, 0 ),
+			MathEngOnProgPaymentP03 = COALESCE ( FM36PM.MathEngOnProgPaymentP03, FM36P.MathEngOnProgPaymentP03, 0 ),
 			AchCompPaymentP03 = COALESCE ( FM35P.AchCompPaymentP03, FM36PM.AchCompPaymentP03, FM36P.AchCompPaymentP03, 0 ),
 			BalancePaymentP03 = COALESCE ( FM35P.BalancePaymentP03, FM36PM.BalancePaymentP03, FM36P.BalancePaymentP03, 0 ),
 			EmpOutcomePayP03 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7822,7 +7822,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP04, FM36PM.LearnSuppPaymentP04, FM36P.LearnSuppPaymentP04, 0 ),
-			MatEngOnProgPaymentP04 = COALESCE ( FM36PM.MatEngOnProgPaymentP04, FM36P.MatEngOnProgPaymentP04, 0 ),
+			MathEngOnProgPaymentP04 = COALESCE ( FM36PM.MathEngOnProgPaymentP04, FM36P.MathEngOnProgPaymentP04, 0 ),
 			AchCompPaymentP04 = COALESCE ( FM35P.AchCompPaymentP04, FM36PM.AchCompPaymentP04, FM36P.AchCompPaymentP04, 0 ),
 			BalancePaymentP04 = COALESCE ( FM35P.BalancePaymentP04, FM36PM.BalancePaymentP04, FM36P.BalancePaymentP04, 0 ),
 			EmpOutcomePayP04 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7909,7 +7909,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP05, FM36PM.LearnSuppPaymentP05, FM36P.LearnSuppPaymentP05, 0 ),
-			MatEngOnProgPaymentP05 = COALESCE ( FM36PM.MatEngOnProgPaymentP05, FM36P.MatEngOnProgPaymentP05, 0 ),
+			MathEngOnProgPaymentP05 = COALESCE ( FM36PM.MathEngOnProgPaymentP05, FM36P.MathEngOnProgPaymentP05, 0 ),
 			AchCompPaymentP05 = COALESCE ( FM35P.AchCompPaymentP05, FM36PM.AchCompPaymentP05, FM36P.AchCompPaymentP05, 0 ),
 			BalancePaymentP05 = COALESCE ( FM35P.BalancePaymentP05, FM36PM.BalancePaymentP05, FM36P.BalancePaymentP05, 0 ),
 			EmpOutcomePayP05 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -7996,7 +7996,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP06, FM36PM.LearnSuppPaymentP06, FM36P.LearnSuppPaymentP06, 0 ),
-			MatEngOnProgPaymentP06 = COALESCE ( FM36PM.MatEngOnProgPaymentP06, FM36P.MatEngOnProgPaymentP06, 0 ),
+			MathEngOnProgPaymentP06 = COALESCE ( FM36PM.MathEngOnProgPaymentP06, FM36P.MathEngOnProgPaymentP06, 0 ),
 			AchCompPaymentP06 = COALESCE ( FM35P.AchCompPaymentP06, FM36PM.AchCompPaymentP06, FM36P.AchCompPaymentP06, 0 ),
 			BalancePaymentP06 = COALESCE ( FM35P.BalancePaymentP06, FM36PM.BalancePaymentP06, FM36P.BalancePaymentP06, 0 ),
 			EmpOutcomePayP06 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8083,7 +8083,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP07, FM36PM.LearnSuppPaymentP07, FM36P.LearnSuppPaymentP07, 0 ),
-			MatEngOnProgPaymentP07 = COALESCE ( FM36PM.MatEngOnProgPaymentP07, FM36P.MatEngOnProgPaymentP07, 0 ),
+			MathEngOnProgPaymentP07 = COALESCE ( FM36PM.MathEngOnProgPaymentP07, FM36P.MathEngOnProgPaymentP07, 0 ),
 			AchCompPaymentP07 = COALESCE ( FM35P.AchCompPaymentP07, FM36PM.AchCompPaymentP07, FM36P.AchCompPaymentP07, 0 ),
 			BalancePaymentP07 = COALESCE ( FM35P.BalancePaymentP07, FM36PM.BalancePaymentP07, FM36P.BalancePaymentP07, 0 ),
 			EmpOutcomePayP07 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8170,7 +8170,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP08, FM36PM.LearnSuppPaymentP08, FM36P.LearnSuppPaymentP08, 0 ),
-			MatEngOnProgPaymentP08 = COALESCE ( FM36PM.MatEngOnProgPaymentP08, FM36P.MatEngOnProgPaymentP08, 0 ),
+			MathEngOnProgPaymentP08 = COALESCE ( FM36PM.MathEngOnProgPaymentP08, FM36P.MathEngOnProgPaymentP08, 0 ),
 			AchCompPaymentP08 = COALESCE ( FM35P.AchCompPaymentP08, FM36PM.AchCompPaymentP08, FM36P.AchCompPaymentP08, 0 ),
 			BalancePaymentP08 = COALESCE ( FM35P.BalancePaymentP08, FM36PM.BalancePaymentP08, FM36P.BalancePaymentP08, 0 ),
 			EmpOutcomePayP08 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8257,7 +8257,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP09, FM36PM.LearnSuppPaymentP09, FM36P.LearnSuppPaymentP09, 0 ),
-			MatEngOnProgPaymentP09 = COALESCE ( FM36PM.MatEngOnProgPaymentP09, FM36P.MatEngOnProgPaymentP09, 0 ),
+			MathEngOnProgPaymentP09 = COALESCE ( FM36PM.MathEngOnProgPaymentP09, FM36P.MathEngOnProgPaymentP09, 0 ),
 			AchCompPaymentP09 = COALESCE ( FM35P.AchCompPaymentP09, FM36PM.AchCompPaymentP09, FM36P.AchCompPaymentP09, 0 ),
 			BalancePaymentP09 = COALESCE ( FM35P.BalancePaymentP09, FM36PM.BalancePaymentP09, FM36P.BalancePaymentP09, 0 ),
 			EmpOutcomePayP09 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8344,7 +8344,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP10, FM36PM.LearnSuppPaymentP10, FM36P.LearnSuppPaymentP10, 0 ),
-			MatEngOnProgPaymentP10 = COALESCE ( FM36PM.MatEngOnProgPaymentP10, FM36P.MatEngOnProgPaymentP10, 0 ),
+			MathEngOnProgPaymentP10 = COALESCE ( FM36PM.MathEngOnProgPaymentP10, FM36P.MathEngOnProgPaymentP10, 0 ),
 			AchCompPaymentP10 = COALESCE ( FM35P.AchCompPaymentP10, FM36PM.AchCompPaymentP10, FM36P.AchCompPaymentP10, 0 ),
 			BalancePaymentP10 = COALESCE ( FM35P.BalancePaymentP10, FM36PM.BalancePaymentP10, FM36P.BalancePaymentP10, 0 ),
 			EmpOutcomePayP10 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8431,7 +8431,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP11, FM36PM.LearnSuppPaymentP11, FM36P.LearnSuppPaymentP11, 0 ),
-			MatEngOnProgPaymentP11 = COALESCE ( FM36PM.MatEngOnProgPaymentP11, FM36P.MatEngOnProgPaymentP11, 0 ),
+			MathEngOnProgPaymentP11 = COALESCE ( FM36PM.MathEngOnProgPaymentP11, FM36P.MathEngOnProgPaymentP11, 0 ),
 			AchCompPaymentP11 = COALESCE ( FM35P.AchCompPaymentP11, FM36PM.AchCompPaymentP11, FM36P.AchCompPaymentP11, 0 ),
 			BalancePaymentP11 = COALESCE ( FM35P.BalancePaymentP11, FM36PM.BalancePaymentP11, FM36P.BalancePaymentP11, 0 ),
 			EmpOutcomePayP11 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8518,7 +8518,7 @@ BEGIN
 							0
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP12, FM36PM.LearnSuppPaymentP12, FM36P.LearnSuppPaymentP12, 0 ),
-			MatEngOnProgPaymentP12 = COALESCE ( FM36PM.MatEngOnProgPaymentP12, FM36P.MatEngOnProgPaymentP12, 0 ),
+			MathEngOnProgPaymentP12 = COALESCE ( FM36PM.MathEngOnProgPaymentP12, FM36P.MathEngOnProgPaymentP12, 0 ),
 			AchCompPaymentP12 = COALESCE ( FM35P.AchCompPaymentP12, FM36PM.AchCompPaymentP12, FM36P.AchCompPaymentP12, 0 ),
 			BalancePaymentP12 = COALESCE ( FM35P.BalancePaymentP12, FM36PM.BalancePaymentP12, FM36P.BalancePaymentP12, 0 ),
 			EmpOutcomePayP12 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
