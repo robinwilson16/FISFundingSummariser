@@ -787,6 +787,7 @@ BEGIN
 					SET @SQLString += 
 						N'
 							OnProgPaymentToPeriod DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestToPeriod DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContToPeriod DECIMAL(10, 5) NULL,
 							LearnSuppPaymentToPeriod DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentToPeriod DECIMAL(10, 5) NULL,
@@ -797,6 +798,7 @@ BEGIN
 							TotalEarnedCashToPeriod DECIMAL(10, 5) NULL,
 
 							OnProgPaymentMidYear DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestMidYear DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContMidYear DECIMAL(10, 5) NULL,
 							LearnSuppPaymentMidYear DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentMidYear DECIMAL(10, 5) NULL,
@@ -807,6 +809,7 @@ BEGIN
 							TotalEarnedCashMidYear DECIMAL(10, 5) NULL,
 
 							OnProgPaymentYearEnd DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestYearEnd DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContYearEnd DECIMAL(10, 5) NULL,
 							LearnSuppPaymentYearEnd DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentYearEnd DECIMAL(10, 5) NULL,
@@ -931,6 +934,7 @@ BEGIN
 					SET @SQLString += 
 						N'
 							OnProgPaymentP01 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP01 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP01 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP01 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP01 DECIMAL(10, 5) NULL,
@@ -941,6 +945,7 @@ BEGIN
 							TotalEarnedCashP01 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP02 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP02 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP02 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP02 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP02 DECIMAL(10, 5) NULL,
@@ -951,6 +956,7 @@ BEGIN
 							TotalEarnedCashP02 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP03 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP03 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP03 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP03 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP03 DECIMAL(10, 5) NULL,
@@ -961,6 +967,7 @@ BEGIN
 							TotalEarnedCashP03 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP04 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP04 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP04 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP04 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP04 DECIMAL(10, 5) NULL,
@@ -971,6 +978,7 @@ BEGIN
 							TotalEarnedCashP04 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP05 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP05 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP05 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP05 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP05 DECIMAL(10, 5) NULL,
@@ -981,6 +989,7 @@ BEGIN
 							TotalEarnedCashP05 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP06 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP06 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP06 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP06 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP06 DECIMAL(10, 5) NULL,
@@ -991,6 +1000,7 @@ BEGIN
 							TotalEarnedCashP06 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP07 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP07 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP07 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP07 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP07 DECIMAL(10, 5) NULL,
@@ -1001,6 +1011,7 @@ BEGIN
 							TotalEarnedCashP07 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP08 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP08 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP08 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP08 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP08 DECIMAL(10, 5) NULL,
@@ -1011,6 +1022,7 @@ BEGIN
 							TotalEarnedCashP08 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP09 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP09 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP09 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP09 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP09 DECIMAL(10, 5) NULL,
@@ -1021,6 +1033,7 @@ BEGIN
 							TotalEarnedCashP09 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP10 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP10 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP10 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP10 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP10 DECIMAL(10, 5) NULL,
@@ -1031,6 +1044,7 @@ BEGIN
 							TotalEarnedCashP10 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP11 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP11 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP11 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP11 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP11 DECIMAL(10, 5) NULL,
@@ -1041,6 +1055,7 @@ BEGIN
 							TotalEarnedCashP11 DECIMAL(10, 5) NULL,
 
 							OnProgPaymentP12 DECIMAL(10, 5) NULL,
+							ProgFundIndMinCoInvestP12 DECIMAL(10, 5) NULL,
 							ProgFundIndMaxEmpContP12 DECIMAL(10, 5) NULL,
 							LearnSuppPaymentP12 DECIMAL(10, 5) NULL,
 							MathEngOnProgPaymentP12 DECIMAL(10, 5) NULL,
