@@ -2080,6 +2080,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnSuppFundCash 
@@ -2145,6 +2165,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2204,6 +2244,22 @@ BEGIN
 					SUM ( 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 					),
+				LearnDelFirstProv1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelFirstProv1618Pay 
+					),
+				LearnDelSecondProv1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelSecondProv1618Pay 
+					),
+				LearnDelFirstEmp1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelFirstEmp1618Pay 
+					),
+				LearnDelSecondEmp1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelSecondEmp1618Pay 
+					),
 				LearnSuppPaymentYearEnd = 
 					SUM ( 
 						FM36P.LearnSuppFundCash 
@@ -2261,6 +2317,26 @@ BEGIN
 				ProgFundIndMaxEmpContP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP01 = 
@@ -2322,7 +2398,27 @@ BEGIN
 					),
 				ProgFundIndMaxEmpContP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						FM36P.ProgrammeAimProgFundIndMaxEmpCont
+						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP02 = 
@@ -2390,6 +2486,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2450,6 +2566,26 @@ BEGIN
 				ProgFundIndMaxEmpContP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP04 = 
@@ -2517,6 +2653,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2577,6 +2733,26 @@ BEGIN
 				ProgFundIndMaxEmpContP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP06 = 
@@ -2644,6 +2820,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2704,6 +2900,26 @@ BEGIN
 				ProgFundIndMaxEmpContP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP08 = 
@@ -2771,6 +2987,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2831,6 +3067,26 @@ BEGIN
 				ProgFundIndMaxEmpContP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP10 = 
@@ -2898,6 +3154,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnSuppFundCash 
@@ -2958,6 +3234,26 @@ BEGIN
 				ProgFundIndMaxEmpContP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP12 = 
@@ -3053,6 +3349,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.LearnSuppFundCash 
@@ -3118,6 +3434,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3177,6 +3513,22 @@ BEGIN
 					SUM ( 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 					),
+				LearnDelFirstProv1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelFirstProv1618Pay 
+					),
+				LearnDelSecondProv1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelSecondProv1618Pay 
+					),
+				LearnDelFirstEmp1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelFirstEmp1618Pay 
+					),
+				LearnDelSecondEmp1618PayYearEnd = 
+					SUM ( 
+						FM36P.LearnDelSecondEmp1618Pay 
+					),
 				LearnSuppPaymentYearEnd = 
 					SUM ( 
 						FM36P.LearnSuppFundCash 
@@ -3234,6 +3586,26 @@ BEGIN
 				ProgFundIndMaxEmpContP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP01 = 
@@ -3296,6 +3668,26 @@ BEGIN
 				ProgFundIndMaxEmpContP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP02 = 
@@ -3363,6 +3755,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3423,6 +3835,26 @@ BEGIN
 				ProgFundIndMaxEmpContP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP04 = 
@@ -3490,6 +3922,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3550,6 +4002,26 @@ BEGIN
 				ProgFundIndMaxEmpContP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP06 = 
@@ -3617,6 +4089,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3677,6 +4169,26 @@ BEGIN
 				ProgFundIndMaxEmpContP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP08 = 
@@ -3744,6 +4256,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3804,6 +4336,26 @@ BEGIN
 				ProgFundIndMaxEmpContP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP10 = 
@@ -3871,6 +4423,26 @@ BEGIN
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
 						ELSE 0 END
 					),
+				LearnDelFirstProv1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
+						ELSE 0 END
+					),
 				LearnSuppPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.LearnSuppFundCash 
@@ -3931,6 +4503,26 @@ BEGIN
 				ProgFundIndMaxEmpContP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.ProgrammeAimProgFundIndMaxEmpCont 
+						ELSE 0 END
+					),
+				LearnDelFirstProv1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelFirstProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondProv1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelSecondProv1618Pay 
+						ELSE 0 END
+					),
+				LearnDelFirstEmp1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelFirstEmp1618Pay 
+						ELSE 0 END
+					),
+				LearnDelSecondEmp1618PayP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelSecondEmp1618Pay 
 						ELSE 0 END
 					),
 				LearnSuppPaymentP12 = 
@@ -6223,6 +6815,10 @@ BEGIN
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossibleIncome = 1 THEN ALBP.TotalEarnedCashToPeriod END, FM38P.OnProgPaymentToPeriod, FM35P.OnProgPaymentToPeriod, FM36PM.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
 			ProgFundIndMinCoInvestToPeriod = COALESCE ( FM36PM.ProgFundIndMinCoInvestToPeriod, FM36P.ProgFundIndMinCoInvestToPeriod, 0 ),
 			ProgFundIndMaxEmpContToPeriod = COALESCE ( FM36PM.ProgFundIndMaxEmpContToPeriod, FM36P.ProgFundIndMaxEmpContToPeriod, 0 ),
+			LearnDelFirstProv1618PayToPeriod = COALESCE ( FM36PM.LearnDelFirstProv1618PayToPeriod, FM36P.LearnDelFirstProv1618PayToPeriod, 0 ),
+			LearnDelSecondProv1618PayToPeriod = COALESCE ( FM36PM.LearnDelSecondProv1618PayToPeriod, FM36P.LearnDelSecondProv1618PayToPeriod, 0 ),
+			LearnDelFirstEmp1618PayToPeriod = COALESCE ( FM36PM.LearnDelFirstEmp1618PayToPeriod, FM36P.LearnDelFirstEmp1618PayToPeriod, 0 ),
+			LearnDelSecondEmp1618PayToPeriod = COALESCE ( FM36PM.LearnDelSecondEmp1618PayToPeriod, FM36P.LearnDelSecondEmp1618PayToPeriod, 0 ),
 			LearnSuppPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6311,6 +6907,10 @@ BEGIN
 				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM38P.OnProgPaymentMidYear, FM35P.OnProgPaymentMidYear, FM36PM.OnProgPaymentMidYear, FM36P.OnProgPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
 			ProgFundIndMinCoInvestMidYear = COALESCE ( FM36PM.ProgFundIndMinCoInvestMidYear, FM36P.ProgFundIndMinCoInvestMidYear, 0 ),
 			ProgFundIndMaxEmpContMidYear = COALESCE ( FM36PM.ProgFundIndMaxEmpContMidYear, FM36P.ProgFundIndMaxEmpContMidYear, 0 ),
+			LearnDelFirstProv1618PayMidYear = COALESCE ( FM36PM.LearnDelFirstProv1618PayMidYear, FM36P.LearnDelFirstProv1618PayMidYear, 0 ),
+			LearnDelSecondProv1618PayMidYear = COALESCE ( FM36PM.LearnDelSecondProv1618PayMidYear, FM36P.LearnDelSecondProv1618PayMidYear, 0 ),
+			LearnDelFirstEmp1618PayMidYear = COALESCE ( FM36PM.LearnDelFirstEmp1618PayMidYear, FM36P.LearnDelFirstEmp1618PayMidYear, 0 ),
+			LearnDelSecondEmp1618PayMidYear = COALESCE ( FM36PM.LearnDelSecondEmp1618PayMidYear, FM36P.LearnDelSecondEmp1618PayMidYear, 0 ),
 			LearnSuppPaymentMidYear = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -6399,6 +6999,10 @@ BEGIN
 				END END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashYearEnd END, FM38P.OnProgPaymentYearEnd, FM35P.OnProgPaymentYearEnd, FM36PM.OnProgPaymentYearEnd, FM36P.OnProgPaymentYearEnd, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END, 0 ),
 			ProgFundIndMinCoInvestYearEnd = COALESCE ( FM36PM.ProgFundIndMinCoInvestYearEnd, FM36P.ProgFundIndMinCoInvestYearEnd, 0 ),
 			ProgFundIndMaxEmpContYearEnd = COALESCE ( FM36PM.ProgFundIndMaxEmpContYearEnd, FM36P.ProgFundIndMaxEmpContYearEnd, 0 ),
+			LearnDelFirstProv1618PayYearEnd = COALESCE ( FM36PM.LearnDelFirstProv1618PayYearEnd, FM36P.LearnDelFirstProv1618PayYearEnd, 0 ),
+			LearnDelSecondProv1618PayYearEnd = COALESCE ( FM36PM.LearnDelSecondProv1618PayYearEnd, FM36P.LearnDelSecondProv1618PayYearEnd, 0 ),
+			LearnDelFirstEmp1618PayYearEnd = COALESCE ( FM36PM.LearnDelFirstEmp1618PayYearEnd, FM36P.LearnDelFirstEmp1618PayYearEnd, 0 ),
+			LearnDelSecondEmp1618PayYearEnd = COALESCE ( FM36PM.LearnDelSecondEmp1618PayYearEnd, FM36P.LearnDelSecondEmp1618PayYearEnd, 0 ),
 			LearnSuppPaymentYearEnd = COALESCE ( CASE WHEN LD.FundModel = 25 THEN CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7515,6 +8119,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP01 END, FM38P.OnProgPaymentP01, FM35P.OnProgPaymentP01, FM36PM.OnProgPaymentP01, FM36P.OnProgPaymentP01, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP01 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP01, FM36P.ProgFundIndMinCoInvestP01, 0 ),
 			ProgFundIndMaxEmpContP01 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP01, FM36P.ProgFundIndMaxEmpContP01, 0 ),
+			LearnDelFirstProv1618PayP01 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP01, FM36P.LearnDelFirstProv1618PayP01, 0 ),
+			LearnDelSecondProv1618PayP01 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP01, FM36P.LearnDelSecondProv1618PayP01, 0 ),
+			LearnDelFirstEmp1618PayP01 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP01, FM36P.LearnDelFirstEmp1618PayP01, 0 ),
+			LearnDelSecondEmp1618PayP01 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP01, FM36P.LearnDelSecondEmp1618PayP01, 0 ),
 			LearnSuppPaymentP01 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7603,6 +8211,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP02 END, FM38P.OnProgPaymentP02, FM35P.OnProgPaymentP02, FM36PM.OnProgPaymentP02, FM36P.OnProgPaymentP02, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP02 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP02, FM36P.ProgFundIndMinCoInvestP02, 0 ),
 			ProgFundIndMaxEmpContP02 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP02, FM36P.ProgFundIndMaxEmpContP02, 0 ),
+			LearnDelFirstProv1618PayP02 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP02, FM36P.LearnDelFirstProv1618PayP02, 0 ),
+			LearnDelSecondProv1618PayP02 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP02, FM36P.LearnDelSecondProv1618PayP02, 0 ),
+			LearnDelFirstEmp1618PayP02 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP02, FM36P.LearnDelFirstEmp1618PayP02, 0 ),
+			LearnDelSecondEmp1618PayP02 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP02, FM36P.LearnDelSecondEmp1618PayP02, 0 ),
 			LearnSuppPaymentP02 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7691,6 +8303,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP03 END, FM38P.OnProgPaymentP03, FM35P.OnProgPaymentP03, FM36PM.OnProgPaymentP03, FM36P.OnProgPaymentP03, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP03 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP03, FM36P.ProgFundIndMinCoInvestP03, 0 ),
 			ProgFundIndMaxEmpContP03 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP03, FM36P.ProgFundIndMaxEmpContP03, 0 ),
+			LearnDelFirstProv1618PayP03 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP03, FM36P.LearnDelFirstProv1618PayP03, 0 ),
+			LearnDelSecondProv1618PayP03 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP03, FM36P.LearnDelSecondProv1618PayP03, 0 ),
+			LearnDelFirstEmp1618PayP03 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP03, FM36P.LearnDelFirstEmp1618PayP03, 0 ),
+			LearnDelSecondEmp1618PayP03 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP03, FM36P.LearnDelSecondEmp1618PayP03, 0 ),
 			LearnSuppPaymentP03 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7779,6 +8395,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP04 END, FM38P.OnProgPaymentP04, FM35P.OnProgPaymentP04, FM36PM.OnProgPaymentP04, FM36P.OnProgPaymentP04, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP04 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP04, FM36P.ProgFundIndMinCoInvestP04, 0 ),
 			ProgFundIndMaxEmpContP04 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP04, FM36P.ProgFundIndMaxEmpContP04, 0 ),
+			LearnDelFirstProv1618PayP04 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP04, FM36P.LearnDelFirstProv1618PayP04, 0 ),
+			LearnDelSecondProv1618PayP04 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP04, FM36P.LearnDelSecondProv1618PayP04, 0 ),
+			LearnDelFirstEmp1618PayP04 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP04, FM36P.LearnDelFirstEmp1618PayP04, 0 ),
+			LearnDelSecondEmp1618PayP04 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP04, FM36P.LearnDelSecondEmp1618PayP04, 0 ),
 			LearnSuppPaymentP04 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7867,6 +8487,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP05 END, FM38P.OnProgPaymentP05, FM35P.OnProgPaymentP05, FM36PM.OnProgPaymentP05, FM36P.OnProgPaymentP05, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP05 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP05, FM36P.ProgFundIndMinCoInvestP05, 0 ),
 			ProgFundIndMaxEmpContP05 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP05, FM36P.ProgFundIndMaxEmpContP05, 0 ),
+			LearnDelFirstProv1618PayP05 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP05, FM36P.LearnDelFirstProv1618PayP05, 0 ),
+			LearnDelSecondProv1618PayP05 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP05, FM36P.LearnDelSecondProv1618PayP05, 0 ),
+			LearnDelFirstEmp1618PayP05 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP05, FM36P.LearnDelFirstEmp1618PayP05, 0 ),
+			LearnDelSecondEmp1618PayP05 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP05, FM36P.LearnDelSecondEmp1618PayP05, 0 ),
 			LearnSuppPaymentP05 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7955,6 +8579,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP06 END, FM38P.OnProgPaymentP06, FM35P.OnProgPaymentP06, FM36PM.OnProgPaymentP06, FM36P.OnProgPaymentP06, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP06 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP06, FM36P.ProgFundIndMinCoInvestP06, 0 ),
 			ProgFundIndMaxEmpContP06 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP06, FM36P.ProgFundIndMaxEmpContP06, 0 ),
+			LearnDelFirstProv1618PayP06 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP06, FM36P.LearnDelFirstProv1618PayP06, 0 ),
+			LearnDelSecondProv1618PayP06 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP06, FM36P.LearnDelSecondProv1618PayP06, 0 ),
+			LearnDelFirstEmp1618PayP06 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP06, FM36P.LearnDelFirstEmp1618PayP06, 0 ),
+			LearnDelSecondEmp1618PayP06 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP06, FM36P.LearnDelSecondEmp1618PayP06, 0 ),
 			LearnSuppPaymentP06 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8043,6 +8671,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP07 END, FM38P.OnProgPaymentP07, FM35P.OnProgPaymentP07, FM36PM.OnProgPaymentP07, FM36P.OnProgPaymentP07, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP07 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP07, FM36P.ProgFundIndMinCoInvestP07, 0 ),
 			ProgFundIndMaxEmpContP07 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP07, FM36P.ProgFundIndMaxEmpContP07, 0 ),
+			LearnDelFirstProv1618PayP07 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP07, FM36P.LearnDelFirstProv1618PayP07, 0 ),
+			LearnDelSecondProv1618PayP07 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP07, FM36P.LearnDelSecondProv1618PayP07, 0 ),
+			LearnDelFirstEmp1618PayP07 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP07, FM36P.LearnDelFirstEmp1618PayP07, 0 ),
+			LearnDelSecondEmp1618PayP07 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP07, FM36P.LearnDelSecondEmp1618PayP07, 0 ),
 			LearnSuppPaymentP07 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8131,6 +8763,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP08 END, FM38P.OnProgPaymentP08, FM35P.OnProgPaymentP08, FM36PM.OnProgPaymentP08, FM36P.OnProgPaymentP08, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP08 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP08, FM36P.ProgFundIndMinCoInvestP08, 0 ),
 			ProgFundIndMaxEmpContP08 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP08, FM36P.ProgFundIndMaxEmpContP08, 0 ),
+			LearnDelFirstProv1618PayP08 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP08, FM36P.LearnDelFirstProv1618PayP08, 0 ),
+			LearnDelSecondProv1618PayP08 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP08, FM36P.LearnDelSecondProv1618PayP08, 0 ),
+			LearnDelFirstEmp1618PayP08 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP08, FM36P.LearnDelFirstEmp1618PayP08, 0 ),
+			LearnDelSecondEmp1618PayP08 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP08, FM36P.LearnDelSecondEmp1618PayP08, 0 ),
 			LearnSuppPaymentP08 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8219,6 +8855,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP09 END, FM38P.OnProgPaymentP09, FM35P.OnProgPaymentP09, FM36PM.OnProgPaymentP09, FM36P.OnProgPaymentP09, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP09 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP09, FM36P.ProgFundIndMinCoInvestP09, 0 ),
 			ProgFundIndMaxEmpContP09 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP09, FM36P.ProgFundIndMaxEmpContP09, 0 ),
+			LearnDelFirstProv1618PayP09 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP09, FM36P.LearnDelFirstProv1618PayP09, 0 ),
+			LearnDelSecondProv1618PayP09 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP09, FM36P.LearnDelSecondProv1618PayP09, 0 ),
+			LearnDelFirstEmp1618PayP09 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP09, FM36P.LearnDelFirstEmp1618PayP09, 0 ),
+			LearnDelSecondEmp1618PayP09 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP09, FM36P.LearnDelSecondEmp1618PayP09, 0 ),
 			LearnSuppPaymentP09 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8307,6 +8947,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP10 END, FM38P.OnProgPaymentP10, FM35P.OnProgPaymentP10, FM36PM.OnProgPaymentP10, FM36P.OnProgPaymentP10, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP10 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP10, FM36P.ProgFundIndMinCoInvestP10, 0 ),
 			ProgFundIndMaxEmpContP10 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP10, FM36P.ProgFundIndMaxEmpContP10, 0 ),
+			LearnDelFirstProv1618PayP10 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP10, FM36P.LearnDelFirstProv1618PayP10, 0 ),
+			LearnDelSecondProv1618PayP10 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP10, FM36P.LearnDelSecondProv1618PayP10, 0 ),
+			LearnDelFirstEmp1618PayP10 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP10, FM36P.LearnDelFirstEmp1618PayP10, 0 ),
+			LearnDelSecondEmp1618PayP10 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP10, FM36P.LearnDelSecondEmp1618PayP10, 0 ),
 			LearnSuppPaymentP10 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8395,6 +9039,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP11 END, FM38P.OnProgPaymentP11, FM35P.OnProgPaymentP11, FM36PM.OnProgPaymentP11, FM36P.OnProgPaymentP11, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP11 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP11, FM36P.ProgFundIndMinCoInvestP11, 0 ),
 			ProgFundIndMaxEmpContP11 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP11, FM36P.ProgFundIndMaxEmpContP11, 0 ),
+			LearnDelFirstProv1618PayP11 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP11, FM36P.LearnDelFirstProv1618PayP11, 0 ),
+			LearnDelSecondProv1618PayP11 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP11, FM36P.LearnDelSecondProv1618PayP11, 0 ),
+			LearnDelFirstEmp1618PayP11 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP11, FM36P.LearnDelFirstEmp1618PayP11, 0 ),
+			LearnDelSecondEmp1618PayP11 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP11, FM36P.LearnDelSecondEmp1618PayP11, 0 ),
 			LearnSuppPaymentP11 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8483,6 +9131,10 @@ BEGIN
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP12 END, FM38P.OnProgPaymentP12, FM35P.OnProgPaymentP12, FM36PM.OnProgPaymentP12, FM36P.OnProgPaymentP12, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP12 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP12, FM36P.ProgFundIndMinCoInvestP12, 0 ),
 			ProgFundIndMaxEmpContP12 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP12, FM36P.ProgFundIndMaxEmpContP12, 0 ),
+			LearnDelFirstProv1618PayP12 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP12, FM36P.LearnDelFirstProv1618PayP12, 0 ),
+			LearnDelSecondProv1618PayP12 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP12, FM36P.LearnDelSecondProv1618PayP12, 0 ),
+			LearnDelFirstEmp1618PayP12 = COALESCE ( FM36PM.LearnDelFirstEmp1618PayP12, FM36P.LearnDelFirstEmp1618PayP12, 0 ),
+			LearnDelSecondEmp1618PayP12 = COALESCE ( FM36PM.LearnDelSecondEmp1618PayP12, FM36P.LearnDelSecondEmp1618PayP12, 0 ),
 			LearnSuppPaymentP12 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
