@@ -2067,6 +2067,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctToPeriod = 
+					MAX ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelESFAContribPct 
+						ELSE 0 END
+					),
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2163,6 +2168,12 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctMidYear = 
+					MAX
+					 ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2257,6 +2268,10 @@ BEGIN
 					MAX ( 
 						FM36P.LearnDelLevyNonPayInd 
 					),
+				LearnDelESFAContribPctYearEnd = 
+					MAX ( 
+						FM36P.LearnDelESFAContribPct
+					),
 				OnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2336,6 +2351,11 @@ BEGIN
 				LearnDelLevyNonPayIndP01 = 
 					MAX ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP01 = 
+					MAX ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP01 = 
@@ -2433,6 +2453,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP02 = 
+					MAX ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2526,6 +2551,11 @@ BEGIN
 				LearnDelLevyNonPayIndP03 = 
 					MAX ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP03 = 
+					MAX ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP03 = 
@@ -2623,6 +2653,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP04 = 
+					MAX ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2716,6 +2751,11 @@ BEGIN
 				LearnDelLevyNonPayIndP05 = 
 					MAX ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP05 = 
+					MAX ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP05 = 
@@ -2813,6 +2853,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP06 = 
+					MAX ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -2906,6 +2951,11 @@ BEGIN
 				LearnDelLevyNonPayIndP07 = 
 					MAX ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP07 = 
+					MAX ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP07 = 
@@ -3003,6 +3053,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP08 = 
+					MAX ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3096,6 +3151,11 @@ BEGIN
 				LearnDelLevyNonPayIndP09 = 
 					MAX ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP09 = 
+					MAX ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP09 = 
@@ -3193,6 +3253,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP10 = 
+					MAX ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3288,6 +3353,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP11 = 
+					MAX ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3381,6 +3451,11 @@ BEGIN
 				LearnDelLevyNonPayIndP12 = 
 					MAX ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP12 = 
+					MAX ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP12 = 
@@ -3506,6 +3581,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctToPeriod = 
+					MAX ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3599,6 +3679,11 @@ BEGIN
 				LearnDelLevyNonPayIndMidYear = 
 					MAX ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctMidYear = 
+					MAX ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentMidYear = 
@@ -3695,6 +3780,10 @@ BEGIN
 					MAX ( 
 						FM36P.LearnDelLevyNonPayInd 
 					),
+				LearnDelESFAContribPctYearEnd = 
+					MAX ( 
+						FM36P.LearnDelESFAContribPct 
+					),
 				OnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3774,6 +3863,11 @@ BEGIN
 				LearnDelLevyNonPayIndP01 = 
 					MAX ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP01 = 
+					MAX ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP01 = 
@@ -3871,6 +3965,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP02 = 
+					MAX ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -3964,6 +4063,11 @@ BEGIN
 				LearnDelLevyNonPayIndP03 = 
 					MAX ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP03 = 
+					MAX ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP03 = 
@@ -4061,6 +4165,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP04 = 
+					MAX ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -4154,6 +4263,11 @@ BEGIN
 				LearnDelLevyNonPayIndP05 = 
 					MAX ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP05 = 
+					MAX ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP05 = 
@@ -4251,6 +4365,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP06 = 
+					MAX ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -4344,6 +4463,11 @@ BEGIN
 				LearnDelLevyNonPayIndP07 = 
 					MAX ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP07 = 
+					MAX ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP07 = 
@@ -4441,6 +4565,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP08 = 
+					MAX ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -4534,6 +4663,11 @@ BEGIN
 				LearnDelLevyNonPayIndP09 = 
 					MAX ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP09 = 
+					MAX ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP09 = 
@@ -4631,6 +4765,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP10 = 
+					MAX ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -4726,6 +4865,11 @@ BEGIN
 						FM36P.LearnDelLevyNonPayInd 
 						ELSE 0 END
 					),
+				LearnDelESFAContribPctP11 = 
+					MAX ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.LearnDelESFAContribPct
+						ELSE 0 END
+					),
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.ProgrammeAimOnProgPayment
@@ -4819,6 +4963,11 @@ BEGIN
 				LearnDelLevyNonPayIndP12 = 
 					MAX ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.LearnDelLevyNonPayInd 
+						ELSE 0 END
+					),
+				LearnDelESFAContribPctP12 = 
+					MAX ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.LearnDelESFAContribPct
 						ELSE 0 END
 					),
 				OnProgPaymentP12 = 
@@ -7119,6 +7268,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndToPeriod = COALESCE ( FM36PM.LearnDelLevyNonPayIndToPeriod, FM36P.LearnDelLevyNonPayIndToPeriod, 0 ),
+			LearnDelESFAContribPctToPeriod = COALESCE ( FM36PM.LearnDelESFAContribPctToPeriod, FM36P.LearnDelESFAContribPctToPeriod, 0 ),
 			OnProgPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7246,6 +7396,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndMidYear = COALESCE ( FM36PM.LearnDelLevyNonPayIndMidYear, FM36P.LearnDelLevyNonPayIndMidYear, 0 ),
+			LearnDelESFAContribPctMidYear = COALESCE ( FM36PM.LearnDelESFAContribPctMidYear, FM36P.LearnDelESFAContribPctMidYear, 0 ),
 			OnProgPaymentMidYear = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -7373,6 +7524,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndYearEnd = COALESCE ( FM36PM.LearnDelLevyNonPayIndYearEnd, FM36P.LearnDelLevyNonPayIndYearEnd, 0 ),
+			LearnDelESFAContribPctYearEnd = COALESCE ( FM36PM.LearnDelESFAContribPctYearEnd, FM36P.LearnDelESFAContribPctYearEnd, 0 ),
 			OnProgPaymentYearEnd = COALESCE ( CASE WHEN LD.FundModel = 25 THEN CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8528,6 +8680,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP01 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP01, FM36P.LearnDelLevyNonPayIndP01, 0 ),
+			LearnDelESFAContribPctP01 = COALESCE ( FM36PM.LearnDelESFAContribPctP01, FM36P.LearnDelESFAContribPctP01, 0 ),
 			OnProgPaymentP01 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8655,6 +8808,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP02 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP02, FM36P.LearnDelLevyNonPayIndP02, 0 ),
+			LearnDelESFAContribPctP02 = COALESCE ( FM36PM.LearnDelESFAContribPctP02, FM36P.LearnDelESFAContribPctP02, 0 ),
 			OnProgPaymentP02 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8782,6 +8936,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP03 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP03, FM36P.LearnDelLevyNonPayIndP03, 0 ),
+			LearnDelESFAContribPctP03 = COALESCE ( FM36PM.LearnDelESFAContribPctP03, FM36P.LearnDelESFAContribPctP03, 0 ),
 			OnProgPaymentP03 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -8909,6 +9064,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP04 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP04, FM36P.LearnDelLevyNonPayIndP04, 0 ),
+			LearnDelESFAContribPctP04 = COALESCE ( FM36PM.LearnDelESFAContribPctP04, FM36P.LearnDelESFAContribPctP04, 0 ),
 			OnProgPaymentP04 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9036,6 +9192,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP05 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP05, FM36P.LearnDelLevyNonPayIndP05, 0 ),
+			LearnDelESFAContribPctP05 = COALESCE ( FM36PM.LearnDelESFAContribPctP05, FM36P.LearnDelESFAContribPctP05, 0 ),
 			OnProgPaymentP05 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9163,6 +9320,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP06 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP06, FM36P.LearnDelLevyNonPayIndP06, 0 ),
+			LearnDelESFAContribPctP06 = COALESCE ( FM36PM.LearnDelESFAContribPctP06, FM36P.LearnDelESFAContribPctP06, 0 ),
 			OnProgPaymentP06 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9290,6 +9448,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP07 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP07, FM36P.LearnDelLevyNonPayIndP07, 0 ),
+			LearnDelESFAContribPctP07 = COALESCE ( FM36PM.LearnDelESFAContribPctP07, FM36P.LearnDelESFAContribPctP07, 0 ),
 			OnProgPaymentP07 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9417,6 +9576,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP08 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP08, FM36P.LearnDelLevyNonPayIndP08, 0 ),
+			LearnDelESFAContribPctP08 = COALESCE ( FM36PM.LearnDelESFAContribPctP08, FM36P.LearnDelESFAContribPctP08, 0 ),
 			OnProgPaymentP08 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9544,6 +9704,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP09 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP09, FM36P.LearnDelLevyNonPayIndP09, 0 ),
+			LearnDelESFAContribPctP09 = COALESCE ( FM36PM.LearnDelESFAContribPctP09, FM36P.LearnDelESFAContribPctP09, 0 ),
 			OnProgPaymentP09 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9671,6 +9832,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP10 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP10, FM36P.LearnDelLevyNonPayIndP10, 0 ),
+			LearnDelESFAContribPctP10 = COALESCE ( FM36PM.LearnDelESFAContribPctP10, FM36P.LearnDelESFAContribPctP10, 0 ),
 			OnProgPaymentP10 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9798,6 +9960,7 @@ BEGIN
     SET @SQLString += 
 		N'
 			LearnDelLevyNonPayIndP11 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP11, FM36P.LearnDelLevyNonPayIndP11, 0 ),
+			LearnDelESFAContribPctP11 = COALESCE ( FM36PM.LearnDelESFAContribPctP11, FM36P.LearnDelESFAContribPctP11, 0 ),
 			OnProgPaymentP11 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE
@@ -9925,6 +10088,7 @@ BEGIN
     SET @SQLString += 
         N'
 			LearnDelLevyNonPayIndP12 = COALESCE ( FM36PM.LearnDelLevyNonPayIndP12, FM36P.LearnDelLevyNonPayIndP12, 0 ),
+			LearnDelESFAContribPctP12 = COALESCE ( FM36PM.LearnDelESFAContribPctP12, FM36P.LearnDelESFAContribPctP12, 0 ),
 			OnProgPaymentP12 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
 				THEN
 					CASE

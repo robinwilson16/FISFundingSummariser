@@ -787,6 +787,7 @@ BEGIN
 					SET @SQLString += 
 						N'
 							LearnDelLevyNonPayIndToPeriod INT NULL,
+							LearnDelESFAContribPctToPeriod DECIMAL(12, 5) NULL,
 							OnProgPaymentToPeriod DECIMAL(12, 5) NULL,
 							ProviderPaymentToPeriod DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestToPeriod DECIMAL(12, 5) NULL,
@@ -804,6 +805,7 @@ BEGIN
 							TotalEarnedCashToPeriod DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndMidYear INT NULL,
+							LearnDelESFAContribPctMidYear DECIMAL(12, 5) NULL,
 							OnProgPaymentMidYear DECIMAL(12, 5) NULL,
 							ProviderPaymentMidYear DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestMidYear DECIMAL(12, 5) NULL,
@@ -821,6 +823,7 @@ BEGIN
 							TotalEarnedCashMidYear DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndYearEnd INT NULL,
+							LearnDelESFAContribPctYearEnd DECIMAL(12, 5) NULL,
 							OnProgPaymentYearEnd DECIMAL(12, 5) NULL,
 							ProviderPaymentYearEnd DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestYearEnd DECIMAL(12, 5) NULL,
@@ -952,6 +955,7 @@ BEGIN
 					SET @SQLString += 
 						N'
 							LearnDelLevyNonPayIndP01 INT NULL,
+							LearnDelESFAContribPctP01 DECIMAL(12, 5) NULL,
 							OnProgPaymentP01 DECIMAL(12, 5) NULL,
 							ProviderPaymentP01 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP01 DECIMAL(12, 5) NULL,
@@ -969,6 +973,7 @@ BEGIN
 							TotalEarnedCashP01 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP02 INT NULL,
+							LearnDelESFAContribPctP02 DECIMAL(12, 5) NULL,
 							OnProgPaymentP02 DECIMAL(12, 5) NULL,
 							ProviderPaymentP02 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP02 DECIMAL(12, 5) NULL,
@@ -986,6 +991,7 @@ BEGIN
 							TotalEarnedCashP02 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP03 INT NULL,
+							LearnDelESFAContribPctP03 DECIMAL(12, 5) NULL,
 							OnProgPaymentP03 DECIMAL(12, 5) NULL,
 							ProviderPaymentP03 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP03 DECIMAL(12, 5) NULL,
@@ -1003,6 +1009,7 @@ BEGIN
 							TotalEarnedCashP03 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP04 INT NULL,
+							LearnDelESFAContribPctP04 DECIMAL(12, 5) NULL,
 							OnProgPaymentP04 DECIMAL(12, 5) NULL,
 							ProviderPaymentP04 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP04 DECIMAL(12, 5) NULL,
@@ -1020,6 +1027,7 @@ BEGIN
 							TotalEarnedCashP04 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP05 INT NULL,
+							LearnDelESFAContribPctP05 DECIMAL(12, 5) NULL,
 							OnProgPaymentP05 DECIMAL(12, 5) NULL,
 							ProviderPaymentP05 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP05 DECIMAL(12, 5) NULL,
@@ -1037,6 +1045,7 @@ BEGIN
 							TotalEarnedCashP05 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP06 INT NULL,
+							LearnDelESFAContribPctP06 DECIMAL(12, 5) NULL,
 							OnProgPaymentP06 DECIMAL(12, 5) NULL,
 							ProviderPaymentP06 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP06 DECIMAL(12, 5) NULL,
@@ -1054,6 +1063,7 @@ BEGIN
 							TotalEarnedCashP06 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP07 INT NULL,
+							LearnDelESFAContribPctP07 DECIMAL(12, 5) NULL,
 							OnProgPaymentP07 DECIMAL(12, 5) NULL,
 							ProviderPaymentP07 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP07 DECIMAL(12, 5) NULL,
@@ -1071,6 +1081,7 @@ BEGIN
 							TotalEarnedCashP07 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP08 INT NULL,
+							LearnDelESFAContribPctP08 DECIMAL(12, 5) NULL,
 							OnProgPaymentP08 DECIMAL(12, 5) NULL,
 							ProviderPaymentP08 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP08 DECIMAL(12, 5) NULL,
@@ -1088,6 +1099,7 @@ BEGIN
 							TotalEarnedCashP08 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP09 INT NULL,
+							LearnDelESFAContribPctP09 DECIMAL(12, 5) NULL,
 							OnProgPaymentP09 DECIMAL(12, 5) NULL,
 							ProviderPaymentP09 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP09 DECIMAL(12, 5) NULL,
@@ -1105,6 +1117,7 @@ BEGIN
 							TotalEarnedCashP09 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP10 INT NULL,
+							LearnDelESFAContribPctP10 DECIMAL(12, 5) NULL,
 							OnProgPaymentP10 DECIMAL(12, 5) NULL,
 							ProviderPaymentP10 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP10 DECIMAL(12, 5) NULL,
@@ -1122,6 +1135,7 @@ BEGIN
 							TotalEarnedCashP10 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP11 INT NULL,
+							LearnDelESFAContribPctP11 DECIMAL(12, 5) NULL,
 							OnProgPaymentP11 DECIMAL(12, 5) NULL,
 							ProviderPaymentP11 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP11 DECIMAL(12, 5) NULL,
@@ -1139,6 +1153,7 @@ BEGIN
 							TotalEarnedCashP11 DECIMAL(12, 5) NULL,
 
 							LearnDelLevyNonPayIndP12 INT NULL,
+							LearnDelESFAContribPctP12 DECIMAL(12, 5) NULL,
 							OnProgPaymentP12 DECIMAL(12, 5) NULL,
 							ProviderPaymentP12 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP12 DECIMAL(12, 5) NULL,
