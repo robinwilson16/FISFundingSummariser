@@ -788,6 +788,7 @@ BEGIN
 						N'
 							LearnDelLevyNonPayIndToPeriod INT NULL,
 							OnProgPaymentToPeriod DECIMAL(12, 5) NULL,
+							ProviderPaymentToPeriod DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestToPeriod DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContToPeriod DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayToPeriod DECIMAL(12, 5) NULL,
@@ -804,6 +805,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndMidYear INT NULL,
 							OnProgPaymentMidYear DECIMAL(12, 5) NULL,
+							ProviderPaymentMidYear DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestMidYear DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContMidYear DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayMidYear DECIMAL(12, 5) NULL,
@@ -820,6 +822,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndYearEnd INT NULL,
 							OnProgPaymentYearEnd DECIMAL(12, 5) NULL,
+							ProviderPaymentYearEnd DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestYearEnd DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContYearEnd DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayYearEnd DECIMAL(12, 5) NULL,
@@ -950,6 +953,7 @@ BEGIN
 						N'
 							LearnDelLevyNonPayIndP01 INT NULL,
 							OnProgPaymentP01 DECIMAL(12, 5) NULL,
+							ProviderPaymentP01 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP01 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP01 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP01 DECIMAL(12, 5) NULL,
@@ -966,6 +970,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP02 INT NULL,
 							OnProgPaymentP02 DECIMAL(12, 5) NULL,
+							ProviderPaymentP02 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP02 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP02 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP02 DECIMAL(12, 5) NULL,
@@ -982,6 +987,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP03 INT NULL,
 							OnProgPaymentP03 DECIMAL(12, 5) NULL,
+							ProviderPaymentP03 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP03 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP03 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP03 DECIMAL(12, 5) NULL,
@@ -998,6 +1004,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP04 INT NULL,
 							OnProgPaymentP04 DECIMAL(12, 5) NULL,
+							ProviderPaymentP04 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP04 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP04 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP04 DECIMAL(12, 5) NULL,
@@ -1014,6 +1021,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP05 INT NULL,
 							OnProgPaymentP05 DECIMAL(12, 5) NULL,
+							ProviderPaymentP05 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP05 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP05 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP05 DECIMAL(12, 5) NULL,
@@ -1030,6 +1038,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP06 INT NULL,
 							OnProgPaymentP06 DECIMAL(12, 5) NULL,
+							ProviderPaymentP06 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP06 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP06 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP06 DECIMAL(12, 5) NULL,
@@ -1046,6 +1055,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP07 INT NULL,
 							OnProgPaymentP07 DECIMAL(12, 5) NULL,
+							ProviderPaymentP07 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP07 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP07 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP07 DECIMAL(12, 5) NULL,
@@ -1062,6 +1072,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP08 INT NULL,
 							OnProgPaymentP08 DECIMAL(12, 5) NULL,
+							ProviderPaymentP08 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP08 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP08 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP08 DECIMAL(12, 5) NULL,
@@ -1078,6 +1089,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP09 INT NULL,
 							OnProgPaymentP09 DECIMAL(12, 5) NULL,
+							ProviderPaymentP09 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP09 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP09 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP09 DECIMAL(12, 5) NULL,
@@ -1094,6 +1106,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP10 INT NULL,
 							OnProgPaymentP10 DECIMAL(12, 5) NULL,
+							ProviderPaymentP10 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP10 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP10 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP10 DECIMAL(12, 5) NULL,
@@ -1110,6 +1123,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP11 INT NULL,
 							OnProgPaymentP11 DECIMAL(12, 5) NULL,
+							ProviderPaymentP11 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP11 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP11 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP11 DECIMAL(12, 5) NULL,
@@ -1126,6 +1140,7 @@ BEGIN
 
 							LearnDelLevyNonPayIndP12 INT NULL,
 							OnProgPaymentP12 DECIMAL(12, 5) NULL,
+							ProviderPaymentP12 DECIMAL(12, 5) NULL,
 							ProgFundIndMinCoInvestP12 DECIMAL(12, 5) NULL,
 							ProgFundIndMaxEmpContP12 DECIMAL(12, 5) NULL,
 							LearnDelFirstProv1618PayP12 DECIMAL(12, 5) NULL,

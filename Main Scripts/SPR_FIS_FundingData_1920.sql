@@ -7116,6 +7116,40 @@ BEGIN
 							0
 					END
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossibleIncome = 1 THEN ALBP.TotalEarnedCashToPeriod END, FM35P.OnProgPaymentToPeriod, FM36PM.OnProgPaymentToPeriod, FM36P.OnProgPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
+			ProviderPaymentToPeriod = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeHEAdvLoanPossibleIncome = 1 THEN ALBP.TotalEarnedCashToPeriod END, FM35P.OnProgPaymentToPeriod, FM36PM.ProviderPaymentToPeriod, FM36P.ProviderPaymentToPeriod, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ), 0 ),
 			ProgFundIndMinCoInvestToPeriod = COALESCE ( FM36PM.ProgFundIndMinCoInvestToPeriod, FM36P.ProgFundIndMinCoInvestToPeriod, 0 ),
 			ProgFundIndMaxEmpContToPeriod = COALESCE ( FM36PM.ProgFundIndMaxEmpContToPeriod, FM36P.ProgFundIndMaxEmpContToPeriod, 0 ),
 			LearnDelFirstProv1618PayToPeriod = COALESCE ( FM36PM.LearnDelFirstProv1618PayToPeriod, FM36P.LearnDelFirstProv1618PayToPeriod, 0 ),
@@ -7209,6 +7243,40 @@ BEGIN
 							0
 					END
 				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM35P.OnProgPaymentMidYear, FM36PM.OnProgPaymentMidYear, FM36P.OnProgPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
+			ProviderPaymentMidYear = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM35P.OnProgPaymentMidYear, FM36PM.ProviderPaymentMidYear, FM36P.ProviderPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
 			ProgFundIndMinCoInvestMidYear = COALESCE ( FM36PM.ProgFundIndMinCoInvestMidYear, FM36P.ProgFundIndMinCoInvestMidYear, 0 ),
 			ProgFundIndMaxEmpContMidYear = COALESCE ( FM36PM.ProgFundIndMaxEmpContMidYear, FM36P.ProgFundIndMaxEmpContMidYear, 0 ),
 			LearnDelFirstProv1618PayMidYear = COALESCE ( FM36PM.LearnDelFirstProv1618PayMidYear, FM36P.LearnDelFirstProv1618PayMidYear, 0 ),
@@ -7302,6 +7370,40 @@ BEGIN
 							0
 					END
 				END END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashYearEnd END, FM35P.OnProgPaymentYearEnd, FM36PM.OnProgPaymentYearEnd, FM36P.OnProgPaymentYearEnd, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END, 0 ),
+			ProviderPaymentYearEnd = COALESCE ( CASE WHEN LD.FundModel = 25 THEN CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashYearEnd END, FM35P.OnProgPaymentYearEnd, FM36PM.ProviderPaymentYearEnd, FM36P.ProviderPaymentYearEnd, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END, 0 ),
 			ProgFundIndMinCoInvestYearEnd = COALESCE ( FM36PM.ProgFundIndMinCoInvestYearEnd, FM36P.ProgFundIndMinCoInvestYearEnd, 0 ),
 			ProgFundIndMaxEmpContYearEnd = COALESCE ( FM36PM.ProgFundIndMaxEmpContYearEnd, FM36P.ProgFundIndMaxEmpContYearEnd, 0 ),
 			LearnDelFirstProv1618PayYearEnd = COALESCE ( FM36PM.LearnDelFirstProv1618PayYearEnd, FM36P.LearnDelFirstProv1618PayYearEnd, 0 ),
@@ -8401,6 +8503,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP01 END, FM35P.OnProgPaymentP01, FM36PM.OnProgPaymentP01, FM36P.OnProgPaymentP01, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP01 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP01 END, FM35P.OnProgPaymentP01, FM36PM.ProviderPaymentP01, FM36P.ProviderPaymentP01, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP01 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP01, FM36P.ProgFundIndMinCoInvestP01, 0 ),
 			ProgFundIndMaxEmpContP01 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP01, FM36P.ProgFundIndMaxEmpContP01, 0 ),
 			LearnDelFirstProv1618PayP01 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP01, FM36P.LearnDelFirstProv1618PayP01, 0 ),
@@ -8494,6 +8630,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP02 END, FM35P.OnProgPaymentP02, FM36PM.OnProgPaymentP02, FM36P.OnProgPaymentP02, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP02 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP02 END, FM35P.OnProgPaymentP02, FM36PM.ProviderPaymentP02, FM36P.ProviderPaymentP02, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP02 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP02, FM36P.ProgFundIndMinCoInvestP02, 0 ),
 			ProgFundIndMaxEmpContP02 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP02, FM36P.ProgFundIndMaxEmpContP02, 0 ),
 			LearnDelFirstProv1618PayP02 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP02, FM36P.LearnDelFirstProv1618PayP02, 0 ),
@@ -8587,6 +8757,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP03 END, FM35P.OnProgPaymentP03, FM36PM.OnProgPaymentP03, FM36P.OnProgPaymentP03, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP03 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP03 END, FM35P.OnProgPaymentP03, FM36PM.ProviderPaymentP03, FM36P.ProviderPaymentP03, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP03 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP03, FM36P.ProgFundIndMinCoInvestP03, 0 ),
 			ProgFundIndMaxEmpContP03 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP03, FM36P.ProgFundIndMaxEmpContP03, 0 ),
 			LearnDelFirstProv1618PayP03 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP03, FM36P.LearnDelFirstProv1618PayP03, 0 ),
@@ -8680,6 +8884,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP04 END, FM35P.OnProgPaymentP04, FM36PM.OnProgPaymentP04, FM36P.OnProgPaymentP04, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP04 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP04 END, FM35P.OnProgPaymentP04, FM36PM.ProviderPaymentP04, FM36P.ProviderPaymentP04, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP04 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP04, FM36P.ProgFundIndMinCoInvestP04, 0 ),
 			ProgFundIndMaxEmpContP04 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP04, FM36P.ProgFundIndMaxEmpContP04, 0 ),
 			LearnDelFirstProv1618PayP04 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP04, FM36P.LearnDelFirstProv1618PayP04, 0 ),
@@ -8773,6 +9011,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP05 END, FM35P.OnProgPaymentP05, FM36PM.OnProgPaymentP05, FM36P.OnProgPaymentP05, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP05 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP05 END, FM35P.OnProgPaymentP05, FM36PM.ProviderPaymentP05, FM36P.ProviderPaymentP05, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP05 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP05, FM36P.ProgFundIndMinCoInvestP05, 0 ),
 			ProgFundIndMaxEmpContP05 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP05, FM36P.ProgFundIndMaxEmpContP05, 0 ),
 			LearnDelFirstProv1618PayP05 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP05, FM36P.LearnDelFirstProv1618PayP05, 0 ),
@@ -8866,6 +9138,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP06 END, FM35P.OnProgPaymentP06, FM36PM.OnProgPaymentP06, FM36P.OnProgPaymentP06, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP06 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP06 END, FM35P.OnProgPaymentP06, FM36PM.ProviderPaymentP06, FM36P.ProviderPaymentP06, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP06 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP06, FM36P.ProgFundIndMinCoInvestP06, 0 ),
 			ProgFundIndMaxEmpContP06 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP06, FM36P.ProgFundIndMaxEmpContP06, 0 ),
 			LearnDelFirstProv1618PayP06 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP06, FM36P.LearnDelFirstProv1618PayP06, 0 ),
@@ -8959,6 +9265,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP07 END, FM35P.OnProgPaymentP07, FM36PM.OnProgPaymentP07, FM36P.OnProgPaymentP07, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP07 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP07 END, FM35P.OnProgPaymentP07, FM36PM.ProviderPaymentP07, FM36P.ProviderPaymentP07, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP07 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP07, FM36P.ProgFundIndMinCoInvestP07, 0 ),
 			ProgFundIndMaxEmpContP07 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP07, FM36P.ProgFundIndMaxEmpContP07, 0 ),
 			LearnDelFirstProv1618PayP07 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP07, FM36P.LearnDelFirstProv1618PayP07, 0 ),
@@ -9052,6 +9392,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP08 END, FM35P.OnProgPaymentP08, FM36PM.OnProgPaymentP08, FM36P.OnProgPaymentP08, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP08 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP08 END, FM35P.OnProgPaymentP08, FM36PM.ProviderPaymentP08, FM36P.ProviderPaymentP08, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP08 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP08, FM36P.ProgFundIndMinCoInvestP08, 0 ),
 			ProgFundIndMaxEmpContP08 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP08, FM36P.ProgFundIndMaxEmpContP08, 0 ),
 			LearnDelFirstProv1618PayP08 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP08, FM36P.LearnDelFirstProv1618PayP08, 0 ),
@@ -9145,6 +9519,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP09 END, FM35P.OnProgPaymentP09, FM36PM.OnProgPaymentP09, FM36P.OnProgPaymentP09, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP09 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP09 END, FM35P.OnProgPaymentP09, FM36PM.ProviderPaymentP09, FM36P.ProviderPaymentP09, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP09 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP09, FM36P.ProgFundIndMinCoInvestP09, 0 ),
 			ProgFundIndMaxEmpContP09 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP09, FM36P.ProgFundIndMaxEmpContP09, 0 ),
 			LearnDelFirstProv1618PayP09 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP09, FM36P.LearnDelFirstProv1618PayP09, 0 ),
@@ -9238,6 +9646,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP10 END, FM35P.OnProgPaymentP10, FM36PM.OnProgPaymentP10, FM36P.OnProgPaymentP10, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP10 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP10 END, FM35P.OnProgPaymentP10, FM36PM.ProviderPaymentP10, FM36P.ProviderPaymentP10, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP10 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP10, FM36P.ProgFundIndMinCoInvestP10, 0 ),
 			ProgFundIndMaxEmpContP10 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP10, FM36P.ProgFundIndMaxEmpContP10, 0 ),
 			LearnDelFirstProv1618PayP10 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP10, FM36P.LearnDelFirstProv1618PayP10, 0 ),
@@ -9331,6 +9773,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP11 END, FM35P.OnProgPaymentP11, FM36PM.OnProgPaymentP11, FM36P.OnProgPaymentP11, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP11 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP11 END, FM35P.OnProgPaymentP11, FM36PM.ProviderPaymentP11, FM36P.ProviderPaymentP11, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP11 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP11, FM36P.ProgFundIndMinCoInvestP11, 0 ),
 			ProgFundIndMaxEmpContP11 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP11, FM36P.ProgFundIndMaxEmpContP11, 0 ),
 			LearnDelFirstProv1618PayP11 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP11, FM36P.LearnDelFirstProv1618PayP11, 0 ),
@@ -9424,6 +9900,40 @@ BEGIN
 							0
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP12 END, FM35P.OnProgPaymentP12, FM36PM.OnProgPaymentP12, FM36P.OnProgPaymentP12, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
+			ProviderPaymentP12 = COALESCE ( CASE WHEN LD.FundModel = 25 THEN ( CASE WHEN @Split1619Funding = 1 
+				THEN
+					CASE
+						WHEN COALESCE ( HRS.PlannedHours, 0 ) = 0 THEN CASE WHEN LD.AimSeqNumber = FM25.CoreAimSeqNumber THEN COALESCE ( HRS.OnProgPayment, 0 ) ELSE 0 END
+						ELSE
+							( COALESCE ( HRS.OnProgPayment, 0 ) / COALESCE ( HRS.PlannedHours, 0 ) ) * COALESCE ( CASE WHEN FM.Transfer = 0 OR HRS.TFerOnly = 1 THEN CH.PlannedHours END, 0 )
+					END
+				ELSE 
+					CASE
+						WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+							( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+							+ ( 
+								FM25.OnProgPayment 
+								- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+							)
+						ELSE FM25.OnProgPayment
+					END
+					- CASE 
+						WHEN @1619ALSFundingPercent > 0 THEN
+							( 
+								CASE
+									WHEN @Reapportion1619FundingByAimWeighting = 1 AND FM25.StartFund = 1 THEN
+										( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightNew ) 
+										+ ( 
+											FM25.OnProgPayment 
+											- ( FM25.NatRate * FM25.PrvRetentFactHist * FM25.ProgWeightHist ) 
+										)
+									ELSE FM25.OnProgPayment
+								END
+								/ 100 ) * @1619ALSFundingPercent
+						ELSE
+							0
+					END
+				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP12 END, FM35P.OnProgPaymentP12, FM36PM.ProviderPaymentP12, FM36P.ProviderPaymentP12, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP12 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP12, FM36P.ProgFundIndMinCoInvestP12, 0 ),
 			ProgFundIndMaxEmpContP12 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP12, FM36P.ProgFundIndMaxEmpContP12, 0 ),
 			LearnDelFirstProv1618PayP12 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP12, FM36P.LearnDelFirstProv1618PayP12, 0 ),
