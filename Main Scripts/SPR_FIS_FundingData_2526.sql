@@ -2069,7 +2069,12 @@ BEGIN
 					),
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment  
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2135,7 +2140,7 @@ BEGIN
 					),
 				TotalEarnedCashToPeriod = 
 					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2160,7 +2165,12 @@ BEGIN
 					),
 				OnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2226,7 +2236,7 @@ BEGIN
 					),
 				TotalEarnedCashMidYear = 
 					SUM (  CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2249,7 +2259,11 @@ BEGIN
 					),
 				OnProgPaymentYearEnd = 
 					SUM ( 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+					),
+				ProviderPaymentYearEnd = 
+					SUM ( 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2303,7 +2317,7 @@ BEGIN
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2326,7 +2340,12 @@ BEGIN
 					),
 				OnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2392,7 +2411,7 @@ BEGIN
 					),
 				TotalEarnedCashP01 = 
 					SUM (  CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2416,8 +2435,13 @@ BEGIN
 					),
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
-						+ FM36P.MathEngOnProgPayment  
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
+						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
@@ -2482,7 +2506,7 @@ BEGIN
 					),
 				TotalEarnedCashP02 = 
 					SUM (  CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2506,7 +2530,12 @@ BEGIN
 					),
 				OnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2572,7 +2601,7 @@ BEGIN
 					),
 				TotalEarnedCashP03 = 
 					SUM (  CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2596,7 +2625,12 @@ BEGIN
 					),
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2662,7 +2696,7 @@ BEGIN
 					),
 				TotalEarnedCashP04 = 
 					SUM (  CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2686,7 +2720,12 @@ BEGIN
 					),
 				OnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2752,7 +2791,7 @@ BEGIN
 					),
 				TotalEarnedCashP05 = 
 					SUM (  CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2776,7 +2815,12 @@ BEGIN
 					),
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2842,7 +2886,7 @@ BEGIN
 					),
 				TotalEarnedCashP06 = 
 					SUM (  CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2866,7 +2910,12 @@ BEGIN
 					),
 				OnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2932,7 +2981,7 @@ BEGIN
 					),
 				TotalEarnedCashP07 = 
 					SUM (  CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -2956,7 +3005,12 @@ BEGIN
 					),
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3022,7 +3076,7 @@ BEGIN
 					),
 				TotalEarnedCashP08 = 
 					SUM (  CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3046,7 +3100,12 @@ BEGIN
 					),
 				OnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3112,7 +3171,7 @@ BEGIN
 					),
 				TotalEarnedCashP09 = 
 					SUM (  CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3136,7 +3195,12 @@ BEGIN
 					),
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3202,7 +3266,7 @@ BEGIN
 					),
 				TotalEarnedCashP10 = 
 					SUM (  CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3226,7 +3290,12 @@ BEGIN
 					),
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3292,7 +3361,7 @@ BEGIN
 					),
 				TotalEarnedCashP11 = 
 					SUM (  CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3316,7 +3385,12 @@ BEGIN
 					),
 				OnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3382,7 +3456,7 @@ BEGIN
 					),
 				TotalEarnedCashP12 = 
 					SUM (  CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3434,7 +3508,12 @@ BEGIN
 					),
 				OnProgPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment  
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3500,7 +3579,7 @@ BEGIN
 					),
 				TotalEarnedCashToPeriod = 
 					SUM (  CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3524,7 +3603,12 @@ BEGIN
 					),
 				OnProgPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3590,7 +3674,7 @@ BEGIN
 					),
 				TotalEarnedCashMidYear = 
 					SUM (  CASE WHEN FM36P.Period <= 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3613,7 +3697,11 @@ BEGIN
 					),
 				OnProgPaymentYearEnd = 
 					SUM ( 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+					),
+				ProviderPaymentYearEnd = 
+					SUM ( 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3667,7 +3755,7 @@ BEGIN
 					),
 				TotalEarnedCashYearEnd = 
 					SUM (  
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3690,7 +3778,12 @@ BEGIN
 					),
 				OnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3756,7 +3849,7 @@ BEGIN
 					),
 				TotalEarnedCashP01 = 
 					SUM (  CASE WHEN FM36P.Period = 1 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3780,8 +3873,13 @@ BEGIN
 					),
 				OnProgPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
-						+ FM36P.MathEngOnProgPayment  
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
+						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						ELSE 0 END
@@ -3846,7 +3944,7 @@ BEGIN
 					),
 				TotalEarnedCashP02 = 
 					SUM (  CASE WHEN FM36P.Period = 2 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3870,7 +3968,12 @@ BEGIN
 					),
 				OnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3936,7 +4039,7 @@ BEGIN
 					),
 				TotalEarnedCashP03 = 
 					SUM (  CASE WHEN FM36P.Period = 3 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -3960,7 +4063,12 @@ BEGIN
 					),
 				OnProgPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4026,7 +4134,7 @@ BEGIN
 					),
 				TotalEarnedCashP04 = 
 					SUM (  CASE WHEN FM36P.Period = 4 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4050,7 +4158,12 @@ BEGIN
 					),
 				OnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4116,7 +4229,7 @@ BEGIN
 					),
 				TotalEarnedCashP05 = 
 					SUM (  CASE WHEN FM36P.Period = 5 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4140,7 +4253,12 @@ BEGIN
 					),
 				OnProgPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4206,7 +4324,7 @@ BEGIN
 					),
 				TotalEarnedCashP06 = 
 					SUM (  CASE WHEN FM36P.Period = 6 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4230,7 +4348,12 @@ BEGIN
 					),
 				OnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4296,7 +4419,7 @@ BEGIN
 					),
 				TotalEarnedCashP07 = 
 					SUM (  CASE WHEN FM36P.Period = 7 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4320,7 +4443,12 @@ BEGIN
 					),
 				OnProgPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4386,7 +4514,7 @@ BEGIN
 					),
 				TotalEarnedCashP08 = 
 					SUM (  CASE WHEN FM36P.Period = 8 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4410,7 +4538,12 @@ BEGIN
 					),
 				OnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4476,7 +4609,7 @@ BEGIN
 					),
 				TotalEarnedCashP09 = 
 					SUM (  CASE WHEN FM36P.Period = 9 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4500,7 +4633,12 @@ BEGIN
 					),
 				OnProgPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4566,7 +4704,7 @@ BEGIN
 					),
 				TotalEarnedCashP10 = 
 					SUM (  CASE WHEN FM36P.Period = 10 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4590,7 +4728,12 @@ BEGIN
 					),
 				OnProgPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4656,7 +4799,7 @@ BEGIN
 					),
 				TotalEarnedCashP11 = 
 					SUM (  CASE WHEN FM36P.Period = 11 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4680,7 +4823,12 @@ BEGIN
 					),
 				OnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
+						ELSE 0 END
+					),
+				ProviderPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.ProgrammeAimProgFundIndMinCoInvest --Use Monthly Payment Report to Determine if Co-Invest Amount Should be Included
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
@@ -4746,7 +4894,7 @@ BEGIN
 					),
 				TotalEarnedCashP12 = 
 					SUM (  CASE WHEN FM36P.Period = 12 THEN 
-						CASE WHEN FM36P.LearnDelLevyNonPayInd = 1 THEN FM36P.ProgrammeAimProgFundIndMinCoInvest ELSE FM36P.ProgrammeAimOnProgPayment END --1 = Non-Levy so deduct co-investment 
+						FM36P.ProgrammeAimOnProgPayment
 						+ FM36P.MathEngOnProgPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
