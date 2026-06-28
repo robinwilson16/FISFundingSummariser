@@ -1897,6 +1897,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -2009,6 +2014,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -2106,6 +2116,10 @@ BEGIN
 				MathEngOnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.MathEngOnProgPayment 
+					),
+				MathEngBalPaymentYearEnd = 
+					SUM ( 
+						FM36P.MathEngBalPayment 
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
@@ -2211,6 +2225,11 @@ BEGIN
 				MathEngOnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP01 = 
@@ -2323,6 +2342,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -2431,6 +2455,11 @@ BEGIN
 				MathEngOnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP03 = 
@@ -2543,6 +2572,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -2651,6 +2685,11 @@ BEGIN
 				MathEngOnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP05 = 
@@ -2763,6 +2802,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -2871,6 +2915,11 @@ BEGIN
 				MathEngOnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP07 = 
@@ -2983,6 +3032,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -3091,6 +3145,11 @@ BEGIN
 				MathEngOnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP09 = 
@@ -3203,6 +3262,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -3313,6 +3377,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -3421,6 +3490,11 @@ BEGIN
 				MathEngOnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP12 = 
@@ -3565,6 +3639,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentToPeriod = 
+					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentToPeriod = 
 					SUM ( CASE WHEN FM36P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -3675,6 +3754,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentMidYear = 
+					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentMidYear = 
 					SUM ( CASE WHEN FM36P.Period <= 6 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -3772,6 +3856,10 @@ BEGIN
 				MathEngOnProgPaymentYearEnd = 
 					SUM ( 
 						FM36P.MathEngOnProgPayment 
+					),
+				MathEngBalPaymentYearEnd = 
+					SUM ( 
+						FM36P.MathEngBalPayment 
 					),
 				AchCompPaymentYearEnd = 
 					SUM ( 
@@ -3877,6 +3965,11 @@ BEGIN
 				MathEngOnProgPaymentP01 = 
 					SUM ( CASE WHEN FM36P.Period = 1 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP01 = 
+					SUM ( CASE WHEN FM36P.Period = 1 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP01 = 
@@ -3989,6 +4082,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP02 = 
+					SUM ( CASE WHEN FM36P.Period = 2 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP02 = 
 					SUM ( CASE WHEN FM36P.Period = 2 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -4097,6 +4195,11 @@ BEGIN
 				MathEngOnProgPaymentP03 = 
 					SUM ( CASE WHEN FM36P.Period = 3 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP03 = 
+					SUM ( CASE WHEN FM36P.Period = 3 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP03 = 
@@ -4209,6 +4312,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP04 = 
+					SUM ( CASE WHEN FM36P.Period = 4 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP04 = 
 					SUM ( CASE WHEN FM36P.Period = 4 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -4317,6 +4425,11 @@ BEGIN
 				MathEngOnProgPaymentP05 = 
 					SUM ( CASE WHEN FM36P.Period = 5 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP05 = 
+					SUM ( CASE WHEN FM36P.Period = 5 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP05 = 
@@ -4429,6 +4542,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP06 = 
+					SUM ( CASE WHEN FM36P.Period = 6 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP06 = 
 					SUM ( CASE WHEN FM36P.Period = 6 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -4537,6 +4655,11 @@ BEGIN
 				MathEngOnProgPaymentP07 = 
 					SUM ( CASE WHEN FM36P.Period = 7 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP07 = 
+					SUM ( CASE WHEN FM36P.Period = 7 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP07 = 
@@ -4649,6 +4772,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP08 = 
+					SUM ( CASE WHEN FM36P.Period = 8 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP08 = 
 					SUM ( CASE WHEN FM36P.Period = 8 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -4757,6 +4885,11 @@ BEGIN
 				MathEngOnProgPaymentP09 = 
 					SUM ( CASE WHEN FM36P.Period = 9 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP09 = 
+					SUM ( CASE WHEN FM36P.Period = 9 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP09 = 
@@ -4869,6 +5002,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP10 = 
+					SUM ( CASE WHEN FM36P.Period = 10 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP10 = 
 					SUM ( CASE WHEN FM36P.Period = 10 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -4979,6 +5117,11 @@ BEGIN
 						FM36P.MathEngOnProgPayment 
 						ELSE 0 END
 					),
+				MathEngBalPaymentP11 = 
+					SUM ( CASE WHEN FM36P.Period = 11 THEN 
+						FM36P.MathEngBalPayment 
+						ELSE 0 END
+					),
 				AchCompPaymentP11 = 
 					SUM ( CASE WHEN FM36P.Period = 11 THEN 
 						FM36P.ProgrammeAimCompletionPayment 
@@ -5087,6 +5230,11 @@ BEGIN
 				MathEngOnProgPaymentP12 = 
 					SUM ( CASE WHEN FM36P.Period = 12 THEN 
 						FM36P.MathEngOnProgPayment 
+						ELSE 0 END
+					),
+				MathEngBalPaymentP12 = 
+					SUM ( CASE WHEN FM36P.Period = 12 THEN 
+						FM36P.MathEngBalPayment 
 						ELSE 0 END
 					),
 				AchCompPaymentP12 = 
@@ -7326,6 +7474,7 @@ BEGIN
 					END
 				END / 12 ) * TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) END, FM35P.LearnSuppPaymentToPeriod, FM36PM.LearnSuppPaymentToPeriod, FM36P.LearnSuppPaymentToPeriod, 0 ),
 			MathEngOnProgPaymentToPeriod = COALESCE ( FM36PM.MathEngOnProgPaymentToPeriod, FM36P.MathEngOnProgPaymentToPeriod, 0 ),
+			MathEngBalPaymentToPeriod = COALESCE ( FM36PM.MathEngBalPaymentToPeriod, FM36P.MathEngBalPaymentToPeriod, 0 ),
 			AchCompPaymentToPeriod = COALESCE ( FM35P.AchCompPaymentToPeriod, FM36PM.AchCompPaymentToPeriod, FM36P.AchCompPaymentToPeriod, 0 ),
 			BalancePaymentToPeriod = COALESCE ( FM35P.BalancePaymentToPeriod, FM36PM.BalancePaymentToPeriod, FM36P.BalancePaymentToPeriod, 0 ),
 			EmpOutcomePayToPeriod = COALESCE ( FM35P.EmpOutcomePayToPeriod, 0 ),
@@ -7454,6 +7603,7 @@ BEGIN
 					END
 				END / 12 ) * 6 END, FM35P.LearnSuppPaymentMidYear, FM36PM.LearnSuppPaymentMidYear, FM36P.LearnSuppPaymentMidYear, 0 ),
 			MathEngOnProgPaymentMidYear = COALESCE ( FM36PM.MathEngOnProgPaymentMidYear, FM36P.MathEngOnProgPaymentMidYear, 0 ),
+			MathEngBalPaymentMidYear = COALESCE ( FM36PM.MathEngBalPaymentMidYear, FM36P.MathEngBalPaymentMidYear, 0 ),
 			AchCompPaymentMidYear = COALESCE ( FM35P.AchCompPaymentMidYear, FM36PM.AchCompPaymentMidYear, FM36P.AchCompPaymentMidYear, 0 ),
 			BalancePaymentMidYear = COALESCE ( FM35P.BalancePaymentMidYear, FM36PM.BalancePaymentMidYear, FM36P.BalancePaymentMidYear, 0 ),
 			EmpOutcomePayMidYear = COALESCE ( FM35P.EmpOutcomePayMidYear, 0 ),
@@ -7582,6 +7732,7 @@ BEGIN
 					END
 				END END, FM35P.LearnSuppPaymentYearEnd, FM36PM.LearnSuppPaymentYearEnd, FM36P.LearnSuppPaymentYearEnd, 0 ),
 			MathEngOnProgPaymentYearEnd = COALESCE ( FM36PM.MathEngOnProgPaymentYearEnd, FM36P.MathEngOnProgPaymentYearEnd, 0 ),
+			MathEngBalPaymentYearEnd = COALESCE ( FM36PM.MathEngBalPaymentYearEnd, FM36P.MathEngBalPaymentYearEnd, 0 ),
 			AchCompPaymentYearEnd = COALESCE ( FM35P.AchCompPaymentYearEnd, FM36PM.AchCompPaymentYearEnd, FM36P.AchCompPaymentYearEnd, 0 ),
 			BalancePaymentYearEnd = COALESCE ( FM35P.BalancePaymentYearEnd, FM36PM.BalancePaymentYearEnd, FM36P.BalancePaymentYearEnd, 0 ),
 			EmpOutcomePayYearEnd = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8704,6 +8855,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP01, FM36PM.LearnSuppPaymentP01, FM36P.LearnSuppPaymentP01, 0 ),
 			MathEngOnProgPaymentP01 = COALESCE ( FM36PM.MathEngOnProgPaymentP01, FM36P.MathEngOnProgPaymentP01, 0 ),
+			MathEngBalPaymentP01 = COALESCE ( FM36PM.MathEngBalPaymentP01, FM36P.MathEngBalPaymentP01, 0 ),
 			AchCompPaymentP01 = COALESCE ( FM35P.AchCompPaymentP01, FM36PM.AchCompPaymentP01, FM36P.AchCompPaymentP01, 0 ),
 			BalancePaymentP01 = COALESCE ( FM35P.BalancePaymentP01, FM36PM.BalancePaymentP01, FM36P.BalancePaymentP01, 0 ),
 			EmpOutcomePayP01 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8832,6 +8984,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP02, FM36PM.LearnSuppPaymentP02, FM36P.LearnSuppPaymentP02, 0 ),
 			MathEngOnProgPaymentP02 = COALESCE ( FM36PM.MathEngOnProgPaymentP02, FM36P.MathEngOnProgPaymentP02, 0 ),
+			MathEngBalPaymentP02 = COALESCE ( FM36PM.MathEngBalPaymentP02, FM36P.MathEngBalPaymentP02, 0 ),
 			AchCompPaymentP02 = COALESCE ( FM35P.AchCompPaymentP02, FM36PM.AchCompPaymentP02, FM36P.AchCompPaymentP02, 0 ),
 			BalancePaymentP02 = COALESCE ( FM35P.BalancePaymentP02, FM36PM.BalancePaymentP02, FM36P.BalancePaymentP02, 0 ),
 			EmpOutcomePayP02 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -8960,6 +9113,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP03, FM36PM.LearnSuppPaymentP03, FM36P.LearnSuppPaymentP03, 0 ),
 			MathEngOnProgPaymentP03 = COALESCE ( FM36PM.MathEngOnProgPaymentP03, FM36P.MathEngOnProgPaymentP03, 0 ),
+			MathEngBalPaymentP03 = COALESCE ( FM36PM.MathEngBalPaymentP03, FM36P.MathEngBalPaymentP03, 0 ),
 			AchCompPaymentP03 = COALESCE ( FM35P.AchCompPaymentP03, FM36PM.AchCompPaymentP03, FM36P.AchCompPaymentP03, 0 ),
 			BalancePaymentP03 = COALESCE ( FM35P.BalancePaymentP03, FM36PM.BalancePaymentP03, FM36P.BalancePaymentP03, 0 ),
 			EmpOutcomePayP03 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9088,6 +9242,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP04, FM36PM.LearnSuppPaymentP04, FM36P.LearnSuppPaymentP04, 0 ),
 			MathEngOnProgPaymentP04 = COALESCE ( FM36PM.MathEngOnProgPaymentP04, FM36P.MathEngOnProgPaymentP04, 0 ),
+			MathEngBalPaymentP04 = COALESCE ( FM36PM.MathEngBalPaymentP04, FM36P.MathEngBalPaymentP04, 0 ),
 			AchCompPaymentP04 = COALESCE ( FM35P.AchCompPaymentP04, FM36PM.AchCompPaymentP04, FM36P.AchCompPaymentP04, 0 ),
 			BalancePaymentP04 = COALESCE ( FM35P.BalancePaymentP04, FM36PM.BalancePaymentP04, FM36P.BalancePaymentP04, 0 ),
 			EmpOutcomePayP04 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9216,6 +9371,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP05, FM36PM.LearnSuppPaymentP05, FM36P.LearnSuppPaymentP05, 0 ),
 			MathEngOnProgPaymentP05 = COALESCE ( FM36PM.MathEngOnProgPaymentP05, FM36P.MathEngOnProgPaymentP05, 0 ),
+			MathEngBalPaymentP05 = COALESCE ( FM36PM.MathEngBalPaymentP05, FM36P.MathEngBalPaymentP05, 0 ),
 			AchCompPaymentP05 = COALESCE ( FM35P.AchCompPaymentP05, FM36PM.AchCompPaymentP05, FM36P.AchCompPaymentP05, 0 ),
 			BalancePaymentP05 = COALESCE ( FM35P.BalancePaymentP05, FM36PM.BalancePaymentP05, FM36P.BalancePaymentP05, 0 ),
 			EmpOutcomePayP05 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9344,6 +9500,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP06, FM36PM.LearnSuppPaymentP06, FM36P.LearnSuppPaymentP06, 0 ),
 			MathEngOnProgPaymentP06 = COALESCE ( FM36PM.MathEngOnProgPaymentP06, FM36P.MathEngOnProgPaymentP06, 0 ),
+			MathEngBalPaymentP06 = COALESCE ( FM36PM.MathEngBalPaymentP06, FM36P.MathEngBalPaymentP06, 0 ),
 			AchCompPaymentP06 = COALESCE ( FM35P.AchCompPaymentP06, FM36PM.AchCompPaymentP06, FM36P.AchCompPaymentP06, 0 ),
 			BalancePaymentP06 = COALESCE ( FM35P.BalancePaymentP06, FM36PM.BalancePaymentP06, FM36P.BalancePaymentP06, 0 ),
 			EmpOutcomePayP06 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9472,6 +9629,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP07, FM36PM.LearnSuppPaymentP07, FM36P.LearnSuppPaymentP07, 0 ),
 			MathEngOnProgPaymentP07 = COALESCE ( FM36PM.MathEngOnProgPaymentP07, FM36P.MathEngOnProgPaymentP07, 0 ),
+			MathEngBalPaymentP07 = COALESCE ( FM36PM.MathEngBalPaymentP07, FM36P.MathEngBalPaymentP07, 0 ),
 			AchCompPaymentP07 = COALESCE ( FM35P.AchCompPaymentP07, FM36PM.AchCompPaymentP07, FM36P.AchCompPaymentP07, 0 ),
 			BalancePaymentP07 = COALESCE ( FM35P.BalancePaymentP07, FM36PM.BalancePaymentP07, FM36P.BalancePaymentP07, 0 ),
 			EmpOutcomePayP07 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9600,6 +9758,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP08, FM36PM.LearnSuppPaymentP08, FM36P.LearnSuppPaymentP08, 0 ),
 			MathEngOnProgPaymentP08 = COALESCE ( FM36PM.MathEngOnProgPaymentP08, FM36P.MathEngOnProgPaymentP08, 0 ),
+			MathEngBalPaymentP08 = COALESCE ( FM36PM.MathEngBalPaymentP08, FM36P.MathEngBalPaymentP08, 0 ),
 			AchCompPaymentP08 = COALESCE ( FM35P.AchCompPaymentP08, FM36PM.AchCompPaymentP08, FM36P.AchCompPaymentP08, 0 ),
 			BalancePaymentP08 = COALESCE ( FM35P.BalancePaymentP08, FM36PM.BalancePaymentP08, FM36P.BalancePaymentP08, 0 ),
 			EmpOutcomePayP08 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9697,7 +9856,6 @@ BEGIN
 					END
 				END / 12 ) END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashP09 END, FM35P.OnProgPaymentP09, FM36PM.ProviderPaymentP09, FM36P.ProviderPaymentP09, CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12, 0 ),
 			ProgFundIndMinCoInvestP09 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP09, FM36P.ProgFundIndMinCoInvestP09, 0 ),
-			ProgFundIndMinCoInvestP09 = COALESCE ( FM36PM.ProgFundIndMinCoInvestP09, FM36P.ProgFundIndMinCoInvestP09, 0 ),
 			ProgFundIndMaxEmpContP09 = COALESCE ( FM36PM.ProgFundIndMaxEmpContP09, FM36P.ProgFundIndMaxEmpContP09, 0 ),
 			LearnDelFirstProv1618PayP09 = COALESCE ( FM36PM.LearnDelFirstProv1618PayP09, FM36P.LearnDelFirstProv1618PayP09, 0 ),
 			LearnDelSecondProv1618PayP09 = COALESCE ( FM36PM.LearnDelSecondProv1618PayP09, FM36P.LearnDelSecondProv1618PayP09, 0 ),
@@ -9729,6 +9887,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP09, FM36PM.LearnSuppPaymentP09, FM36P.LearnSuppPaymentP09, 0 ),
 			MathEngOnProgPaymentP09 = COALESCE ( FM36PM.MathEngOnProgPaymentP09, FM36P.MathEngOnProgPaymentP09, 0 ),
+			MathEngBalPaymentP09 = COALESCE ( FM36PM.MathEngBalPaymentP09, FM36P.MathEngBalPaymentP09, 0 ),
 			AchCompPaymentP09 = COALESCE ( FM35P.AchCompPaymentP09, FM36PM.AchCompPaymentP09, FM36P.AchCompPaymentP09, 0 ),
 			BalancePaymentP09 = COALESCE ( FM35P.BalancePaymentP09, FM36PM.BalancePaymentP09, FM36P.BalancePaymentP09, 0 ),
 			EmpOutcomePayP09 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9857,6 +10016,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP10, FM36PM.LearnSuppPaymentP10, FM36P.LearnSuppPaymentP10, 0 ),
 			MathEngOnProgPaymentP10 = COALESCE ( FM36PM.MathEngOnProgPaymentP10, FM36P.MathEngOnProgPaymentP10, 0 ),
+			MathEngBalPaymentP10 = COALESCE ( FM36PM.MathEngBalPaymentP10, FM36P.MathEngBalPaymentP10, 0 ),
 			AchCompPaymentP10 = COALESCE ( FM35P.AchCompPaymentP10, FM36PM.AchCompPaymentP10, FM36P.AchCompPaymentP10, 0 ),
 			BalancePaymentP10 = COALESCE ( FM35P.BalancePaymentP10, FM36PM.BalancePaymentP10, FM36P.BalancePaymentP10, 0 ),
 			EmpOutcomePayP10 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -9985,6 +10145,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP11, FM36PM.LearnSuppPaymentP11, FM36P.LearnSuppPaymentP11, 0 ),
 			MathEngOnProgPaymentP11 = COALESCE ( FM36PM.MathEngOnProgPaymentP11, FM36P.MathEngOnProgPaymentP11, 0 ),
+			MathEngBalPaymentP11 = COALESCE ( FM36PM.MathEngBalPaymentP11, FM36P.MathEngBalPaymentP11, 0 ),
 			AchCompPaymentP11 = COALESCE ( FM35P.AchCompPaymentP11, FM36PM.AchCompPaymentP11, FM36P.AchCompPaymentP11, 0 ),
 			BalancePaymentP11 = COALESCE ( FM35P.BalancePaymentP11, FM36PM.BalancePaymentP11, FM36P.BalancePaymentP11, 0 ),
 			EmpOutcomePayP11 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
@@ -10113,6 +10274,7 @@ BEGIN
 					END
 				END / 12 ) END, FM35P.LearnSuppPaymentP12, FM36PM.LearnSuppPaymentP12, FM36P.LearnSuppPaymentP12, 0 ),
 			MathEngOnProgPaymentP12 = COALESCE ( FM36PM.MathEngOnProgPaymentP12, FM36P.MathEngOnProgPaymentP12, 0 ),
+			MathEngBalPaymentP12 = COALESCE ( FM36PM.MathEngBalPaymentP12, FM36P.MathEngBalPaymentP12, 0 ),
 			AchCompPaymentP12 = COALESCE ( FM35P.AchCompPaymentP12, FM36PM.AchCompPaymentP12, FM36P.AchCompPaymentP12, 0 ),
 			BalancePaymentP12 = COALESCE ( FM35P.BalancePaymentP12, FM36PM.BalancePaymentP12, FM36P.BalancePaymentP12, 0 ),
 			EmpOutcomePayP12 = COALESCE ( FM35P.EmpOutcomePayYearEnd, 0 ),
