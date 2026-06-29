@@ -1511,7 +1511,7 @@ BEGIN
 				PwayCode = COALESCE ( LD.PwayCode, 0 ),
 
 				OnProgPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentToPeriod = SUM ( CASE WHEN FM35P.Period <= TRY_CAST ( REPLACE ( @ILRReturn, ''R'', '''' ) AS INT ) THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1525,7 +1525,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentMidYear = SUM ( CASE WHEN FM35P.Period BETWEEN 1 AND 6 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1539,7 +1539,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentYearEnd = SUM ( FM35P.OnProgPayment ),
-				ProviderPaymentYearEnd = SUM ( FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ),
+				ProviderPaymentYearEnd = SUM ( FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ),
 				LearnSuppPaymentYearEnd = SUM ( FM35P.LearnSuppFundCash ),
 				AchCompPaymentYearEnd = SUM ( FM35P.AchievePayment ),
 				BalancePaymentYearEnd = SUM ( FM35P.BalancePayment ),
@@ -1556,7 +1556,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP01 = SUM ( CASE WHEN FM35P.Period = 1 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1570,7 +1570,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP02 = SUM ( CASE WHEN FM35P.Period = 2 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1587,7 +1587,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP03 = SUM ( CASE WHEN FM35P.Period = 3 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1601,7 +1601,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP04 = SUM ( CASE WHEN FM35P.Period = 4 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1618,7 +1618,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP05 = SUM ( CASE WHEN FM35P.Period = 5 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1632,7 +1632,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP06 = SUM ( CASE WHEN FM35P.Period = 6 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1649,7 +1649,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP07 = SUM ( CASE WHEN FM35P.Period = 7 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1663,7 +1663,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP08 = SUM ( CASE WHEN FM35P.Period = 8 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1680,7 +1680,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP09 = SUM ( CASE WHEN FM35P.Period = 9 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1694,7 +1694,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP10 = SUM ( CASE WHEN FM35P.Period = 10 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1711,7 +1711,7 @@ BEGIN
     SET @SQLString += 
         N'
 				OnProgPaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP11 = SUM ( CASE WHEN FM35P.Period = 11 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1725,7 +1725,7 @@ BEGIN
 				ELSE 0 END ),
 
 				OnProgPaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.OnProgPayment ELSE 0 END ),
-				ProviderPaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment ELSE 0 END ),
+				ProviderPaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.OnProgPayment + FM35P.BalancePayment + FM35P.AchievePayment + FM35P.EmpOutcomePay ELSE 0 END ),
 				LearnSuppPaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.LearnSuppFundCash ELSE 0 END ),
 				AchCompPaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.AchievePayment ELSE 0 END ),
 				BalancePaymentP12 = SUM ( CASE WHEN FM35P.Period = 12 THEN FM35P.BalancePayment ELSE 0 END ),
@@ -1877,6 +1877,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestToPeriod = 
@@ -1994,6 +1997,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestMidYear = 
@@ -2106,6 +2112,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 					),
 				ProgFundIndMinCoInvestYearEnd = 
 					SUM ( 
@@ -2207,6 +2216,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP01 = 
@@ -2322,6 +2334,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP02 = 
@@ -2437,6 +2452,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP03 = 
@@ -2552,6 +2570,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP04 = 
@@ -2667,6 +2688,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP05 = 
@@ -2782,6 +2806,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP06 = 
@@ -2897,6 +2924,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP07 = 
@@ -3012,6 +3042,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP08 = 
@@ -3127,6 +3160,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP09 = 
@@ -3242,6 +3278,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP10 = 
@@ -3357,6 +3396,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP11 = 
@@ -3472,6 +3514,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP12 = 
@@ -3619,6 +3664,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestToPeriod = 
@@ -3734,6 +3782,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestMidYear = 
@@ -3846,6 +3897,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 					),
 				ProgFundIndMinCoInvestYearEnd = 
 					SUM ( 
@@ -3947,6 +4001,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP01 = 
@@ -4062,6 +4119,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP02 = 
@@ -4177,6 +4237,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP03 = 
@@ -4292,6 +4355,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP04 = 
@@ -4407,6 +4473,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP05 = 
@@ -4522,6 +4591,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP06 = 
@@ -4637,6 +4709,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP07 = 
@@ -4752,6 +4827,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP08 = 
@@ -4867,6 +4945,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP09 = 
@@ -4982,6 +5063,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP10 = 
@@ -5097,6 +5181,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP11 = 
@@ -5212,6 +5299,9 @@ BEGIN
 						+ FM36P.DisadvSecondPayment 
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
+						+ FM36P.MathEngBalPayment 
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
+						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP12 = 
