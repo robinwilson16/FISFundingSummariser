@@ -3602,6 +3602,10 @@ BEGIN
 						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					)
+	'
+
+	SET @SQLString += 
+        N'
 				INTO #FM36PeriodFunding
 			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
 			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
@@ -5387,6 +5391,10 @@ BEGIN
 						+ FM36P.LearnDelLearnAddPayment
 						ELSE 0 END
 					)
+	'
+
+	SET @SQLString += 
+        N'
 				INTO #FM36PeriodFundingSummary
 			FROM ' + @FISDatabase + '.Valid.LearningDelivery LD
 			INNER JOIN ' + @FISDatabase + '.Rulebase.AEC_LearningDelivery FM36
