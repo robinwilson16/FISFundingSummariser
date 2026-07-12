@@ -7687,7 +7687,7 @@ BEGIN
 						ELSE
 							0
 					END
-				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM35P.ProviderPaymentMidYear, FM36PM.ProviderPaymentMidYear, FM36P.ProvidergPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
+				END / 12 ) * 6 END, CASE WHEN ALB.AdvLoan = 1 AND @IncludeAdvLoanBursaryIncome = 1 THEN ALBP.TotalEarnedCashMidYear END, FM35P.ProviderPaymentMidYear, FM36PM.ProviderPaymentMidYear, FM36P.ProviderPaymentMidYear, ( CASE WHEN @IncludeHEAdvLoanPossibleIncome = 1 THEN HE.GROSSFEE ELSE 0 END / 12 ) * 6, 0 ),
 			ProgFundIndMinCoInvestMidYear = COALESCE ( FM36PM.ProgFundIndMinCoInvestMidYear, FM36P.ProgFundIndMinCoInvestMidYear, 0 ),
 			ProgFundIndMaxEmpContMidYear = COALESCE ( FM36PM.ProgFundIndMaxEmpContMidYear, FM36P.ProgFundIndMaxEmpContMidYear, 0 ),
 			LearnDelFirstProv1618PayMidYear = COALESCE ( FM36PM.LearnDelFirstProv1618PayMidYear, FM36P.LearnDelFirstProv1618PayMidYear, 0 ),
