@@ -1871,8 +1871,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestToPeriod = 
@@ -1991,8 +1990,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestMidYear = 
@@ -2106,8 +2104,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 					),
 				ProgFundIndMinCoInvestYearEnd = 
 					SUM ( 
@@ -2210,8 +2207,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP01 = 
@@ -2328,8 +2324,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP02 = 
@@ -2446,8 +2441,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP03 = 
@@ -2564,8 +2558,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP04 = 
@@ -2682,8 +2675,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP05 = 
@@ -2800,8 +2792,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP06 = 
@@ -2918,8 +2909,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP07 = 
@@ -3036,8 +3026,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP08 = 
@@ -3154,8 +3143,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP09 = 
@@ -3272,8 +3260,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP10 = 
@@ -3390,8 +3377,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP11 = 
@@ -3508,8 +3494,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP12 = 
@@ -3662,8 +3647,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestToPeriod = 
@@ -3780,8 +3764,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestMidYear = 
@@ -3895,8 +3878,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 					),
 				ProgFundIndMinCoInvestYearEnd = 
 					SUM ( 
@@ -3999,8 +3981,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP01 = 
@@ -4117,8 +4098,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP02 = 
@@ -4235,8 +4215,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP03 = 
@@ -4353,8 +4332,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP04 = 
@@ -4471,8 +4449,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP05 = 
@@ -4589,8 +4566,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP06 = 
@@ -4707,8 +4683,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP07 = 
@@ -4825,8 +4800,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP08 = 
@@ -4943,8 +4917,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP09 = 
@@ -5061,8 +5034,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP10 = 
@@ -5179,8 +5151,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP11 = 
@@ -5297,8 +5268,7 @@ BEGIN
 						+ FM36P.LearnDelFirstProv1618Pay 
 						+ FM36P.LearnDelSecondProv1618Pay
 						+ FM36P.MathEngBalPayment 
-						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment 
-						+ FM36P.LearnDelLearnAddPayment
+						+ FM36P.LDApplic1618FrameworkUpliftBalancingPayment
 						ELSE 0 END
 					),
 				ProgFundIndMinCoInvestP12 = 
