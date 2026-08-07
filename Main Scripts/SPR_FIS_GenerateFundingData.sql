@@ -427,7 +427,7 @@ BEGIN
 							EthnicityName VARCHAR(62) NULL,
 							LLDDHealthProb INT NULL,
 							PrimaryLLDDHealthProblemCode INT NULL,
-							PrimaryLLDDHealthProblemName VARCHAR(100) NULL,
+							PrimaryLLDDHealthProblemName VARCHAR(255) NULL,
 							FAMLearnerHNS INT NULL,
 							FAMLearnerEHC INT NULL,
 							FAMLearnerDLA INT NULL,
