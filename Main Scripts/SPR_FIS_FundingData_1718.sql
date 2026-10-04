@@ -5917,7 +5917,13 @@ BEGIN
 			EmpStatusCode = EMP.EmpStatusCode,
 			EmpStatusName = EMP.EmpStatusName,
 			EmpStatusAppliesDate = EMP.EmpStatusAppliesDate,
-			EmpStatusEmployerID = EMP.EmployerID,
+			EmpStatusEmployerID = 
+				CASE
+					WHEN LDR.LearnDel_EmpID = -1 THEN NULL
+					ELSE LDR.LearnDel_EmpID
+				END,
+			EmpStatusEmployerName = EMPN.EmployerName,
+			EmpStatusAgreementIdentifier = NULL,
 			LengthOfEmploy = ESM.LOE,
 			LengthOfUnemploy = ESM.LOU,
 			BenefitStatusInd = ESM.BSI,
@@ -7249,6 +7255,15 @@ BEGIN
         N'
 			PlanLearnHours = COALESCE ( L.PlanLearnHours, 0 ),
 			PlanEEPHours = COALESCE ( L.PlanEEPHours, 0 ),
+			PlannedHoursAim = 0,
+			AdditionalHoursAim = COALESCE ( LD.AddHours, 0 ),
+			ActualHoursAim = NULL,
+			OffTheJobPlannedHours = NULL,
+			OffTheJobActualHours = NULL,
+			OffTheJobHoursRPLReduction = NULL,
+			PlannedTLevelHours = NULL,
+			PlannedTailoredLearningHours = NULL,
+
 			FM25PlanLearnHoursAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( FM.Transfer = 0 OR HRS.TFerOnly = 1 ) THEN CH.PlannedHours END, 0 ),
 			FM25EEPHoursAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( FM.Transfer = 0 OR HRS.TFerOnly = 1 ) THEN CH.EEPHours END, 0 ),
 			FM25TLevelHoursAim = COALESCE ( CASE WHEN LD.FundModel = 25 AND ( FM.Transfer = 0 OR HRS.TFerOnly = 1 ) THEN CH.TLevelHours END, 0 ),
@@ -7272,13 +7287,6 @@ BEGIN
 			FrameworkName = COALESCE ( FW.FrameworkName, ''-- Unknown --'' ),
 			PathwayCode = LD.PwayCode,
 			PathwayName = COALESCE ( PWAY.PathwayName, CASE WHEN LD.PwayCode IS NULL THEN NULL ELSE ''-- Unknown --'' END ),
-			OffTheJobActualHours = NULL,
-			EmployerID = 
-				CASE
-					WHEN LDR.LearnDel_EmpID = -1 THEN NULL
-					ELSE LDR.LearnDel_EmpID
-				END,
-			EmployerName = EMPN.EmployerName,
 			PartnerCode = 
 				CASE
 					WHEN LD.LearnAimRef = ''ZPROG001'' THEN PTR.PartnerUKPRN
@@ -7867,21 +7875,25 @@ BEGIN
 				*
 				COALESCE ( FM25.Block2DisadvElementsNew, 0 ),
 			LargeProgrammeUplift = 
-				(
-					(
-						@LargeProgramme10PercentUpliftAmount
-						*
-						@LargeProgramme10PercentUpliftNumLearners
-					)
-					+
-					(
-						@LargeProgramme20PercentUpliftAmount
-						*
-						@LargeProgramme20PercentUpliftNumLearners
-					)
-				)
-				/
-				CAST ( COALESCE ( FM25LRNS.Learners, 0 ) AS FLOAT ),
+				CASE
+					WHEN COALESCE ( FM25LRNS.Learners, 0 ) = 0 THEN 0
+					ELSE
+						(
+							(
+								@LargeProgramme10PercentUpliftAmount
+								*
+								@LargeProgramme10PercentUpliftNumLearners
+							)
+							+
+							(
+								@LargeProgramme20PercentUpliftAmount
+								*
+								@LargeProgramme20PercentUpliftNumLearners
+							)
+						)
+						/
+						CAST ( COALESCE ( FM25LRNS.Learners, 0 ) AS FLOAT )
+				END,
 			AreaCostFact1618Hist = COALESCE ( FM25.AreaCostFact1618Hist, 0 ),
 			ConditionOfFundingAdjustment = 
 				CASE
